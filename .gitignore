@@ -1,0 +1,14 @@
+# Xcode / Swift
+build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+*.xcscmblueprint
+*.xccheckout
+.swiftpm/
+Packages/
+.DS_Store
+
+# user-specific Xcode state
+*.xcodeproj/project.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
