@@ -1,0 +1,137 @@
+import SwiftUI
+
+// Shared building blocks for content list screens.
+struct SectionLabel: View {
+    let text: String
+    var body: some View {
+        HStack(spacing: 9) {
+            Text(text.uppercased())
+                .font(.system(size: 10.5, weight: .medium)).tracking(2)
+                .foregroundStyle(Palette.faint)
+            Rectangle().fill(Palette.line).frame(height: 1)
+        }
+        .padding(.top, Space.sm)
+    }
+}
+
+struct TextRow: View {
+    @EnvironmentObject var app: AppState
+    let item: SacredText
+    let first: Bool
+    var body: some View {
+        HStack(spacing: 13) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 11).fill(Palette.cream).frame(width: 40, height: 40)
+                Image(systemName: item.icon).font(.system(size: 19)).foregroundStyle(Palette.gold)
+            }
+            Text(item.ru == item.name(app.lang) ? item.ru : item.name(app.lang))
+                .font(Typo.sans(15, .medium)).foregroundStyle(Palette.ink)
+            Spacer(minLength: 0)
+            if app.lang != .he {
+                Text(item.he).font(Typo.serif(16)).foregroundStyle(Palette.ink)
+            }
+            Image(systemName: "chevron.forward").font(.system(size: 13, weight: .semibold)).foregroundStyle(Palette.faint)
+        }
+        .padding(.horizontal, 18).padding(.vertical, 14)
+        .overlay(alignment: .top) { if !first { Rectangle().fill(Palette.line).frame(height: 1) } }
+        .contentShape(Rectangle())
+    }
+}
+
+struct GroupCard<Content: View>: View {
+    @ViewBuilder let content: Content
+    var body: some View {
+        VStack(spacing: 0) { content }
+            .background(RoundedRectangle(cornerRadius: 18).fill(Palette.card)
+                .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(Palette.line, lineWidth: 1)))
+            .clipShape(RoundedRectangle(cornerRadius: 18))
+    }
+}
+
+// MARK: Brachot
+struct BrachotView: View {
+    @EnvironmentObject var app: AppState
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                Palette.paper.ignoresSafeArea()
+                ScrollView {
+                    VStack(alignment: .leading, spacing: Space.md) {
+                        Text(app.s.brachot).font(Typo.display(29)).foregroundStyle(Palette.ink)
+                        section(app.s.often, Content.brachotOften)
+                        section(app.s.beforeEat, Content.brachotBefore)
+                        section(app.s.afterEat, Content.brachotAfter)
+                        Spacer(minLength: 20)
+                    }
+                    .padding(.horizontal, Space.lg).padding(.top, Space.sm)
+                }
+            }
+            .navigationBarTitleDisplayMode(.inline)
+        }
+    }
+
+    @ViewBuilder
+    private func section(_ label: String, _ items: [SacredText]) -> some View {
+        SectionLabel(text: label)
+        GroupCard {
+            ForEach(Array(items.enumerated()), id: \.element.id) { idx, it in
+                NavigationLink { ReaderView(text: it) } label: { TextRow(item: it, first: idx == 0) }
+                    .buttonStyle(.plain)
+            }
+        }
+    }
+}
+
+// MARK: Prayers
+struct PrayersView: View {
+    @EnvironmentObject var app: AppState
+
+    // Daily services — structure present; full nusach-specific text is a later content task.
+    private var daily: [(ru: String, he: String, icon: String)] {
+        [(app.s.sh, "שַׁחֲרִית", "sun.max"), (app.s.mi, "מִנְחָה", "clock"), (app.s.ma, "מַעֲרִיב", "moon.stars")]
+    }
+
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                Palette.paper.ignoresSafeArea()
+                ScrollView {
+                    VStack(alignment: .leading, spacing: Space.md) {
+                        Text(app.s.prayers).font(Typo.display(29)).foregroundStyle(Palette.ink)
+
+                        SectionLabel(text: app.s.daily)
+                        GroupCard {
+                            ForEach(Array(daily.enumerated()), id: \.offset) { idx, d in
+                                HStack(spacing: 13) {
+                                    ZStack {
+                                        RoundedRectangle(cornerRadius: 11).fill(Palette.cream).frame(width: 40, height: 40)
+                                        Image(systemName: d.icon).font(.system(size: 19)).foregroundStyle(Palette.gold)
+                                    }
+                                    Text(d.ru).font(Typo.sans(15, .medium)).foregroundStyle(Palette.ink)
+                                    Spacer(minLength: 0)
+                                    Text(app.s.soon).font(Typo.sans(11)).foregroundStyle(Palette.faint)
+                                    if app.lang != .he {
+                                        Text(d.he).font(Typo.serif(16)).foregroundStyle(Palette.ink)
+                                    }
+                                }
+                                .padding(.horizontal, 18).padding(.vertical, 14)
+                                .overlay(alignment: .top) { if idx != 0 { Rectangle().fill(Palette.line).frame(height: 1) } }
+                            }
+                        }
+
+                        SectionLabel(text: app.s.personal)
+                        GroupCard {
+                            ForEach(Array(Content.personal.enumerated()), id: \.element.id) { idx, it in
+                                NavigationLink { ReaderView(text: it) } label: { TextRow(item: it, first: idx == 0) }
+                                    .buttonStyle(.plain)
+                            }
+                        }
+                        Spacer(minLength: 20)
+                    }
+                    .padding(.horizontal, Space.lg).padding(.top, Space.sm)
+                }
+            }
+            .navigationBarTitleDisplayMode(.inline)
+        }
+    }
+}

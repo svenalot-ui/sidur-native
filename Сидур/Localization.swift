@@ -47,6 +47,14 @@ struct Strings {
     var min10: String { t("10 мин", "10 דק׳") }
     var min15: String { t("15 мин", "15 דק׳") }
 
+    // prayers / brachot
+    var often: String { t("Часто нужные", "הנפוצות") }
+    var beforeEat: String { t("Перед едой", "לפני האכילה") }
+    var afterEat: String { t("После еды", "לאחר האכילה") }
+    var daily: String { t("Ежедневные", "יומיות") }
+    var personal: String { t("Личные молитвы", "תפילות אישיות") }
+    var soon: String { t("Полный текст скоро", "הטקסט המלא בקרוב") }
+
     // common
     var settings: String { t("Настройки", "הגדרות") }
 }

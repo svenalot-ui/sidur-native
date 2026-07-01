@@ -23,8 +23,8 @@ struct ContentView: View {
         switch app.tab {
         case 0: TodayView()
         case 1: ZmanimView()
-        case 2: ScreenStub(title: app.s.prayers, symbol: "book")
-        case 3: ScreenStub(title: app.s.brachot, symbol: "leaf")
+        case 2: PrayersView()
+        case 3: BrachotView()
         case 4: ScreenStub(title: app.s.tehillim, symbol: "star")
         default: ScreenStub(title: app.s.more, symbol: "ellipsis")
         }

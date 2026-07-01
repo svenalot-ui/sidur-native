@@ -54,26 +54,3 @@ enum Typo {
     static func sans(_ size: CGFloat, _ w: Font.Weight = .regular) -> Font { .system(size: size, weight: w) }
 }
 
-// MARK: - Reusable card container
-struct CardBG: ViewModifier {
-    var padding: CGFloat = Space.lg
-    var radius: CGFloat = 22
-    func body(content: Content) -> some View {
-        content
-            .padding(padding)
-            .background(
-                RoundedRectangle(cornerRadius: radius, style: .continuous)
-                    .fill(Palette.card)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: radius, style: .continuous)
-                            .strokeBorder(Palette.line, lineWidth: 1)
-                    )
-            )
-    }
-}
-
-extension View {
-    func cardBG(padding: CGFloat = Space.lg, radius: CGFloat = 22) -> some View {
-        modifier(CardBG(padding: padding, radius: radius))
-    }
-}
