@@ -68,7 +68,7 @@ struct ReaderView: View {
             }
         }
         .sheet(isPresented: $showSettings) {
-            settingsSheet
+            ReaderOptionsSheet(size: $size, bgKey: $bgKey)
                 .presentationDetents([.height(300)])
                 .presentationDragIndicator(.visible)
         }
@@ -100,56 +100,6 @@ struct ReaderView: View {
         .buttonStyle(.plain)
     }
 
-    private var settingsSheet: some View {
-        VStack(alignment: .leading, spacing: Space.lg) {
-            // font size
-            Text(app.s.fSize.uppercased()).font(.system(size: 11, weight: .medium)).tracking(1.5).foregroundStyle(Palette.faint)
-            HStack(spacing: 14) {
-                sizeButton("A", 15) { size = max(16, size - 1) }
-                Text("\(Int(size)) px").font(Typo.sans(15, .medium)).foregroundStyle(Palette.ink).frame(maxWidth: .infinity)
-                sizeButton("A", 23) { size = min(40, size + 1) }
-            }
-            // background
-            Text(app.s.fBg.uppercased()).font(.system(size: 11, weight: .medium)).tracking(1.5).foregroundStyle(Palette.faint)
-            HStack(spacing: 10) {
-                bgSwatch("paper", app.s.bgPaper)
-                bgSwatch("sepia", app.s.bgSepia)
-                bgSwatch("white", app.s.bgWhite)
-                bgSwatch("night", app.s.bgNight)
-            }
-            Spacer()
-        }
-        .padding(Space.lg)
-        .presentationBackground(Palette.card)
-    }
-
-    private func sizeButton(_ ch: String, _ fontSize: CGFloat, _ action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text(ch).font(Typo.serif(fontSize, .semibold)).foregroundStyle(Palette.ink)
-                .frame(width: 54, height: 46)
-                .background(RoundedRectangle(cornerRadius: 14).fill(Palette.cream)
-                    .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(Palette.line, lineWidth: 1)))
-        }
-        .buttonStyle(.plain)
-    }
-
-    private func bgSwatch(_ key: String, _ name: String) -> some View {
-        let p = ReaderBG.get(key)
-        return Button { bgKey = key } label: {
-            VStack(spacing: 5) {
-                Text("א")
-                    .font(Typo.serif(18))
-                    .foregroundStyle(p.fg)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 46)
-                    .background(RoundedRectangle(cornerRadius: 12).fill(p.bg))
-                    .overlay(RoundedRectangle(cornerRadius: 12)
-                        .strokeBorder(bgKey == key ? Palette.gold : Palette.line, lineWidth: bgKey == key ? 2 : 1))
-                Text(name).font(.system(size: 10)).foregroundStyle(Palette.faint)
-            }
-        }
-        .buttonStyle(.plain)
-    }
 }
 
 extension SacredText {

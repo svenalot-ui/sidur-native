@@ -55,6 +55,18 @@ struct Strings {
     var personal: String { t("Личные молитвы", "תפילות אישיות") }
     var soon: String { t("Полный текст скоро", "הטקסט המלא בקרוב") }
 
+    // tehillim
+    var tehBook: String { t("Вся книга", "כל הספר") }
+    var tehByDay: String { t("По дням", "לפי יום") }
+    var tehDay: String { t("День", "יום") }
+    var psalm: String { t("Псалом", "מזמור") }
+    var tehFavTitle: String { t("Избранные", "מועדפים") }
+    var needNet: String { t("Нужна сеть при первом открытии", "דרושה רשת בפתיחה הראשונה") }
+    var noRu: String { t("Русский перевод недоступен — показана транслитерация", "תרגום רוסי לא זמין") }
+    var bookHdr: [String] { lang == .he
+        ? ["ספר ראשון", "ספר שני", "ספר שלישי", "ספר רביעי", "ספר חמישי"]
+        : ["Книга первая", "Книга вторая", "Книга третья", "Книга четвёртая", "Книга пятая"] }
+
     // reader
     var fSize: String { t("Размер", "גודל") }
     var fBg: String { t("Фон", "רקע") }

@@ -18,7 +18,7 @@ struct ContentView: View {
             BrachotView()
                 .tabItem { Label(app.s.brachot, systemImage: "leaf") }
                 .tag(3)
-            ScreenStub(title: app.s.tehillim, symbol: "star")
+            TehillimView()
                 .tabItem { Label(app.s.tehillim, systemImage: "star") }
                 .tag(4)
         }
