@@ -21,7 +21,10 @@ enum Teh {
     // MARK: favorites
     private static let favKey = "tehFav"
     static var favorites: [Int] {
-        get { UserDefaults.standard.array(forKey: favKey) as? [Int] ?? [] }
+        get {
+            let raw = UserDefaults.standard.array(forKey: favKey) ?? []
+            return raw.compactMap { ($0 as? Int) ?? Int("\($0)") }
+        }
         set { UserDefaults.standard.set(newValue.sorted(), forKey: favKey) }
     }
     static func toggleFav(_ n: Int) {

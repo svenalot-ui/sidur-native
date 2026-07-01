@@ -35,8 +35,8 @@ struct Strings {
     var tehOpen: String { t("Читать главы дня", "קריאת פרקי היום") }
 
     // zmanim
-    var zIntro: String { t("Основные времена дня. Нажмите на любое, чтобы увидеть варианты и включить напоминание.",
-                            "זמני היום העיקריים. הקישו על כל אחד כדי לראות חישובים ולהפעיל תזכורת.") }
+    var zIntro: String { t("Основные времена дня. Нажмите на любое, чтобы увидеть все варианты расчёта.",
+                            "זמני היום העיקריים. הקישו על כל אחד כדי לראות את כל החישובים.") }
     var allVariants: String { t("Все варианты", "כל החישובים") }
     var remind: String { t("Напоминание", "תזכורת") }
     var remindOn: String { t("Напоминание включено", "התזכורת הופעלה") }
@@ -77,6 +77,34 @@ struct Strings {
     var bgSepia: String { t("Сепия", "ספיה") }
     var bgWhite: String { t("Белый", "לבן") }
     var bgNight: String { t("Ночь", "לילה") }
+
+    // mizrah (compass)
+    var mizrahTitle: String { t("Направление молитвы", "כיוון התפילה") }
+    var toJerusalem: String { t("до Иерусалима", "לירושלים") }
+    var km: String { t("км", "ק״מ") }
+    var facing: String { t("Лицом к Иерусалиму", "פונה לירושלים") }
+    var rotateHint: String { t("Поворачивайтесь, пока стрелка не укажет вверх", "סובבו עד שהחץ יפנה למעלה") }
+    var calibHint: String { t("Если неточно — поводите телефоном «восьмёркой»", "אם לא מדויק — הניעו בצורת שמינייה") }
+
+    // tzedaka
+    var tzedakaTitle: String { t("Цдака", "צדקה") }
+    var tzedakaSub: String { t("Цдака перед молитвой", "צדקה לפני התפילה") }
+    var tzedakaText: String { t("Принято давать цдаку перед молитвой. «Цдака спасает от смерти». Отсканируйте QR в приложении банка — реквизиты подставятся.",
+                                 "נהגו לתת צדקה לפני התפילה. «וּצְדָקָה תַּצִּיל מִמָּוֶת». סרקו את הקוד באפליקציית הבנק.") }
+    var requisites: String { t("Реквизиты", "פרטי תשלום") }
+    var rqName: String { t("Получатель", "מקבל") }
+    var rqAcc: String { t("Расчётный счёт", "חשבון") }
+    var rqBank: String { t("Банк", "בנק") }
+    var rqBik: String { t("БИК", "BIC") }
+    var rqCor: String { t("Корр. счёт", "נוסטרו") }
+    var copied: String { t("Скопировано", "הועתק") }
+
+    // settings
+    var setLang: String { t("Язык приложения", "שפת האפליקציה") }
+    var setTheme: String { t("Оформление", "מראה") }
+    var themeAuto: String { t("Авто", "אוטומטי") }
+    var themeLight: String { t("День", "יום") }
+    var themeDark: String { t("Ночь", "לילה") }
 
     // common
     var settings: String { t("Настройки", "הגדרות") }

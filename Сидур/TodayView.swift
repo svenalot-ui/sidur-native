@@ -3,6 +3,7 @@ import SwiftUI
 struct TodayView: View {
     @EnvironmentObject var app: AppState
     @State private var pidx: Int? = nil
+    @State private var favPsalms: [Int] = Teh.favorites
 
     private var z: Zmanim { app.currentZmanim }
 
@@ -21,28 +22,34 @@ struct TodayView: View {
     }
 
     var body: some View {
-        ZStack {
-            Palette.paper.ignoresSafeArea()
-            ScrollView {
-                VStack(alignment: .leading, spacing: Space.md) {
-                    header
-                    quickRow
-                    prayerCard
-                    tiles
-                    tehillimCard
-                    favoritesHeader
-                    Text(app.lang == .he ? "אין שמורים — בקרוב" : "Избранное появится здесь")
-                        .font(Typo.sans(13))
-                        .foregroundStyle(Palette.faint)
-                        .frame(maxWidth: .infinity, alignment: .center)
-                        .padding(.top, 4)
-                    Spacer(minLength: 30)
+        NavigationStack {
+            ZStack {
+                Palette.paper.ignoresSafeArea()
+                ScrollView {
+                    VStack(alignment: .leading, spacing: Space.md) {
+                        header
+                        quickRow
+                        prayerCard
+                        tiles
+                        tehillimCard
+                        if !favPsalms.isEmpty {
+                            favoritesHeader
+                            favoritesGrid
+                        }
+                        Spacer(minLength: 30)
+                    }
+                    .padding(.horizontal, Space.lg)
+                    .padding(.top, Space.sm)
                 }
-                .padding(.horizontal, Space.lg)
-                .padding(.top, Space.sm)
             }
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar(.hidden, for: .navigationBar)
         }
-        .onAppear { if pidx == nil { pidx = currentIdx } }
+        .onAppear {
+            if pidx == nil { pidx = currentIdx }
+            favPsalms = Teh.favorites
+            app.refreshZmanim()
+        }
     }
 
     private var header: some View {
@@ -60,20 +67,24 @@ struct TodayView: View {
 
     private var quickRow: some View {
         HStack(spacing: 7) {
-            quickPill("location.north.line", app.s.navDir)
-            quickPill("calendar", app.s.navCal)
-            quickPill("heart.circle", app.s.navTz)
+            NavigationLink { MizrahView() } label: { quickPill("location.north.line", app.s.navDir) }
+                .buttonStyle(.plain)
+            NavigationLink { TzedakaView() } label: { quickPill("heart.circle", app.s.navTz) }
+                .buttonStyle(.plain)
+            NavigationLink { SettingsView() } label: { quickPill("gearshape", app.s.settings) }
+                .buttonStyle(.plain)
         }
     }
 
     private func quickPill(_ symbol: String, _ label: String) -> some View {
         HStack(spacing: 6) {
             Image(systemName: symbol).font(.system(size: 13)).foregroundStyle(Palette.gold)
-            Text(label).font(Typo.sans(12)).foregroundStyle(Palette.soft).lineLimit(1)
+            Text(label).font(Typo.sans(12)).foregroundStyle(Palette.soft).lineLimit(1).minimumScaleFactor(0.8)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 9)
         .overlay(RoundedRectangle(cornerRadius: 11).strokeBorder(Palette.line, lineWidth: 1))
+        .contentShape(Rectangle())
     }
 
     private var prayerCard: some View {
@@ -179,6 +190,7 @@ struct TodayView: View {
 
     private var favoritesHeader: some View {
         HStack(spacing: 9) {
+            Image(systemName: "heart.fill").font(.system(size: 11)).foregroundStyle(Palette.gold)
             Text(app.s.favorites.uppercased())
                 .font(.system(size: 10.5, weight: .medium))
                 .tracking(2)
@@ -186,5 +198,29 @@ struct TodayView: View {
             Rectangle().fill(Palette.line).frame(height: 1)
         }
         .padding(.top, Space.sm)
+    }
+
+    // Favorite psalms — one tap from the home screen.
+    private var favoritesGrid: some View {
+        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3), spacing: 8) {
+            ForEach(favPsalms, id: \.self) { n in
+                NavigationLink {
+                    TehillimReaderView(title: "\(app.s.psalm) \(n)", chapters: [n], onFavChange: { favPsalms = Teh.favorites })
+                } label: {
+                    HStack(spacing: 7) {
+                        Text("\(n)")
+                            .font(Typo.serif(16, .semibold)).foregroundStyle(Palette.gold).monospacedDigit()
+                        Text(app.s.psalm)
+                            .font(Typo.sans(11.5)).foregroundStyle(Palette.soft)
+                            .lineLimit(1).minimumScaleFactor(0.7)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 11)
+                    .background(RoundedRectangle(cornerRadius: 12).fill(Palette.card)
+                        .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Palette.line, lineWidth: 1)))
+                }
+                .buttonStyle(.plain)
+            }
+        }
     }
 }

@@ -6,6 +6,7 @@ final class LocationManager: NSObject, CLLocationManagerDelegate {
     private let manager = CLLocationManager()
     private let geocoder = CLGeocoder()
     var onUpdate: ((GeoLoc) -> Void)?
+    var onHeading: ((Double) -> Void)?
 
     override init() {
         super.init()
@@ -45,5 +46,16 @@ final class LocationManager: NSObject, CLLocationManagerDelegate {
 
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         // Keep the existing fallback location.
+    }
+
+    // MARK: compass heading
+    func startHeading() {
+        if CLLocationManager.headingAvailable() { manager.startUpdatingHeading() }
+    }
+    func stopHeading() { manager.stopUpdatingHeading() }
+
+    func locationManager(_ manager: CLLocationManager, didUpdateHeading h: CLHeading) {
+        let v = h.trueHeading >= 0 ? h.trueHeading : h.magneticHeading
+        DispatchQueue.main.async { [weak self] in self?.onHeading?(v) }
     }
 }

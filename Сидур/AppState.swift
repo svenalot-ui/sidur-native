@@ -15,6 +15,7 @@ final class AppState: ObservableObject {
     @Published var loc: GeoLoc
     @Published var tab: Int = 0
     @Published var remoteNamed: [String: Date]? = nil    // myzmanim override (online)
+    @Published var heading: Double? = nil                // compass (degrees, 0 = north)
     private var lastFetchKey = ""
 
     let tz = TimeZone.current
@@ -36,10 +37,22 @@ final class AppState: ObservableObject {
         refreshZmanim()   // also fetch for the current (fallback) location immediately
     }
 
+    // MARK: compass
+    func startCompass() {
+        locationManager.onHeading = { [weak self] h in
+            Task { @MainActor in self?.heading = h }
+        }
+        locationManager.startHeading()
+    }
+    func stopCompass() { locationManager.stopHeading() }
+
     // Fetch authoritative zmanim from myzmanim for the current location.
+    // Key includes the calendar day so times refresh after midnight / on foreground.
     func refreshZmanim() {
         let lat = loc.lat, lng = loc.lng, tz = self.tz
-        let key = "\(Int((lat * 100).rounded()))_\(Int((lng * 100).rounded()))"
+        var cal = Calendar(identifier: .gregorian); cal.timeZone = tz
+        let d = cal.dateComponents([.year, .month, .day], from: Date())
+        let key = "\(Int((lat * 100).rounded()))_\(Int((lng * 100).rounded()))_\(d.year ?? 0)-\(d.month ?? 0)-\(d.day ?? 0)"
         if key == lastFetchKey && remoteNamed != nil { return }
         lastFetchKey = key
         Task { @MainActor in

@@ -15,3 +15,6 @@ Packages/
 # user-specific Xcode state
 *.xcodeproj/project.xcworkspace/xcuserdata/
 *.xcodeproj/xcuserdata/
+
+# Claude Code local settings
+.claude/settings.local.json
