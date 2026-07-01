@@ -38,6 +38,18 @@ enum Palette {
     static let line   = dyn(0xE3DFD8, 0x322C23)
 }
 
+// MARK: - Liquid Glass (native iOS 26; falls back to material)
+extension View {
+    @ViewBuilder
+    func liquidGlass<S: Shape>(_ shape: S) -> some View {
+        if #available(iOS 26.0, *) {
+            self.glassEffect(.regular, in: shape)
+        } else {
+            self.background(.ultraThinMaterial, in: shape)
+        }
+    }
+}
+
 // MARK: - Spacing
 enum Space {
     static let xs: CGFloat = 6

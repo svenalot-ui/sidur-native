@@ -9,6 +9,9 @@ xcuserdata/
 Packages/
 .DS_Store
 
+# secrets — API keys must never be committed
+Сидур/Secrets.swift
+
 # user-specific Xcode state
 *.xcodeproj/project.xcworkspace/xcuserdata/
 *.xcodeproj/xcuserdata/

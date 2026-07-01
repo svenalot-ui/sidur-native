@@ -57,11 +57,7 @@ struct MainTabBar: View {
         }
         .frame(height: 58)
         .padding(6)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 30, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 30, style: .continuous)
-                .strokeBorder(Color.white.opacity(scheme == .dark ? 0.14 : 0.5), lineWidth: 1)
-        )
+        .liquidGlass(RoundedRectangle(cornerRadius: 30, style: .continuous))
         .shadow(color: .black.opacity(0.18), radius: 20, y: 10)
         .padding(.horizontal, 12)
         .animation(.spring(response: 0.32, dampingFraction: 0.8), value: selection)

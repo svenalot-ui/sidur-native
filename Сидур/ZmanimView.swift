@@ -3,7 +3,7 @@ import SwiftUI
 struct ZmanimView: View {
     @EnvironmentObject var app: AppState
 
-    private var rows: [ZmanRow] { app.zmanim().rows() }
+    private var rows: [ZmanRow] { app.currentZmanim.rows() }
 
     var body: some View {
         NavigationStack {
@@ -32,7 +32,7 @@ struct ZmanimView: View {
                             .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(Palette.line, lineWidth: 1)))
                         .clipShape(RoundedRectangle(cornerRadius: 18))
 
-                        Text("\(app.loc.name ?? "Jerusalem")")
+                        Text("\(app.usingMyZmanim ? "myzmanim · " : "")\(app.loc.name ?? "Jerusalem")")
                             .font(Typo.sans(11))
                             .foregroundStyle(Palette.faint)
                             .frame(maxWidth: .infinity, alignment: .center)

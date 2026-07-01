@@ -4,7 +4,7 @@ struct TodayView: View {
     @EnvironmentObject var app: AppState
     @State private var pidx: Int? = nil
 
-    private var z: Zmanim { app.zmanim() }
+    private var z: Zmanim { app.currentZmanim }
 
     // (name, start, end) for Shacharit / Mincha / Maariv
     private var prayers: [(name: String, start: Date?, end: Date?)] {

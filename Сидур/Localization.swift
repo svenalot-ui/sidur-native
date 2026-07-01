@@ -55,6 +55,17 @@ struct Strings {
     var personal: String { t("Личные молитвы", "תפילות אישיות") }
     var soon: String { t("Полный текст скоро", "הטקסט המלא בקרוב") }
 
+    // reader
+    var fSize: String { t("Размер", "גודל") }
+    var fBg: String { t("Фон", "רקע") }
+    var he_: String { t("Иврит", "עברית") }
+    var translit: String { t("Транслит.", "תעתיק") }
+    var ru_: String { t("Русский", "רוסית") }
+    var bgPaper: String { t("Бумага", "נייר") }
+    var bgSepia: String { t("Сепия", "ספיה") }
+    var bgWhite: String { t("Белый", "לבן") }
+    var bgNight: String { t("Ночь", "לילה") }
+
     // common
     var settings: String { t("Настройки", "הגדרות") }
 }

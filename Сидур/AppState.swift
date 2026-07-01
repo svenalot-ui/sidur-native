@@ -14,9 +14,13 @@ final class AppState: ObservableObject {
     }
     @Published var loc: GeoLoc
     @Published var tab: Int = 0
+    @Published var remoteNamed: [String: Date]? = nil    // myzmanim override (online)
+    private var lastFetchKey = ""
 
     let tz = TimeZone.current
     private let locationManager = LocationManager()
+
+    var usingMyZmanim: Bool { !(remoteNamed?.isEmpty ?? true) }
 
     func startLocation() {
         locationManager.onUpdate = { [weak self] newLoc in
@@ -25,9 +29,33 @@ final class AppState: ObservableObject {
                 var l = newLoc
                 if l.name == nil { l.name = self.loc.name }   // keep last known city until geocode resolves
                 self.loc = l
+                self.refreshZmanim()
             }
         }
         locationManager.start()
+        refreshZmanim()   // also fetch for the current (fallback) location immediately
+    }
+
+    // Fetch authoritative zmanim from myzmanim for the current location.
+    func refreshZmanim() {
+        let lat = loc.lat, lng = loc.lng, tz = self.tz
+        let key = "\(Int((lat * 100).rounded()))_\(Int((lng * 100).rounded()))"
+        if key == lastFetchKey && remoteNamed != nil { return }
+        lastFetchKey = key
+        Task { @MainActor in
+            if let named = await MyZmanimClient.fetchNamed(lat: lat, lng: lng, date: Date(), tz: tz) {
+                self.remoteNamed = named
+            }
+        }
+    }
+
+    // Native engine (offline) merged with myzmanim overrides where available.
+    var currentZmanim: Zmanim {
+        let native = Zmanim.compute(day: Date(), loc: loc, tz: tz)
+        if let r = remoteNamed, !r.isEmpty {
+            return Zmanim(named: native.named.merging(r) { _, new in new })
+        }
+        return native
     }
 
     init() {
