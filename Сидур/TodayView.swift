@@ -62,7 +62,7 @@ struct TodayView: View {
         HStack(spacing: 7) {
             quickPill("location.north.line", app.s.navDir)
             quickPill("calendar", app.s.navCal)
-            quickPill("indianrupeesign.circle", app.s.navTz)
+            quickPill("heart.circle", app.s.navTz)
         }
     }
 

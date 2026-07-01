@@ -4,29 +4,30 @@ struct ContentView: View {
     @EnvironmentObject var app: AppState
 
     var body: some View {
-        TabView(selection: $app.tab) {
-            TodayView()
-                .tabItem { Label(app.s.today, systemImage: "sun.max") }
-                .tag(0)
-            ZmanimView()
-                .tabItem { Label(app.s.zmanim, systemImage: "clock") }
-                .tag(1)
-            ScreenStub(title: app.s.prayers, symbol: "book")
-                .tabItem { Label(app.s.prayers, systemImage: "book") }
-                .tag(2)
-            ScreenStub(title: app.s.brachot, symbol: "leaf")
-                .tabItem { Label(app.s.brachot, systemImage: "leaf") }
-                .tag(3)
-            ScreenStub(title: app.s.tehillim, symbol: "star.of.david")
-                .tabItem { Label(app.s.tehillim, systemImage: "star") }
-                .tag(4)
-            ScreenStub(title: app.s.more, symbol: "ellipsis")
-                .tabItem { Label(app.s.more, systemImage: "ellipsis") }
-                .tag(5)
+        ZStack(alignment: .bottom) {
+            Palette.paper.ignoresSafeArea()
+
+            currentScreen
+                .safeAreaInset(edge: .bottom) { Color.clear.frame(height: 62) }
+
+            MainTabBar(selection: $app.tab)
         }
         .tint(Palette.gold)
         .environment(\.layoutDirection, app.lang.layoutDirection)
         .preferredColorScheme(app.preferredScheme)
+        .onAppear { app.startLocation() }
+    }
+
+    @ViewBuilder
+    private var currentScreen: some View {
+        switch app.tab {
+        case 0: TodayView()
+        case 1: ZmanimView()
+        case 2: ScreenStub(title: app.s.prayers, symbol: "book")
+        case 3: ScreenStub(title: app.s.brachot, symbol: "leaf")
+        case 4: ScreenStub(title: app.s.tehillim, symbol: "star")
+        default: ScreenStub(title: app.s.more, symbol: "ellipsis")
+        }
     }
 }
 

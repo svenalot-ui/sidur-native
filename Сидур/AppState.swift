@@ -16,6 +16,19 @@ final class AppState: ObservableObject {
     @Published var tab: Int = 0
 
     let tz = TimeZone.current
+    private let locationManager = LocationManager()
+
+    func startLocation() {
+        locationManager.onUpdate = { [weak self] newLoc in
+            Task { @MainActor in
+                guard let self else { return }
+                var l = newLoc
+                if l.name == nil { l.name = self.loc.name }   // keep last known city until geocode resolves
+                self.loc = l
+            }
+        }
+        locationManager.start()
+    }
 
     init() {
         let d = UserDefaults.standard
