@@ -30,7 +30,7 @@ final class CalendarModel: ObservableObject {
     func load(year: Int, month: Int, force: Bool = false) async {
         let key = "\(year)-\(month)"
         guard force || !loadedMonths.contains(key) else { return }
-        guard let url = URL(string: "https://www.hebcal.com/hebcal?v=1&cfg=json&year=\(year)&month=\(month)&maj=on&min=on&nx=on&mf=on&ss=on&o=on") else { return }
+        guard let url = URL(string: "https://www.hebcal.com/hebcal?v=1&cfg=json&year=\(year)&month=\(month)&maj=on&min=on&nx=on&mf=on&ss=on&o=on&s=on") else { return }
         do {
             var req = URLRequest(url: url); req.timeoutInterval = 12
             let (data, _) = try await URLSession.shared.data(for: req)

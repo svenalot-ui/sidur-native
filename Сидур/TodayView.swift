@@ -7,6 +7,7 @@ struct TodayView: View {
     @State private var bookmarks: [Bookmark] = Bookmarks.all
     @State private var lastRead: LastRead? = LastReadStore.current
     @State private var path: [Route] = []
+    @State private var parsha: ParshaService.Parsha? = nil
 
     private var z: Zmanim { app.currentZmanim }
 
@@ -32,6 +33,7 @@ struct TodayView: View {
                     VStack(alignment: .leading, spacing: Space.md) {
                         header
                         quickRow
+                        shabbatCard
                         resumeBanner
                         prayerCard
                         tiles
@@ -72,6 +74,41 @@ struct TodayView: View {
             bookmarks = Bookmarks.all
             lastRead = LastReadStore.current
             app.refreshZmanim()
+        }
+        .task { parsha = await ParshaService.shared.next() }
+    }
+
+    // Friday → candle lighting; Saturday → Shabbat end. Weekday is location-local.
+    @ViewBuilder
+    private var shabbatCard: some View {
+        var cal = Calendar(identifier: .gregorian)
+        let _ = { cal.timeZone = app.tz }()
+        let wd = cal.component(.weekday, from: Date())
+        if wd == 6 || wd == 7 {
+            let isFriday = wd == 6
+            let time = isFriday
+                ? (z.t("CandleLighting") ?? z.shkia.map { $0.addingTimeInterval(-18 * 60) })
+                : z.tzeit
+            HStack(spacing: 13) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 13)
+                        .fill(LinearGradient(colors: [Palette.gold, Palette.goldL], startPoint: .topLeading, endPoint: .bottomTrailing))
+                        .frame(width: 42, height: 42)
+                    Image(systemName: isFriday ? "flame" : "sparkles").font(.system(size: 17)).foregroundStyle(.white)
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(app.s.shabbatShalom.uppercased())
+                        .font(.system(size: 10, weight: .medium)).tracking(1.2).foregroundStyle(Palette.gold)
+                    Text(isFriday ? app.s.candleLighting : app.s.shabbatEnd)
+                        .font(Typo.sans(14.5, .medium)).foregroundStyle(Palette.ink)
+                }
+                Spacer(minLength: 0)
+                Text(app.fmt(time))
+                    .font(Typo.digits(22)).foregroundStyle(Palette.gold).monospacedDigit()
+            }
+            .padding(13)
+            .background(RoundedRectangle(cornerRadius: 18).fill(Palette.cream)
+                .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(Palette.goldL.opacity(0.4), lineWidth: 1)))
         }
     }
 
@@ -135,6 +172,12 @@ struct TodayView: View {
                 Text(HebrewDate.gregorian(app.lang))
                     .font(Typo.sans(13))
                     .foregroundStyle(Palette.soft)
+                if let p = parsha {
+                    Text(app.lang == .he ? p.hebrew : "\(p.hebrew) · \(ParshaService.shortTitle(p))")
+                        .font(Typo.serif(13))
+                        .foregroundStyle(Palette.gold)
+                        .padding(.top, 1)
+                }
             }
             Spacer(minLength: 0)
             NavigationLink { SettingsView() } label: {

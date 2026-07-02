@@ -1,6 +1,7 @@
 import SwiftUI
 
-// Full weekday service reader — sections stream in from Sefaria (cached on disk).
+// Full weekday service reader. All section texts are prefetched (concurrently,
+// disk-cached) before display — stable layout makes section jumps reliable.
 struct ServiceReaderView: View {
     @EnvironmentObject var app: AppState
     let service: ServiceKind
@@ -10,11 +11,17 @@ struct ServiceReaderView: View {
     @AppStorage("rdrBg") private var bgKey: String = "paper"
     @AppStorage("svcMode") private var mode: String = "he"    // he | translit
     @State private var sections: [ServiceSection] = []
+    @State private var texts: [String: [String]] = [:]        // ref → hebrew paragraphs
     @State private var loadFailed = false
     @State private var loading = true
+    @State private var progress = 0
     @State private var showSettings = false
+    @State private var showSections = false
     @State private var zen = false
     @State private var bookmarked = false
+    @State private var pendingScroll: String? = nil
+
+    private var posKey: String { "svcPos_\(service.rawValue)" }
 
     private var palette: ReaderBG { ReaderBG.get(bgKey) }
     private var isRTL: Bool { mode == "he" }
@@ -26,27 +33,44 @@ struct ServiceReaderView: View {
         ZStack {
             palette.bg.ignoresSafeArea()
             if loading {
-                ProgressView().tint(Palette.gold)
+                VStack(spacing: 10) {
+                    ProgressView().tint(Palette.gold)
+                    if !sections.isEmpty {
+                        Text("\(progress)/\(sections.count)")
+                            .font(Typo.sans(12)).foregroundStyle(palette.fg.opacity(0.5)).monospacedDigit()
+                    }
+                }
             } else if loadFailed {
                 retryState
             } else {
                 VStack(spacing: 0) {
                     if !zen { langSegment }
-                    ScrollView {
-                        LazyVStack(alignment: isRTL ? .trailing : .leading, spacing: 10) {
-                            ForEach(sections) { sec in
-                                SectionBlock(section: sec, mode: mode, size: size, palette: palette)
+                    ScrollViewReader { proxy in
+                        ScrollView {
+                            VStack(alignment: isRTL ? .trailing : .leading, spacing: 10) {
+                                ForEach(sections) { sec in
+                                    sectionBlock(sec)
+                                        .id(sec.id)
+                                }
                             }
+                            .padding(.horizontal, Space.lg)
+                            .padding(.top, Space.sm)
+                            .padding(.bottom, 110)
                         }
-                        .padding(.horizontal, Space.lg)
-                        .padding(.top, Space.sm)
-                        .padding(.bottom, 110)
+                        .onChange(of: pendingScroll) { target in
+                            guard let target else { return }
+                            withAnimation(.easeInOut(duration: 0.3)) {
+                                proxy.scrollTo(target, anchor: .top)
+                            }
+                            DispatchQueue.main.async { pendingScroll = nil }
+                        }
                     }
                 }
             }
         }
         .readerChrome(title: title, zen: $zen) {
             HStack(spacing: 6) {
+                ReaderIconButton(symbol: "list.bullet") { showSections = true }
                 ReaderIconButton(symbol: bookmarked ? "bookmark.fill" : "bookmark", action: toggleBookmark)
                 ReaderIconButton(symbol: "textformat.size") { showSettings = true }
             }
@@ -54,6 +78,11 @@ struct ServiceReaderView: View {
         .sheet(isPresented: $showSettings) {
             ReaderOptionsSheet(size: $size, bgKey: $bgKey)
                 .presentationDetents([.height(300)])
+                .presentationDragIndicator(.visible)
+        }
+        .sheet(isPresented: $showSections) {
+            sectionsSheet
+                .presentationDetents([.medium, .large])
                 .presentationDragIndicator(.visible)
         }
         .task { await reload() }
@@ -83,24 +112,112 @@ struct ServiceReaderView: View {
 
     private func reload() async {
         loading = true
-        let s = await SiddurClient.shared.sections(nusach: app.nusach ?? "ashkenaz", service: service)
-        sections = s
-        loadFailed = s.isEmpty
+        progress = 0
+        let secs = await SiddurClient.shared.sections(nusach: app.nusach ?? "ashkenaz", service: service)
+        sections = secs
+        guard !secs.isEmpty else {
+            loadFailed = true
+            loading = false
+            return
+        }
+        // Prefetch every section concurrently (6 at a time) — instant from disk cache afterwards.
+        var loadedTexts: [String: [String]] = [:]
+        await withTaskGroup(of: (String, [String]).self) { group in
+            var iterator = secs.makeIterator()
+            var inFlight = 0
+            func addNext(_ group: inout TaskGroup<(String, [String])>) {
+                if let sec = iterator.next() {
+                    group.addTask { (sec.ref, await SiddurClient.shared.text(ref: sec.ref)) }
+                    inFlight += 1
+                }
+            }
+            for _ in 0..<6 { addNext(&group) }
+            for await (ref, lines) in group {
+                inFlight -= 1
+                loadedTexts[ref] = lines
+                progress = loadedTexts.count
+                addNext(&group)
+            }
+        }
+        texts = loadedTexts
+        // A service with no text at all → network problem.
+        loadFailed = loadedTexts.values.allSatisfy { $0.isEmpty }
         loading = false
-    }
-
-    private var serviceNames: (ru: String, he: String) {
-        switch service {
-        case .shacharit: return ("Шахарит", "שַׁחֲרִית")
-        case .mincha: return ("Минха", "מִנְחָה")
-        case .maariv: return ("Маарив", "מַעֲרִיב")
+        // Restore the last section the user jumped to.
+        if !loadFailed,
+           let saved = UserDefaults.standard.string(forKey: posKey),
+           secs.contains(where: { $0.id == saved }) {
+            try? await Task.sleep(nanoseconds: 350_000_000)
+            pendingScroll = saved
         }
     }
 
-    private func toggleBookmark() {
-        let n = serviceNames
-        Bookmarks.toggle(Bookmark(kind: "service", refId: service.rawValue, titleRu: n.ru, titleHe: n.he, icon: serviceIcon))
-        bookmarked.toggle()
+    @ViewBuilder
+    private func sectionBlock(_ sec: ServiceSection) -> some View {
+        let lines = texts[sec.ref] ?? []
+        if !lines.isEmpty {
+            VStack(alignment: isRTL ? .trailing : .leading, spacing: 10) {
+                Text(sec.heTitle)
+                    .font(Typo.serif(15, .semibold))
+                    .foregroundStyle(Palette.gold)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.top, 14)
+
+                ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
+                    Text(mode == "translit" ? Teh.translit(line) : line)
+                        .font(mode == "he" ? Typo.serif(size) : Typo.sans(size - 5))
+                        .foregroundStyle(palette.fg)
+                        .lineSpacing(9)
+                        .frame(maxWidth: .infinity, alignment: isRTL ? .trailing : .leading)
+                        .multilineTextAlignment(isRTL ? .trailing : .leading)
+                        .environment(\.layoutDirection, isRTL ? .rightToLeft : .leftToRight)
+                }
+            }
+        }
+    }
+
+    // Table of contents — jump to any section of the service.
+    private var sectionsSheet: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 0) {
+                    ForEach(Array(sections.enumerated()), id: \.element.id) { idx, sec in
+                        Button {
+                            Haptics.tap()
+                            UserDefaults.standard.set(sec.id, forKey: posKey)
+                            showSections = false
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                                pendingScroll = sec.id
+                            }
+                        } label: {
+                            HStack(spacing: 10) {
+                                Text("\(idx + 1)")
+                                    .font(Typo.digits(13)).foregroundStyle(Palette.faint).monospacedDigit()
+                                    .frame(width: 26, alignment: .trailing)
+                                Text(sec.heTitle)
+                                    .font(Typo.serif(16)).foregroundStyle(Palette.ink)
+                                Spacer(minLength: 8)
+                                if app.lang != .he {
+                                    Text(sec.enTitle)
+                                        .font(Typo.sans(11.5)).foregroundStyle(Palette.faint)
+                                        .lineLimit(1)
+                                }
+                            }
+                            .padding(.horizontal, 18).padding(.vertical, 11)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .overlay(alignment: .top) {
+                            if idx != 0 { Rectangle().fill(Palette.line).frame(height: 1).padding(.horizontal, 18) }
+                        }
+                    }
+                }
+                .padding(.vertical, 8)
+            }
+            .background(Palette.paper)
+            .navigationTitle(app.s.sections)
+            .navigationBarTitleDisplayMode(.inline)
+        }
     }
 
     private var langSegment: some View {
@@ -125,51 +242,18 @@ struct ServiceReaderView: View {
         }
         .buttonStyle(.plain)
     }
-}
 
-// One service section: gold Hebrew header + streamed text.
-private struct SectionBlock: View {
-    @EnvironmentObject var app: AppState
-    let section: ServiceSection
-    let mode: String
-    let size: Double
-    let palette: ReaderBG
-
-    @State private var lines: [String] = []
-    @State private var loaded = false
-
-    private var isRTL: Bool { mode == "he" }
-
-    var body: some View {
-        VStack(alignment: isRTL ? .trailing : .leading, spacing: 10) {
-            if !lines.isEmpty {
-                Text(isRTL ? section.heTitle : section.heTitle)
-                    .font(Typo.serif(15, .semibold))
-                    .foregroundStyle(Palette.gold)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(.top, 14)
-
-                ForEach(Array(displayLines.enumerated()), id: \.offset) { _, line in
-                    Text(line)
-                        .font(mode == "he" ? Typo.serif(size) : Typo.sans(size - 5))
-                        .foregroundStyle(palette.fg)
-                        .lineSpacing(9)
-                        .frame(maxWidth: .infinity, alignment: isRTL ? .trailing : .leading)
-                        .multilineTextAlignment(isRTL ? .trailing : .leading)
-                        .environment(\.layoutDirection, isRTL ? .rightToLeft : .leftToRight)
-                }
-            } else if !loaded {
-                ProgressView().tint(Palette.gold).frame(maxWidth: .infinity).padding(.vertical, 8)
-            }
-        }
-        .task {
-            guard lines.isEmpty else { return }
-            lines = await SiddurClient.shared.text(ref: section.ref)
-            loaded = true
+    private var serviceNames: (ru: String, he: String) {
+        switch service {
+        case .shacharit: return ("Шахарит", "שַׁחֲרִית")
+        case .mincha: return ("Минха", "מִנְחָה")
+        case .maariv: return ("Маарив", "מַעֲרִיב")
         }
     }
 
-    private var displayLines: [String] {
-        mode == "translit" ? lines.map { Teh.translit($0) } : lines
+    private func toggleBookmark() {
+        let n = serviceNames
+        Bookmarks.toggle(Bookmark(kind: "service", refId: service.rawValue, titleRu: n.ru, titleHe: n.he, icon: serviceIcon))
+        bookmarked.toggle()
     }
 }

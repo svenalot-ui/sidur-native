@@ -73,6 +73,10 @@ struct Strings {
     var setLoc: String { t("Местоположение", "מיקום") }
     var setLocRefresh: String { t("Обновить по GPS", "רענון לפי GPS") }
     var feedback: String { t("Обратная связь", "משוב") }
+    var candleLighting: String { t("Зажигание свечей", "הדלקת נרות") }
+    var shabbatEnd: String { t("Исход Шаббата", "צאת השבת") }
+    var shabbatShalom: String { t("Шаббат шалом", "שבת שלום") }
+    var sections: String { t("Разделы", "פרקים") }
     var noRu: String { t("Русский перевод недоступен — показана транслитерация", "תרגום רוסי לא זמין") }
     var bookHdr: [String] { lang == .he
         ? ["ספר ראשון", "ספר שני", "ספר שלישי", "ספר רביעי", "ספר חמישי"]
