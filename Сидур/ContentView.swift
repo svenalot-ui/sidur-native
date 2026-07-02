@@ -1,7 +1,10 @@
 import SwiftUI
+import Combine
 
 struct ContentView: View {
     @EnvironmentObject var app: AppState
+    @Environment(\.scenePhase) private var scenePhase
+    private let minuteTick = Timer.publish(every: 60, on: .main, in: .common).autoconnect()
 
     var body: some View {
         // Native system tab bar → real Apple Liquid Glass on iOS 26.
@@ -25,7 +28,25 @@ struct ContentView: View {
         .tint(Palette.gold)
         .environment(\.layoutDirection, app.lang.layoutDirection)
         .preferredColorScheme(app.preferredScheme)
-        .onAppear { app.startLocation() }
+        .onAppear {
+            app.startLocation()
+            NotificationScheduler.reschedule(app: app)
+        }
+        .onChange(of: scenePhase) { phase in
+            if phase == .active {
+                app.refreshZmanim()
+                NotificationScheduler.reschedule(app: app)
+            }
+        }
+        .onReceive(minuteTick) { _ in
+            app.objectWillChange.send()   // re-evaluate auto theme + "now" prayer state
+        }
+        .fullScreenCover(isPresented: Binding(
+            get: { app.nusach == nil },
+            set: { _ in }
+        )) {
+            OnboardingView()
+        }
     }
 }
 
