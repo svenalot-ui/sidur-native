@@ -279,6 +279,57 @@ struct SettingsView: View {
                         }
                     }
 
+                    SectionLabel(text: app.s.setLoc)
+                    GroupCard {
+                        HStack(spacing: 12) {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 10).fill(Palette.cream).frame(width: 36, height: 36)
+                                Image(systemName: "mappin.and.ellipse").font(.system(size: 15)).foregroundStyle(Palette.gold)
+                            }
+                            VStack(alignment: .leading, spacing: 1) {
+                                Text(app.loc.name ?? app.s.locating)
+                                    .font(Typo.sans(14, .medium)).foregroundStyle(Palette.ink)
+                                Text(String(format: "%.3f, %.3f", app.loc.lat, app.loc.lng))
+                                    .font(Typo.sans(11)).foregroundStyle(Palette.faint).monospacedDigit()
+                            }
+                            Spacer(minLength: 0)
+                        }
+                        .padding(.horizontal, 16).padding(.vertical, 12)
+
+                        Button {
+                            Haptics.tap()
+                            app.startLocation()
+                        } label: {
+                            HStack(spacing: 8) {
+                                Image(systemName: "location").font(.system(size: 13)).foregroundStyle(Palette.gold)
+                                Text(app.s.setLocRefresh).font(Typo.sans(13.5, .medium)).foregroundStyle(Palette.gold)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .overlay(alignment: .top) { Rectangle().fill(Palette.line).frame(height: 1).padding(.horizontal, 16) }
+                    }
+
+                    GroupCard {
+                        Link(destination: URL(string: "mailto:svenalot@gmail.com?subject=%D0%A1%D0%B8%D0%B4%D1%83%D1%80%20%C2%B7%20%D0%9E%D1%82%D0%B7%D1%8B%D0%B2")!) {
+                            HStack(spacing: 12) {
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: 10).fill(Palette.cream).frame(width: 36, height: 36)
+                                    Image(systemName: "envelope").font(.system(size: 15)).foregroundStyle(Palette.gold)
+                                }
+                                Text(app.s.feedback).font(Typo.sans(14, .medium)).foregroundStyle(Palette.ink)
+                                Spacer(minLength: 0)
+                                Image(systemName: "chevron.forward").font(.system(size: 12, weight: .semibold)).foregroundStyle(Palette.faint)
+                            }
+                            .padding(.horizontal, 16).padding(.vertical, 13)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .padding(.top, 2)
+
                     Text("Сидур · שֶׁבֶת אַחִים גַּם יָחַד")
                         .font(Typo.sans(11.5)).foregroundStyle(Palette.faint)
                         .frame(maxWidth: .infinity, alignment: .center)

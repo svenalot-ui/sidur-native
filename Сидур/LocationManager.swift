@@ -33,12 +33,13 @@ final class LocationManager: NSObject, CLLocationManagerDelegate {
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let c = locations.last?.coordinate else { return }
-        var loc = GeoLoc(lat: c.latitude, lng: c.longitude, name: nil)
+        var loc = GeoLoc(lat: c.latitude, lng: c.longitude, name: nil, tzId: nil)
         DispatchQueue.main.async { [weak self] in self?.onUpdate?(loc) }
-        // Reverse geocode for a city label (best-effort).
+        // Reverse geocode for a city label + the place's timezone (zmanim are location-local).
         geocoder.reverseGeocodeLocation(CLLocation(latitude: c.latitude, longitude: c.longitude)) { [weak self] places, _ in
             if let p = places?.first {
                 loc.name = p.locality ?? p.subAdministrativeArea ?? p.administrativeArea ?? p.country
+                loc.tzId = p.timeZone?.identifier
                 DispatchQueue.main.async { self?.onUpdate?(loc) }
             }
         }

@@ -5,6 +5,12 @@ struct ZmanimView: View {
 
     private var rows: [ZmanRow] { app.currentZmanim.rows() }
 
+    // First zman still ahead of us today → highlighted as "next".
+    private var nextId: String? {
+        let now = Date()
+        return rows.first { ($0.main ?? .distantPast) > now }?.id
+    }
+
     var body: some View {
         NavigationStack {
             ZStack {
@@ -23,7 +29,7 @@ struct ZmanimView: View {
                                 NavigationLink {
                                     ZmanDetailView(row: row)
                                 } label: {
-                                    rowView(row, first: idx == 0)
+                                    rowView(row, first: idx == 0, isNext: row.id == nextId)
                                 }
                                 .buttonStyle(.plain)
                             }
@@ -42,19 +48,35 @@ struct ZmanimView: View {
                     .padding(.horizontal, Space.lg)
                     .padding(.top, Space.sm)
                 }
+                .refreshable {
+                    Haptics.tap()
+                    app.refreshZmanim()
+                    try? await Task.sleep(nanoseconds: 500_000_000)
+                }
             }
             .navigationBarTitleDisplayMode(.inline)
         }
     }
 
-    private func rowView(_ row: ZmanRow, first: Bool) -> some View {
+    private func rowView(_ row: ZmanRow, first: Bool, isNext: Bool) -> some View {
         HStack(spacing: 13) {
             ZStack {
-                RoundedRectangle(cornerRadius: 11).fill(Palette.cream).frame(width: 38, height: 38)
+                RoundedRectangle(cornerRadius: 11)
+                    .fill(isNext ? Palette.gold.opacity(0.16) : Palette.cream)
+                    .frame(width: 38, height: 38)
                 Image(systemName: row.icon).font(.system(size: 18)).foregroundStyle(Palette.gold)
             }
             VStack(alignment: .leading, spacing: 1) {
-                Text(row.name(app.lang)).font(Typo.sans(15, .medium)).foregroundStyle(Palette.ink)
+                HStack(spacing: 6) {
+                    Text(row.name(app.lang)).font(Typo.sans(15, .medium)).foregroundStyle(Palette.ink)
+                    if isNext {
+                        Text(app.s.nextZman)
+                            .font(.system(size: 9, weight: .semibold))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 7).padding(.vertical, 3)
+                            .background(Capsule().fill(Palette.gold))
+                    }
+                }
                 if app.lang != .he {
                     Text(row.he).font(Typo.serif(12)).foregroundStyle(Palette.faint)
                 }
@@ -71,6 +93,7 @@ struct ZmanimView: View {
         }
         .padding(.horizontal, 18)
         .padding(.vertical, 15)
+        .background(isNext ? Palette.cream.opacity(0.7) : .clear)
         .overlay(alignment: .top) {
             if !first { Rectangle().fill(Palette.line).frame(height: 1) }
         }

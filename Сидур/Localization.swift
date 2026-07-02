@@ -67,6 +67,12 @@ struct Strings {
     var needNet: String { t("Нужна сеть при первом открытии", "דרושה רשת בפתיחה הראשונה") }
     var retry: String { t("Повторить", "נסו שוב") }
     var continueReading: String { t("Продолжить чтение", "המשך קריאה") }
+    var segulot: String { t("Сгулот", "סגולות") }
+    var segIntro: String { t("Подборки глав Теилим на разные нужды", "מבחר פרקי תהילים לצרכים שונים") }
+    var nextZman: String { t("следующий", "הבא") }
+    var setLoc: String { t("Местоположение", "מיקום") }
+    var setLocRefresh: String { t("Обновить по GPS", "רענון לפי GPS") }
+    var feedback: String { t("Обратная связь", "משוב") }
     var noRu: String { t("Русский перевод недоступен — показана транслитерация", "תרגום רוסי לא זמין") }
     var bookHdr: [String] { lang == .he
         ? ["ספר ראשון", "ספר שני", "ספר שלישי", "ספר רביעי", "ספר חמישי"]

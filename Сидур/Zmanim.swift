@@ -4,7 +4,8 @@ struct GeoLoc: Equatable {
     var lat: Double
     var lng: Double
     var name: String?
-    static let jerusalem = GeoLoc(lat: 31.7683, lng: 35.2137, name: "Jerusalem")
+    var tzId: String?    // IANA timezone of the place — zmanim are local to the location
+    static let jerusalem = GeoLoc(lat: 31.7683, lng: 35.2137, name: "Jerusalem", tzId: "Asia/Jerusalem")
 }
 
 struct ZmanVariant: Identifiable {

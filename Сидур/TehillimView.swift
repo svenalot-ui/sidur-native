@@ -20,8 +20,10 @@ struct TehillimView: View {
                         if mode == "book" {
                             if !favs.isEmpty { favSection }
                             ForEach(0..<5, id: \.self) { bookSection($0) }
-                        } else {
+                        } else if mode == "day" {
                             daySection
+                        } else {
+                            segulotSection
                         }
                         Spacer(minLength: 30)
                     }
@@ -38,6 +40,7 @@ struct TehillimView: View {
         HStack(spacing: 6) {
             seg("book", app.s.tehBook)
             seg("day", app.s.tehByDay)
+            seg("seg", app.s.segulot)
         }
     }
 
@@ -117,6 +120,43 @@ struct TehillimView: View {
             }
     }
 
+    // MARK: segulot
+    private var segulotSection: some View {
+        VStack(alignment: .leading, spacing: Space.sm) {
+            Text(app.s.segIntro)
+                .font(Typo.sans(12.5)).foregroundStyle(Palette.soft)
+                .padding(.bottom, 2)
+            ForEach(Teh.segulot) { s in
+                NavigationLink {
+                    TehillimReaderView(
+                        title: s.name(app.lang),
+                        chapters: s.psalms,
+                        intro: s.desc(app.lang),
+                        onFavChange: { favs = Teh.favorites })
+                } label: {
+                    HStack(spacing: 13) {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 11).fill(Palette.cream).frame(width: 40, height: 40)
+                            Image(systemName: s.icon).font(.system(size: 17)).foregroundStyle(Palette.gold)
+                        }
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(s.name(app.lang)).font(Typo.sans(15, .medium)).foregroundStyle(Palette.ink)
+                            Text("\(app.s.psalm): \(s.psalms.map(String.init).joined(separator: " · "))")
+                                .font(Typo.sans(12)).foregroundStyle(Palette.gold).monospacedDigit()
+                        }
+                        Spacer(minLength: 0)
+                        Image(systemName: "chevron.forward").font(.system(size: 13, weight: .semibold)).foregroundStyle(Palette.faint)
+                    }
+                    .padding(15)
+                    .background(RoundedRectangle(cornerRadius: 16).fill(Palette.card)
+                        .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(Palette.line, lineWidth: 1)))
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+
     // MARK: by day
     private var daySection: some View {
         let today = min(HebrewDate.dayOfMonth(), 30)
@@ -160,6 +200,7 @@ struct TehillimReaderView: View {
     @EnvironmentObject var app: AppState
     let title: String
     let chapters: [Int]
+    var intro: String? = nil
     var onFavChange: () -> Void = {}
 
     @AppStorage("rdrMode") private var lmode: String = "he"      // he | translit | ru
@@ -188,6 +229,14 @@ struct TehillimReaderView: View {
                 } else {
                     ScrollView {
                         VStack(alignment: isRTL ? .trailing : .leading, spacing: 14) {
+                            if let intro {
+                                Text(intro)
+                                    .font(Typo.sans(13))
+                                    .foregroundStyle(palette.fg.opacity(0.65))
+                                    .multilineTextAlignment(.center)
+                                    .frame(maxWidth: .infinity, alignment: .center)
+                                    .padding(.top, 6)
+                            }
                             ForEach(chapters, id: \.self) { n in
                                 psalmBlock(n)
                             }

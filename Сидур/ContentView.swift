@@ -41,6 +41,9 @@ struct ContentView: View {
         .onReceive(minuteTick) { _ in
             app.objectWillChange.send()   // re-evaluate auto theme + "now" prayer state
         }
+        .onReceive(NotificationCenter.default.publisher(for: .sidurOpenZmanim)) { _ in
+            app.tab = 1   // a zman notification was tapped
+        }
         .fullScreenCover(isPresented: Binding(
             get: { app.nusach == nil },
             set: { _ in }

@@ -72,7 +72,9 @@ enum NotificationScheduler {
                     : timeStr
                 content.sound = .default
 
-                let comps = cal.dateComponents([.year, .month, .day, .hour, .minute, .second], from: fireAt)
+                // fireAt is an absolute instant — build trigger components in the DEVICE timezone
+                // (app.tz may be the location's tz, which can differ while travelling).
+                let comps = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute, .second], from: fireAt)
                 let trigger = UNCalendarNotificationTrigger(dateMatching: comps, repeats: false)
                 center.add(UNNotificationRequest(identifier: "\(id)_\(off)", content: content, trigger: trigger))
             }

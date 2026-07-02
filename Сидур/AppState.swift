@@ -18,7 +18,11 @@ final class AppState: ObservableObject {
     @Published var heading: Double? = nil                // compass (degrees, 0 = north)
     private var lastFetchKey = ""
 
-    let tz = TimeZone.current
+    // Zmanim live in the location's timezone (matters when device tz ≠ place tz).
+    var tz: TimeZone {
+        if let id = loc.tzId, let t = TimeZone(identifier: id) { return t }
+        return .current
+    }
     private let locationManager = LocationManager()
 
     var usingMyZmanim: Bool { !(remoteNamed?.isEmpty ?? true) }
@@ -29,6 +33,7 @@ final class AppState: ObservableObject {
                 guard let self else { return }
                 var l = newLoc
                 if l.name == nil { l.name = self.loc.name }   // keep last known city until geocode resolves
+                if l.tzId == nil { l.tzId = self.loc.tzId }
                 self.loc = l
                 self.refreshZmanim()
             }

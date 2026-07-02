@@ -184,14 +184,24 @@ struct TodayView: View {
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.top, Space.md)
 
-            VStack(spacing: 3) {
-                Text(p.name).font(Typo.display(23)).foregroundStyle(Palette.ink)
-                Text(app.fmt(p.start)).font(Typo.digits(22)).foregroundStyle(Palette.gold).monospacedDigit()
-                if live {
-                    Text(app.s.now).font(Typo.sans(11)).foregroundStyle(Palette.gold)
+            // Tapping the prayer opens its full service text.
+            Button {
+                Haptics.tap()
+                let kinds: [ServiceKind] = [.shacharit, .mincha, .maariv]
+                path.append(.service(kinds[i].rawValue))
+            } label: {
+                VStack(spacing: 3) {
+                    Text(p.name).font(Typo.display(23)).foregroundStyle(Palette.ink)
+                    Text(app.fmt(p.start)).font(Typo.digits(22)).foregroundStyle(Palette.gold).monospacedDigit()
+                    if live {
+                        Text(app.s.now).font(Typo.sans(11)).foregroundStyle(Palette.gold)
+                    }
                 }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 10)
+                .contentShape(Rectangle())
             }
-            .padding(.vertical, 10)
+            .buttonStyle(.plain)
 
             Divider().background(Palette.line)
 

@@ -18,6 +18,44 @@ enum Teh {
         return Array(dayRanges[d - 1])
     }
 
+    // MARK: segulot — curated psalm sets for specific needs (ported from the PWA)
+    struct Segula: Identifiable {
+        let id: String
+        let ru: String, he: String
+        let psalms: [Int]
+        let descRu: String, descHe: String
+        let icon: String
+        func name(_ lang: Lang) -> String { lang == .he ? he : ru }
+        func desc(_ lang: Lang) -> String { lang == .he ? descHe : descRu }
+    }
+
+    static let segulot: [Segula] = [
+        Segula(id: "parnasa", ru: "Пропитание (парнаса)", he: "פרנסה", psalms: [23, 24, 34, 67],
+               descRu: "Псалмы на изобилие и заработок. Главу 23 принято читать ежедневно.",
+               descHe: "מזמורים לפרנסה. נהוג לומר פרק כ״ג בכל יום.", icon: "banknote"),
+        Segula(id: "refua", ru: "Здоровье и исцеление", he: "רפואה", psalms: [6, 20, 30, 41, 103],
+               descRu: "За полное выздоровление; добавляют имя больного и имя матери.",
+               descHe: "לרפואה שלמה; מוסיפים שם החולה ושם האם.", icon: "cross.case"),
+        Segula(id: "shidduch", ru: "Удачный брак (шидух)", he: "שידוך", psalms: [32, 38, 70, 71, 124],
+               descRu: "О встрече своей пары вовремя.",
+               descHe: "למציאת זיווג הגון בעיתו.", icon: "heart"),
+        Segula(id: "children", ru: "Дети", he: "זרע של קיימא", psalms: [102, 105, 128],
+               descRu: "О детях и благополучии семьи.",
+               descHe: "לזרע בר קיימא ושלום הבית.", icon: "figure.2.and.child.holdinghands"),
+        Segula(id: "road", ru: "Защита в дороге", he: "שמירה בדרך", psalms: [91, 121],
+               descRu: "«Песнь защиты» (91) и «Возвожу очи» (121).",
+               descHe: "שיר של פגעים (צ״א) ופרק קכ״א.", icon: "car"),
+        Segula(id: "ayin", ru: "От дурного глаза", he: "נגד עין הרע", psalms: [31, 121],
+               descRu: "Для защиты от сглаза.",
+               descHe: "לשמירה מעין הרע.", icon: "eye.slash"),
+        Segula(id: "yeshua", ru: "Спасение и помощь", he: "ישועה", psalms: [13, 20, 86, 142],
+               descRu: "В тяжёлой ситуации.",
+               descHe: "בעת צרה.", icon: "lifepreserver"),
+        Segula(id: "dinim", ru: "Смягчение приговоров", he: "המתקת הדינים", psalms: [20, 33, 90],
+               descRu: "О милосердии и отмене суровых приговоров.",
+               descHe: "לרחמים ולהמתקת הדינים.", icon: "scalemass"),
+    ]
+
     // MARK: favorites
     private static let favKey = "tehFav"
     static var favorites: [Int] {
