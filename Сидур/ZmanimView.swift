@@ -172,6 +172,7 @@ struct ZmanDetailView: View {
                             if await NotificationScheduler.requestAuth() {
                                 reminder.on = true
                                 save()
+                                Haptics.success()
                             } else {
                                 denied = true
                             }

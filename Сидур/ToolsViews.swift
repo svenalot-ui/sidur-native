@@ -294,7 +294,7 @@ struct SettingsView: View {
     }
 
     private func segButton(_ label: String, active: Bool, _ action: @escaping () -> Void) -> some View {
-        Button(action: action) {
+        Button(action: { Haptics.tap(); action() }) {
             Text(label)
                 .font(Typo.sans(13.5, active ? .semibold : .regular))
                 .foregroundStyle(active ? Palette.paper : Palette.soft)

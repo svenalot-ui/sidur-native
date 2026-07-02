@@ -11,7 +11,7 @@ struct SacredText: Identifiable {
     let textRu: String?
 }
 
-enum Content {
+enum Liturgy {
     // MARK: Brachot (blessings) — full he / translit / ru
     static let brachotOften: [SacredText] = [
         SacredText(id: "hamotzi", ru: "Хлеб · а-Моци", he: "הַמּוֹצִיא", icon: "birthday.cake",

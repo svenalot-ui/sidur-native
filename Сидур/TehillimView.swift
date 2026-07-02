@@ -42,7 +42,7 @@ struct TehillimView: View {
     }
 
     private func seg(_ key: String, _ label: String) -> some View {
-        Button { withAnimation(.easeInOut(duration: 0.15)) { mode = key } } label: {
+        Button { Haptics.tap(); withAnimation(.easeInOut(duration: 0.15)) { mode = key } } label: {
             Text(label)
                 .font(Typo.sans(13.5, mode == key ? .semibold : .regular))
                 .foregroundStyle(mode == key ? Palette.paper : Palette.soft)
@@ -170,6 +170,7 @@ struct TehillimReaderView: View {
     @State private var loadedRu: [Int: [String]] = [:]
     @State private var loading = true
     @State private var favTick = false
+    @State private var zen = false
 
     private var palette: ReaderBG { ReaderBG.get(bgKey) }
     private var isRTL: Bool { lmode == "he" }
@@ -179,7 +180,7 @@ struct TehillimReaderView: View {
         ZStack {
             palette.bg.ignoresSafeArea()
             VStack(spacing: 0) {
-                langSegment
+                if !zen { langSegment }
                 if loading {
                     Spacer()
                     ProgressView().tint(Palette.gold)
@@ -198,24 +199,15 @@ struct TehillimReaderView: View {
                 }
             }
         }
-        .navigationTitle(title)
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            if let n = singlePsalm {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
+        .readerChrome(title: title, zen: $zen) {
+            HStack(spacing: 6) {
+                if let n = singlePsalm {
+                    ReaderIconButton(symbol: Teh.favorites.contains(n) ? "heart.fill" : "heart") {
                         Teh.toggleFav(n); favTick.toggle(); onFavChange()
-                    } label: {
-                        Image(systemName: Teh.favorites.contains(n) ? "heart.fill" : "heart")
-                            .foregroundStyle(Palette.gold)
                     }
                     .id(favTick)
                 }
-            }
-            ToolbarItem(placement: .topBarTrailing) {
-                Button { showSettings = true } label: {
-                    Image(systemName: "textformat.size").foregroundStyle(Palette.gold)
-                }
+                ReaderIconButton(symbol: "textformat.size") { showSettings = true }
             }
         }
         .sheet(isPresented: $showSettings) {
@@ -223,7 +215,12 @@ struct TehillimReaderView: View {
                 .presentationDetents([.height(300)])
                 .presentationDragIndicator(.visible)
         }
-        .task { await load() }
+        .task {
+            await load()
+            if let n = singlePsalm {
+                LastReadStore.save(kind: "psalm", refId: "\(n)", title: title)
+            }
+        }
     }
 
     private func load() async {
@@ -246,9 +243,15 @@ struct TehillimReaderView: View {
                 .padding(.top, 10)
 
             if he.isEmpty {
-                Text(app.s.needNet)
-                    .font(Typo.sans(13)).foregroundStyle(palette.fg.opacity(0.6))
-                    .frame(maxWidth: .infinity, alignment: .center)
+                Button {
+                    Haptics.tap()
+                    Task { loaded[n] = await TehTexts.shared.hebrew(n) ?? [] }
+                } label: {
+                    Label(app.s.needNet, systemImage: "arrow.clockwise")
+                        .font(Typo.sans(13)).foregroundStyle(palette.fg.opacity(0.6))
+                }
+                .buttonStyle(.plain)
+                .frame(maxWidth: .infinity, alignment: .center)
             } else {
                 ForEach(Array(lines(n).enumerated()), id: \.offset) { i, line in
                     (Text("\(i + 1)  ").font(Typo.serif(size * 0.55)).foregroundColor(Palette.gold)

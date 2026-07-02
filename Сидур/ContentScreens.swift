@@ -58,9 +58,9 @@ struct BrachotView: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: Space.md) {
                         Text(app.s.brachot).font(Typo.display(29)).foregroundStyle(Palette.ink)
-                        section(app.s.often, Content.brachotOften)
-                        section(app.s.beforeEat, Content.brachotBefore)
-                        section(app.s.afterEat, Content.brachotAfter)
+                        section(app.s.often, Liturgy.brachotOften)
+                        section(app.s.beforeEat, Liturgy.brachotBefore)
+                        section(app.s.afterEat, Liturgy.brachotAfter)
                         Spacer(minLength: 20)
                     }
                     .padding(.horizontal, Space.lg).padding(.top, Space.sm)
@@ -138,7 +138,7 @@ struct PrayersView: View {
 
                         SectionLabel(text: app.s.personal)
                         GroupCard {
-                            ForEach(Array(Content.personal.enumerated()), id: \.element.id) { idx, it in
+                            ForEach(Array(Liturgy.personal.enumerated()), id: \.element.id) { idx, it in
                                 NavigationLink { ReaderView(text: it) } label: { TextRow(item: it, first: idx == 0) }
                                     .buttonStyle(.plain)
                             }

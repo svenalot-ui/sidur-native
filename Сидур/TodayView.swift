@@ -4,6 +4,9 @@ struct TodayView: View {
     @EnvironmentObject var app: AppState
     @State private var pidx: Int? = nil
     @State private var favPsalms: [Int] = Teh.favorites
+    @State private var bookmarks: [Bookmark] = Bookmarks.all
+    @State private var lastRead: LastRead? = LastReadStore.current
+    @State private var path: [Route] = []
 
     private var z: Zmanim { app.currentZmanim }
 
@@ -22,17 +25,18 @@ struct TodayView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             ZStack {
                 Palette.paper.ignoresSafeArea()
                 ScrollView {
                     VStack(alignment: .leading, spacing: Space.md) {
                         header
                         quickRow
+                        resumeBanner
                         prayerCard
                         tiles
                         tehillimCard
-                        if !favPsalms.isEmpty {
+                        if !favPsalms.isEmpty || !bookmarks.isEmpty {
                             favoritesHeader
                             favoritesGrid
                         }
@@ -41,14 +45,83 @@ struct TodayView: View {
                     .padding(.horizontal, Space.lg)
                     .padding(.top, Space.sm)
                 }
+                .refreshable {
+                    Haptics.tap()
+                    app.refreshZmanim()
+                    try? await Task.sleep(nanoseconds: 500_000_000)
+                }
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar(.hidden, for: .navigationBar)
+            .navigationDestination(for: Route.self) { route in
+                switch route {
+                case .text(let id):
+                    if let t = Liturgy.bracha(id) { ReaderView(text: t) }
+                case .psalm(let n):
+                    TehillimReaderView(title: "\(app.s.psalm) \(n)", chapters: [n], onFavChange: { favPsalms = Teh.favorites })
+                case .service(let raw):
+                    if let kind = ServiceKind(rawValue: raw) {
+                        ServiceReaderView(service: kind, title: serviceTitle(kind))
+                    }
+                }
+            }
         }
         .onAppear {
             if pidx == nil { pidx = currentIdx }
             favPsalms = Teh.favorites
+            bookmarks = Bookmarks.all
+            lastRead = LastReadStore.current
             app.refreshZmanim()
+        }
+    }
+
+    private func serviceTitle(_ k: ServiceKind) -> String {
+        switch k { case .shacharit: return app.s.sh; case .mincha: return app.s.mi; case .maariv: return app.s.ma }
+    }
+
+    @ViewBuilder
+    private var resumeBanner: some View {
+        if let lr = lastRead, Date().timeIntervalSince(lr.ts) < 3 * 86400 {
+            Button {
+                Haptics.tap()
+                switch lr.kind {
+                case "text": path.append(.text(lr.refId))
+                case "psalm": if let n = Int(lr.refId) { path.append(.psalm(n)) }
+                case "service": path.append(.service(lr.refId))
+                default: break
+                }
+            } label: {
+                HStack(spacing: 13) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 13)
+                            .fill(LinearGradient(colors: [Palette.gold, Palette.goldL], startPoint: .topLeading, endPoint: .bottomTrailing))
+                            .frame(width: 42, height: 42)
+                        Image(systemName: "play.fill").font(.system(size: 15)).foregroundStyle(.white)
+                    }
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(app.s.continueReading.uppercased())
+                            .font(.system(size: 10, weight: .medium)).tracking(1.2).foregroundStyle(Palette.gold)
+                        Text(lr.title).font(Typo.sans(14.5, .medium)).foregroundStyle(Palette.ink).lineLimit(1)
+                    }
+                    Spacer(minLength: 0)
+                    Button {
+                        Haptics.tap()
+                        LastReadStore.dismiss()
+                        withAnimation { lastRead = nil }
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(Palette.soft)
+                            .frame(width: 26, height: 26)
+                            .background(Circle().fill(Palette.card).overlay(Circle().strokeBorder(Palette.line, lineWidth: 1)))
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(13)
+                .background(RoundedRectangle(cornerRadius: 18).fill(Palette.cream)
+                    .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(Palette.line, lineWidth: 1)))
+            }
+            .buttonStyle(.plain)
         }
     }
 
@@ -124,7 +197,7 @@ struct TodayView: View {
 
             HStack(spacing: 0) {
                 ForEach(Array(prayers.enumerated()), id: \.offset) { idx, pr in
-                    Button { pidx = idx } label: {
+                    Button { Haptics.tap(); pidx = idx } label: {
                         Text(pr.name)
                             .font(Typo.sans(11))
                             .foregroundStyle(idx == i ? Palette.ink : Palette.faint)
@@ -211,13 +284,11 @@ struct TodayView: View {
         .padding(.top, Space.sm)
     }
 
-    // Favorite psalms — one tap from the home screen.
+    // Favorite psalms + bookmarked brachot/services — one tap from the home screen.
     private var favoritesGrid: some View {
         LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3), spacing: 8) {
             ForEach(favPsalms, id: \.self) { n in
-                NavigationLink {
-                    TehillimReaderView(title: "\(app.s.psalm) \(n)", chapters: [n], onFavChange: { favPsalms = Teh.favorites })
-                } label: {
+                NavigationLink(value: Route.psalm(n)) {
                     HStack(spacing: 7) {
                         Text("\(n)")
                             .font(Typo.serif(16, .semibold)).foregroundStyle(Palette.gold).monospacedDigit()
@@ -227,6 +298,22 @@ struct TodayView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 11)
+                    .background(RoundedRectangle(cornerRadius: 12).fill(Palette.card)
+                        .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Palette.line, lineWidth: 1)))
+                }
+                .buttonStyle(.plain)
+            }
+            ForEach(bookmarks) { b in
+                NavigationLink(value: b.kind == "text" ? Route.text(b.refId) : Route.service(b.refId)) {
+                    HStack(spacing: 6) {
+                        Image(systemName: b.icon).font(.system(size: 12)).foregroundStyle(Palette.gold)
+                        Text(b.title(app.lang))
+                            .font(Typo.sans(12.5, .medium)).foregroundStyle(Palette.ink)
+                            .lineLimit(1).minimumScaleFactor(0.7)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 11)
+                    .padding(.horizontal, 4)
                     .background(RoundedRectangle(cornerRadius: 12).fill(Palette.card)
                         .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Palette.line, lineWidth: 1)))
                 }

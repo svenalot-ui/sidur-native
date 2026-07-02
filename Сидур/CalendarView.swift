@@ -27,9 +27,9 @@ final class CalendarModel: ObservableObject {
     @Published var failed = false
     private var loadedMonths: Set<String> = []
 
-    func load(year: Int, month: Int) async {
+    func load(year: Int, month: Int, force: Bool = false) async {
         let key = "\(year)-\(month)"
-        guard !loadedMonths.contains(key) else { return }
+        guard force || !loadedMonths.contains(key) else { return }
         guard let url = URL(string: "https://www.hebcal.com/hebcal?v=1&cfg=json&year=\(year)&month=\(month)&maj=on&min=on&nx=on&mf=on&ss=on&o=on") else { return }
         do {
             var req = URLRequest(url: url); req.timeoutInterval = 12
@@ -80,6 +80,11 @@ struct CalendarView: View {
                 }
                 .padding(.horizontal, Space.lg)
                 .padding(.top, Space.sm)
+            }
+            .refreshable {
+                Haptics.tap()
+                let c = cal.dateComponents([.year, .month], from: monthAnchor)
+                await model.load(year: c.year ?? 2026, month: c.month ?? 1, force: true)
             }
         }
         .navigationTitle(app.s.calTitle)
@@ -198,8 +203,21 @@ struct CalendarView: View {
     private var eventsList: some View {
         let evs = model.events[ymd(selected)] ?? []
         if model.failed && evs.isEmpty {
-            Text(app.s.calError).font(Typo.sans(13)).foregroundStyle(Palette.soft)
-                .frame(maxWidth: .infinity, alignment: .center).padding(.top, 4)
+            VStack(spacing: 10) {
+                Text(app.s.calError).font(Typo.sans(13)).foregroundStyle(Palette.soft)
+                Button {
+                    Haptics.tap()
+                    let c = cal.dateComponents([.year, .month], from: monthAnchor)
+                    Task { await model.load(year: c.year ?? 2026, month: c.month ?? 1, force: true) }
+                } label: {
+                    Label(app.s.retry, systemImage: "arrow.clockwise")
+                        .font(Typo.sans(13, .medium)).foregroundStyle(Palette.gold)
+                        .padding(.horizontal, 16).padding(.vertical, 9)
+                        .background(Capsule().strokeBorder(Palette.gold, lineWidth: 1))
+                }
+                .buttonStyle(.plain)
+            }
+            .frame(maxWidth: .infinity, alignment: .center).padding(.top, 4)
         } else if evs.isEmpty {
             Text(app.s.calNoEvents).font(Typo.sans(13)).foregroundStyle(Palette.faint)
                 .frame(maxWidth: .infinity, alignment: .center).padding(.top, 4)

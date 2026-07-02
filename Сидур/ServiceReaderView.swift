@@ -11,23 +11,27 @@ struct ServiceReaderView: View {
     @AppStorage("svcMode") private var mode: String = "he"    // he | translit
     @State private var sections: [ServiceSection] = []
     @State private var loadFailed = false
+    @State private var loading = true
     @State private var showSettings = false
+    @State private var zen = false
+    @State private var bookmarked = false
 
     private var palette: ReaderBG { ReaderBG.get(bgKey) }
     private var isRTL: Bool { mode == "he" }
+    private var serviceIcon: String {
+        switch service { case .shacharit: return "sun.max"; case .mincha: return "clock"; case .maariv: return "moon.stars" }
+    }
 
     var body: some View {
         ZStack {
             palette.bg.ignoresSafeArea()
-            if sections.isEmpty && !loadFailed {
+            if loading {
                 ProgressView().tint(Palette.gold)
             } else if loadFailed {
-                Text(app.s.needNet)
-                    .font(Typo.sans(13.5)).foregroundStyle(palette.fg.opacity(0.65))
-                    .padding(Space.lg)
+                retryState
             } else {
                 VStack(spacing: 0) {
-                    langSegment
+                    if !zen { langSegment }
                     ScrollView {
                         LazyVStack(alignment: isRTL ? .trailing : .leading, spacing: 10) {
                             ForEach(sections) { sec in
@@ -41,13 +45,10 @@ struct ServiceReaderView: View {
                 }
             }
         }
-        .navigationTitle(title)
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button { showSettings = true } label: {
-                    Image(systemName: "textformat.size").foregroundStyle(Palette.gold)
-                }
+        .readerChrome(title: title, zen: $zen) {
+            HStack(spacing: 6) {
+                ReaderIconButton(symbol: bookmarked ? "bookmark.fill" : "bookmark", action: toggleBookmark)
+                ReaderIconButton(symbol: "textformat.size") { showSettings = true }
             }
         }
         .sheet(isPresented: $showSettings) {
@@ -55,11 +56,51 @@ struct ServiceReaderView: View {
                 .presentationDetents([.height(300)])
                 .presentationDragIndicator(.visible)
         }
-        .task {
-            let s = await SiddurClient.shared.sections(nusach: app.nusach ?? "ashkenaz", service: service)
-            sections = s
-            loadFailed = s.isEmpty
+        .task { await reload() }
+        .onAppear {
+            bookmarked = Bookmarks.contains(kind: "service", refId: service.rawValue)
+            LastReadStore.save(kind: "service", refId: service.rawValue, title: title)
         }
+    }
+
+    private var retryState: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "wifi.slash").font(.system(size: 26)).foregroundStyle(palette.fg.opacity(0.4))
+            Text(app.s.needNet).font(Typo.sans(13.5)).foregroundStyle(palette.fg.opacity(0.65))
+            Button {
+                Haptics.tap()
+                Task { await reload() }
+            } label: {
+                Label(app.s.retry, systemImage: "arrow.clockwise")
+                    .font(Typo.sans(13, .medium)).foregroundStyle(Palette.gold)
+                    .padding(.horizontal, 16).padding(.vertical, 9)
+                    .background(Capsule().strokeBorder(Palette.gold, lineWidth: 1))
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(Space.lg)
+    }
+
+    private func reload() async {
+        loading = true
+        let s = await SiddurClient.shared.sections(nusach: app.nusach ?? "ashkenaz", service: service)
+        sections = s
+        loadFailed = s.isEmpty
+        loading = false
+    }
+
+    private var serviceNames: (ru: String, he: String) {
+        switch service {
+        case .shacharit: return ("Шахарит", "שַׁחֲרִית")
+        case .mincha: return ("Минха", "מִנְחָה")
+        case .maariv: return ("Маарив", "מַעֲרִיב")
+        }
+    }
+
+    private func toggleBookmark() {
+        let n = serviceNames
+        Bookmarks.toggle(Bookmark(kind: "service", refId: service.rawValue, titleRu: n.ru, titleHe: n.he, icon: serviceIcon))
+        bookmarked.toggle()
     }
 
     private var langSegment: some View {

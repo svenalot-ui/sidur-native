@@ -21,6 +21,8 @@ struct ReaderView: View {
     @AppStorage("rdrSize") private var size: Double = 23
     @AppStorage("rdrBg") private var bgKey: String = "paper"
     @State private var showSettings = false
+    @State private var zen = false
+    @State private var bookmarked = false
 
     private var palette: ReaderBG { ReaderBG.get(bgKey) }
     private var isRTL: Bool { mode == "he" }
@@ -39,7 +41,7 @@ struct ReaderView: View {
         ZStack {
             palette.bg.ignoresSafeArea()
             VStack(spacing: 0) {
-                langSegment
+                if !zen { langSegment }
                 ScrollView {
                     VStack(alignment: isRTL ? .trailing : .leading, spacing: 16) {
                         ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
@@ -58,13 +60,10 @@ struct ReaderView: View {
                 }
             }
         }
-        .navigationTitle(text.name(app.lang))
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button { showSettings = true } label: {
-                    Image(systemName: "textformat.size").foregroundStyle(Palette.gold)
-                }
+        .readerChrome(title: text.name(app.lang), zen: $zen) {
+            HStack(spacing: 6) {
+                ReaderIconButton(symbol: bookmarked ? "bookmark.fill" : "bookmark", action: toggleBookmark)
+                ReaderIconButton(symbol: "textformat.size") { showSettings = true }
             }
         }
         .sheet(isPresented: $showSettings) {
@@ -72,6 +71,15 @@ struct ReaderView: View {
                 .presentationDetents([.height(300)])
                 .presentationDragIndicator(.visible)
         }
+        .onAppear {
+            bookmarked = Bookmarks.contains(kind: "text", refId: text.id)
+            LastReadStore.save(kind: "text", refId: text.id, title: text.name(app.lang))
+        }
+    }
+
+    private func toggleBookmark() {
+        Bookmarks.toggle(Bookmark(kind: "text", refId: text.id, titleRu: text.ru, titleHe: text.he, icon: text.icon))
+        bookmarked.toggle()
     }
 
     private var langSegment: some View {

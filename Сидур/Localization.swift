@@ -65,6 +65,8 @@ struct Strings {
     var psalm: String { t("Псалом", "מזמור") }
     var tehFavTitle: String { t("Избранные", "מועדפים") }
     var needNet: String { t("Нужна сеть при первом открытии", "דרושה רשת בפתיחה הראשונה") }
+    var retry: String { t("Повторить", "נסו שוב") }
+    var continueReading: String { t("Продолжить чтение", "המשך קריאה") }
     var noRu: String { t("Русский перевод недоступен — показана транслитерация", "תרגום רוסי לא זמין") }
     var bookHdr: [String] { lang == .he
         ? ["ספר ראשון", "ספר שני", "ספר שלישי", "ספר רביעי", "ספר חמישי"]
