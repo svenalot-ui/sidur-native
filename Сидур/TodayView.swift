@@ -53,15 +53,26 @@ struct TodayView: View {
     }
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(HebrewDate.hebrew(app.lang))
-                .font(Typo.display(30))
-                .foregroundStyle(Palette.ink)
-            Text(HebrewDate.gregorian(app.lang))
-                .font(Typo.sans(13))
-                .foregroundStyle(Palette.soft)
+        HStack(alignment: .top, spacing: 10) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(HebrewDate.hebrew(app.lang))
+                    .font(Typo.display(30))
+                    .foregroundStyle(Palette.ink)
+                    .lineLimit(1).minimumScaleFactor(0.7)
+                Text(HebrewDate.gregorian(app.lang))
+                    .font(Typo.sans(13))
+                    .foregroundStyle(Palette.soft)
+            }
+            Spacer(minLength: 0)
+            NavigationLink { SettingsView() } label: {
+                Image(systemName: "gearshape")
+                    .font(.system(size: 16))
+                    .foregroundStyle(Palette.soft)
+                    .frame(width: 36, height: 36)
+                    .background(Circle().fill(Palette.card).overlay(Circle().strokeBorder(Palette.line, lineWidth: 1)))
+            }
+            .buttonStyle(.plain)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.top, Space.xs)
     }
 
@@ -69,9 +80,9 @@ struct TodayView: View {
         HStack(spacing: 7) {
             NavigationLink { MizrahView() } label: { quickPill("location.north.line", app.s.navDir) }
                 .buttonStyle(.plain)
-            NavigationLink { TzedakaView() } label: { quickPill("heart.circle", app.s.navTz) }
+            NavigationLink { CalendarView() } label: { quickPill("calendar", app.s.navCal) }
                 .buttonStyle(.plain)
-            NavigationLink { SettingsView() } label: { quickPill("gearshape", app.s.settings) }
+            NavigationLink { TzedakaView() } label: { quickPill("heart.circle", app.s.navTz) }
                 .buttonStyle(.plain)
         }
     }
@@ -102,7 +113,7 @@ struct TodayView: View {
 
             VStack(spacing: 3) {
                 Text(p.name).font(Typo.display(23)).foregroundStyle(Palette.ink)
-                Text(app.fmt(p.start)).font(Typo.serif(21, .semibold)).foregroundStyle(Palette.gold)
+                Text(app.fmt(p.start)).font(Typo.digits(22)).foregroundStyle(Palette.gold).monospacedDigit()
                 if live {
                     Text(app.s.now).font(Typo.sans(11)).foregroundStyle(Palette.gold)
                 }
@@ -172,7 +183,7 @@ struct TodayView: View {
                     RoundedRectangle(cornerRadius: 16)
                         .fill(LinearGradient(colors: [Palette.gold, Palette.goldL], startPoint: .topLeading, endPoint: .bottomTrailing))
                         .frame(width: 58, height: 58)
-                    Text("\(day)").font(Typo.display(30)).foregroundStyle(.white)
+                    Text("\(day)").font(Typo.digits(30)).foregroundStyle(.white)
                 }
                 VStack(alignment: .leading, spacing: 2) {
                     Text("\(app.s.tehTitle)").font(Typo.sans(14.5, .medium)).foregroundStyle(Palette.ink)

@@ -59,10 +59,13 @@ enum Space {
     static let xl: CGFloat = 28
 }
 
-// MARK: - Typography (system fonts for now; bundle Bodoni/Frank Ruhl later)
+// MARK: - Typography
+// display: New York (system serif — supports Cyrillic). digits: Bodoni Moda (Latin/digits only).
+// serif: Frank Ruhl Libre (Hebrew + Latin).
 enum Typo {
     static func display(_ size: CGFloat) -> Font { .system(size: size, weight: .semibold, design: .serif) }
-    static func serif(_ size: CGFloat, _ w: Font.Weight = .regular) -> Font { .system(size: size, weight: w, design: .serif) }
+    static func digits(_ size: CGFloat, _ w: Font.Weight = .semibold) -> Font { .custom("Bodoni Moda", size: size).weight(w) }
+    static func serif(_ size: CGFloat, _ w: Font.Weight = .regular) -> Font { .custom("Frank Ruhl Libre", size: size).weight(w) }
     static func sans(_ size: CGFloat, _ w: Font.Weight = .regular) -> Font { .system(size: size, weight: w) }
 }
 

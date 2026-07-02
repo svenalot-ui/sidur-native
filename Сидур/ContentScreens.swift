@@ -86,9 +86,15 @@ struct BrachotView: View {
 struct PrayersView: View {
     @EnvironmentObject var app: AppState
 
-    // Daily services — structure present; full nusach-specific text is a later content task.
-    private var daily: [(ru: String, he: String, icon: String)] {
-        [(app.s.sh, "שַׁחֲרִית", "sun.max"), (app.s.mi, "מִנְחָה", "clock"), (app.s.ma, "מַעֲרִיב", "moon.stars")]
+    // Daily services — full texts fetched per-nusach from Sefaria.
+    private var daily: [(kind: ServiceKind, name: String, he: String, icon: String)] {
+        [(.shacharit, app.s.sh, "שַׁחֲרִית", "sun.max"),
+         (.mincha, app.s.mi, "מִנְחָה", "clock"),
+         (.maariv, app.s.ma, "מַעֲרִיב", "moon.stars")]
+    }
+
+    private var nusachName: String {
+        Nusach(rawValue: app.nusach ?? "")?.name(app.lang) ?? ""
     }
 
     var body: some View {
@@ -102,19 +108,30 @@ struct PrayersView: View {
                         SectionLabel(text: app.s.daily)
                         GroupCard {
                             ForEach(Array(daily.enumerated()), id: \.offset) { idx, d in
-                                HStack(spacing: 13) {
-                                    ZStack {
-                                        RoundedRectangle(cornerRadius: 11).fill(Palette.cream).frame(width: 40, height: 40)
-                                        Image(systemName: d.icon).font(.system(size: 19)).foregroundStyle(Palette.gold)
+                                NavigationLink {
+                                    ServiceReaderView(service: d.kind, title: d.name)
+                                } label: {
+                                    HStack(spacing: 13) {
+                                        ZStack {
+                                            RoundedRectangle(cornerRadius: 11).fill(Palette.cream).frame(width: 40, height: 40)
+                                            Image(systemName: d.icon).font(.system(size: 19)).foregroundStyle(Palette.gold)
+                                        }
+                                        VStack(alignment: .leading, spacing: 1) {
+                                            Text(d.name).font(Typo.sans(15, .medium)).foregroundStyle(Palette.ink)
+                                            if !nusachName.isEmpty {
+                                                Text(nusachName).font(Typo.sans(11)).foregroundStyle(Palette.faint)
+                                            }
+                                        }
+                                        Spacer(minLength: 0)
+                                        if app.lang != .he {
+                                            Text(d.he).font(Typo.serif(16)).foregroundStyle(Palette.ink)
+                                        }
+                                        Image(systemName: "chevron.forward").font(.system(size: 13, weight: .semibold)).foregroundStyle(Palette.faint)
                                     }
-                                    Text(d.ru).font(Typo.sans(15, .medium)).foregroundStyle(Palette.ink)
-                                    Spacer(minLength: 0)
-                                    Text(app.s.soon).font(Typo.sans(11)).foregroundStyle(Palette.faint)
-                                    if app.lang != .he {
-                                        Text(d.he).font(Typo.serif(16)).foregroundStyle(Palette.ink)
-                                    }
+                                    .padding(.horizontal, 18).padding(.vertical, 14)
+                                    .contentShape(Rectangle())
                                 }
-                                .padding(.horizontal, 18).padding(.vertical, 14)
+                                .buttonStyle(.plain)
                                 .overlay(alignment: .top) { if idx != 0 { Rectangle().fill(Palette.line).frame(height: 1) } }
                             }
                         }

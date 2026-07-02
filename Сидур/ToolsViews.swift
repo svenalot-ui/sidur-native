@@ -272,6 +272,13 @@ struct SettingsView: View {
                         segButton(app.s.themeDark, active: app.theme == "dark") { app.theme = "dark" }
                     }
 
+                    SectionLabel(text: app.s.setNusach)
+                    LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
+                        ForEach(Nusach.allCases, id: \.rawValue) { n in
+                            segButton(n.name(app.lang), active: app.nusach == n.rawValue) { app.nusach = n.rawValue }
+                        }
+                    }
+
                     Text("Сидур · שֶׁבֶת אַחִים גַּם יָחַד")
                         .font(Typo.sans(11.5)).foregroundStyle(Palette.faint)
                         .frame(maxWidth: .infinity, alignment: .center)

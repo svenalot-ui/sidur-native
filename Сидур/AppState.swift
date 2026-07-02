@@ -89,7 +89,14 @@ final class AppState: ObservableObject {
         switch theme {
         case "light": return .light
         case "dark": return .dark
-        default: return nil   // auto → follow system (zmanim-based auto comes later)
+        default:      // auto → dark from nightfall to sunrise (by actual zmanim)
+            let z = currentZmanim
+            let now = Date()
+            if let night = z.tzeit ?? z.shkia, let rise = z.netz {
+                return (now >= night || now < rise) ? .dark : .light
+            }
+            let h = Calendar.current.component(.hour, from: now)
+            return (h >= 20 || h < 6) ? .dark : .light
         }
     }
 
