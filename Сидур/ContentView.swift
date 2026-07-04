@@ -52,27 +52,3 @@ struct ContentView: View {
         }
     }
 }
-
-// Temporary placeholder for screens ported in later sessions.
-struct ScreenStub: View {
-    @EnvironmentObject var app: AppState
-    let title: String
-    let symbol: String
-
-    var body: some View {
-        ZStack {
-            Palette.paper.ignoresSafeArea()
-            VStack(spacing: Space.md) {
-                Image(systemName: symbol)
-                    .font(.system(size: 40, weight: .light))
-                    .foregroundStyle(Palette.gold)
-                Text(title)
-                    .font(Typo.display(26))
-                    .foregroundStyle(Palette.ink)
-                Text(app.lang == .he ? "בקרוב" : "скоро")
-                    .font(Typo.sans(14))
-                    .foregroundStyle(Palette.faint)
-            }
-        }
-    }
-}

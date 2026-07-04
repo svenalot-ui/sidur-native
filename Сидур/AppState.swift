@@ -63,6 +63,8 @@ final class AppState: ObservableObject {
         Task { @MainActor in
             if let named = await MyZmanimClient.fetchNamed(lat: lat, lng: lng, date: Date(), tz: tz) {
                 self.remoteNamed = named
+                // Times changed (new place/day) → pending notifications are stale.
+                NotificationScheduler.reschedule(app: self)
             }
         }
     }

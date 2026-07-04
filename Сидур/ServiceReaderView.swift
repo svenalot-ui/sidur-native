@@ -124,16 +124,13 @@ struct ServiceReaderView: View {
         var loadedTexts: [String: [String]] = [:]
         await withTaskGroup(of: (String, [String]).self) { group in
             var iterator = secs.makeIterator()
-            var inFlight = 0
             func addNext(_ group: inout TaskGroup<(String, [String])>) {
                 if let sec = iterator.next() {
                     group.addTask { (sec.ref, await SiddurClient.shared.text(ref: sec.ref)) }
-                    inFlight += 1
                 }
             }
             for _ in 0..<6 { addNext(&group) }
             for await (ref, lines) in group {
-                inFlight -= 1
                 loadedTexts[ref] = lines
                 progress = loadedTexts.count
                 addNext(&group)
@@ -180,8 +177,10 @@ struct ServiceReaderView: View {
     private var sectionsSheet: some View {
         NavigationStack {
             ScrollView {
+                let current = UserDefaults.standard.string(forKey: posKey)
                 VStack(spacing: 0) {
                     ForEach(Array(sections.enumerated()), id: \.element.id) { idx, sec in
+                        let isCurrent = sec.id == current
                         Button {
                             Haptics.tap()
                             UserDefaults.standard.set(sec.id, forKey: posKey)
@@ -195,7 +194,11 @@ struct ServiceReaderView: View {
                                     .font(Typo.digits(13)).foregroundStyle(Palette.faint).monospacedDigit()
                                     .frame(width: 26, alignment: .trailing)
                                 Text(sec.heTitle)
-                                    .font(Typo.serif(16)).foregroundStyle(Palette.ink)
+                                    .font(Typo.serif(16, isCurrent ? .semibold : .regular))
+                                    .foregroundStyle(isCurrent ? Palette.gold : Palette.ink)
+                                if isCurrent {
+                                    Circle().fill(Palette.gold).frame(width: 5, height: 5)
+                                }
                                 Spacer(minLength: 8)
                                 if app.lang != .he {
                                     Text(sec.enTitle)
@@ -204,6 +207,7 @@ struct ServiceReaderView: View {
                                 }
                             }
                             .padding(.horizontal, 18).padding(.vertical, 11)
+                            .background(isCurrent ? Palette.cream.opacity(0.6) : .clear)
                             .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)

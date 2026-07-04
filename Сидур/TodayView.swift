@@ -11,11 +11,13 @@ struct TodayView: View {
 
     private var z: Zmanim { app.currentZmanim }
 
-    // (name, start, end) for Shacharit / Mincha / Maariv
+    // (name, start, end) for Shacharit / Mincha / Maariv.
+    // Maariv runs until solar midnight, so the "идёт сейчас" badge works in the evening;
+    // after midnight the day rolls over and Shacharit becomes the nearest prayer again.
     private var prayers: [(name: String, start: Date?, end: Date?)] {
         [(app.s.sh, z.netz, z.chatzot),
          (app.s.mi, z.minchaG, z.shkia),
-         (app.s.ma, z.tzeit, nil)]
+         (app.s.ma, z.tzeit, z.t("SolarMidnight"))]
     }
 
     private var currentIdx: Int {
