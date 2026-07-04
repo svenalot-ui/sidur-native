@@ -167,11 +167,11 @@ struct TodayView: View {
     private var header: some View {
         HStack(alignment: .top, spacing: 10) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(HebrewDate.hebrew(app.lang))
+                Text(HebrewDate.hebrew(app.lang, tz: app.tz))
                     .font(Typo.display(30))
                     .foregroundStyle(Palette.ink)
                     .lineLimit(1).minimumScaleFactor(0.7)
-                Text(HebrewDate.gregorian(app.lang))
+                Text(HebrewDate.gregorian(app.lang, tz: app.tz))
                     .font(Typo.sans(13))
                     .foregroundStyle(Palette.soft)
                 if let p = parsha {
@@ -304,7 +304,7 @@ struct TodayView: View {
     }
 
     private var tehillimCard: some View {
-        let day = min(HebrewDate.dayOfMonth(), 30)
+        let day = min(HebrewDate.dayOfMonth(tz: app.tz), 30)
         return Button { app.tab = 4 } label: {
             HStack(spacing: 14) {
                 ZStack {

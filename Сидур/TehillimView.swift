@@ -159,7 +159,7 @@ struct TehillimView: View {
 
     // MARK: by day
     private var daySection: some View {
-        let today = min(HebrewDate.dayOfMonth(), 30)
+        let today = min(HebrewDate.dayOfMonth(tz: app.tz), 30)
         return VStack(spacing: 0) {
             ForEach(1...30, id: \.self) { day in
                 let ch = Teh.chapters(day: day)
