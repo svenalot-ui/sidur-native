@@ -237,12 +237,12 @@ struct TehillimReaderView: View {
         .readerChrome(title: title, zen: $zen) {
             HStack(spacing: 6) {
                 if let n = singlePsalm {
-                    ReaderIconButton(symbol: Teh.favorites.contains(n) ? "heart.fill" : "heart") {
+                    ReaderIconButton(symbol: Teh.favorites.contains(n) ? "heart.fill" : "heart", a11y: "В избранное") {
                         Teh.toggleFav(n); favTick.toggle(); onFavChange()
                     }
                     .id(favTick)
                 }
-                ReaderIconButton(symbol: "textformat.size") { showSettings = true }
+                ReaderIconButton(symbol: "textformat.size", a11y: "Оформление текста") { showSettings = true }
             }
         }
         .sheet(isPresented: $showSettings) {

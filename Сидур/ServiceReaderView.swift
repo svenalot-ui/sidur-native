@@ -97,9 +97,9 @@ struct ServiceReaderView: View {
         }
         .readerChrome(title: title, zen: $zen) {
             HStack(spacing: 6) {
-                ReaderIconButton(symbol: "list.bullet") { showSections = true }
-                ReaderIconButton(symbol: bookmarked ? "bookmark.fill" : "bookmark", action: toggleBookmark)
-                ReaderIconButton(symbol: "textformat.size") { showSettings = true }
+                ReaderIconButton(symbol: "list.bullet", a11y: "Разделы") { showSections = true }
+                ReaderIconButton(symbol: bookmarked ? "bookmark.fill" : "bookmark", a11y: "Закладка", action: toggleBookmark)
+                ReaderIconButton(symbol: "textformat.size", a11y: "Оформление текста") { showSettings = true }
             }
         }
         .sheet(isPresented: $showSettings) {

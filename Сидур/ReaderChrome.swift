@@ -33,6 +33,7 @@ struct ReaderChromeModifier<Accessory: View>: ViewModifier {
                     .background(Circle().fill(.ultraThinMaterial))
             }
             .buttonStyle(.plain)
+            .accessibilityLabel("Назад")
 
             Text(title)
                 .font(Typo.sans(15, .semibold))
@@ -60,6 +61,7 @@ struct ReaderIconButton: View {
     let symbol: String
     var filled: Bool = false
     var tint: Color = Palette.gold
+    var a11y: String? = nil
     let action: () -> Void
 
     var body: some View {
@@ -71,5 +73,6 @@ struct ReaderIconButton: View {
                 .background(Circle().fill(.ultraThinMaterial))
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(a11y ?? "")
     }
 }

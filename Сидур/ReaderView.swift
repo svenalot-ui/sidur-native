@@ -62,8 +62,8 @@ struct ReaderView: View {
         }
         .readerChrome(title: text.name(app.lang), zen: $zen) {
             HStack(spacing: 6) {
-                ReaderIconButton(symbol: bookmarked ? "bookmark.fill" : "bookmark", action: toggleBookmark)
-                ReaderIconButton(symbol: "textformat.size") { showSettings = true }
+                ReaderIconButton(symbol: bookmarked ? "bookmark.fill" : "bookmark", a11y: "Закладка", action: toggleBookmark)
+                ReaderIconButton(symbol: "textformat.size", a11y: "Оформление текста") { showSettings = true }
             }
         }
         .sheet(isPresented: $showSettings) {

@@ -108,6 +108,7 @@ struct TodayView: View {
                         .frame(width: 38, height: 38)
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(app.s.settings)
             }
             // signature: a single short gold rule
             Rectangle().fill(Palette.gold).frame(width: 40, height: 2).padding(.top, 12)
