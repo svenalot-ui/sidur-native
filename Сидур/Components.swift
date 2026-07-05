@@ -1,5 +1,33 @@
 import SwiftUI
 
+// Masks the status-bar safe area with the page color so scrolled content
+// never collides with the clock (screens use a custom in-scroll serif title).
+extension View {
+    func statusBarMask() -> some View {
+        overlay(alignment: .top) {
+            GeometryReader { geo in
+                Rectangle().fill(Palette.paper)
+                    .frame(height: geo.safeAreaInsets.top)
+                    .frame(maxWidth: .infinity)
+                    .ignoresSafeArea(edges: .top)
+            }
+            .allowsHitTesting(false)
+        }
+    }
+}
+
+// A large editorial screen title — Playfair for RU/Latin, Frank Ruhl for Hebrew.
+struct ScreenTitle: View {
+    @EnvironmentObject var app: AppState
+    let text: String
+    var body: some View {
+        Text(text)
+            .font(displayFont(30, app.lang))
+            .foregroundStyle(Palette.ink)
+            .lineLimit(1).minimumScaleFactor(0.6)
+    }
+}
+
 // Premium segmented control: a single unified track with an active pill that
 // slides between options — replaces the loose bordered pills that looked cheap.
 struct Segmented: View {
