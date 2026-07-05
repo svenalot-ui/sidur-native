@@ -34,7 +34,7 @@ struct SidurApp: App {
 
     init() {
         // Register bundled variable fonts (no Info.plist keys needed).
-        for name in ["FrankRuhlLibre", "BodoniModa"] {
+        for name in ["FrankRuhlLibre", "BodoniModa", "PlayfairDisplay"] {
             if let url = Bundle.main.url(forResource: name, withExtension: "ttf") {
                 CTFontManagerRegisterFontsForURL(url as CFURL, .process, nil)
             }

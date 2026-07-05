@@ -78,17 +78,17 @@ struct TodayView: View {
     private var masthead: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .top, spacing: 10) {
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(HebrewDate.gregorian(app.lang, tz: app.tz).uppercased())
+                        .font(Typo.label(10.5)).tracking(1.5)
+                        .foregroundStyle(Palette.faint)
                     Text(HebrewDate.hebrew(app.lang, tz: app.tz))
-                        .font(Typo.display(31))
+                        .font(displayFont(32, app.lang))
                         .foregroundStyle(Palette.ink)
                         .lineLimit(1).minimumScaleFactor(0.6)
-                    Text(HebrewDate.gregorian(app.lang, tz: app.tz))
-                        .font(Typo.sans(13))
-                        .foregroundStyle(Palette.soft)
                     if let p = parsha {
                         Text(app.lang == .he ? p.hebrew : "\(p.hebrew) · \(ParshaService.shortTitle(p))")
-                            .font(Typo.serif(13.5))
+                            .font(Typo.serif(14))
                             .foregroundStyle(Palette.gold)
                             .padding(.top, 1)
                     }
@@ -121,22 +121,22 @@ struct TodayView: View {
                 let kinds: [ServiceKind] = [.shacharit, .mincha, .maariv]
                 path.append(.service(kinds[i].rawValue))
             } label: {
-                VStack(spacing: 5) {
+                VStack(spacing: 6) {
                     Text(app.s.nearest.uppercased())
-                        .font(.system(size: 10, weight: .medium)).tracking(2.6)
+                        .font(Typo.label(10)).tracking(2.4)
                         .foregroundStyle(Palette.faint)
                     Text(p.name)
-                        .font(Typo.display(22))
+                        .font(displayFont(23, app.lang))
                         .foregroundStyle(Palette.ink)
                         .padding(.top, 2)
                     Text(app.fmt(p.start))
-                        .font(Typo.digits(60))
+                        .font(Typo.digits(62))
                         .foregroundStyle(Palette.gold)
                         .monospacedDigit()
-                        .padding(.top, 2)
+                        .padding(.top, 4)
                     if live {
-                        Text(app.s.now)
-                            .font(Typo.sans(11)).tracking(1)
+                        Text(app.s.now.uppercased())
+                            .font(Typo.label(10)).tracking(1.5)
                             .foregroundStyle(Palette.gold)
                             .padding(.top, 2)
                     }
@@ -242,10 +242,10 @@ struct TodayView: View {
             } label: {
                 HStack(spacing: 11) {
                     Image(systemName: "play.circle").font(.system(size: 18)).foregroundStyle(Palette.gold)
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text(app.s.continueReading)
-                            .font(.system(size: 10, weight: .medium)).tracking(1.4).foregroundStyle(Palette.faint)
-                        Text(lr.title).font(Typo.sans(14.5)).foregroundStyle(Palette.ink).lineLimit(1)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(app.s.continueReading.uppercased())
+                            .font(Typo.label(9.5)).tracking(1.4).foregroundStyle(Palette.faint)
+                        Text(lr.title).font(Typo.sans(15)).foregroundStyle(Palette.ink).lineLimit(1)
                     }
                     Spacer(minLength: 0)
                     Button {
@@ -270,9 +270,9 @@ struct TodayView: View {
     private var favoritesBlock: some View {
         if !bookmarks.isEmpty {
             VStack(alignment: .leading, spacing: 0) {
-                HStack(spacing: 8) {
+                HStack(spacing: 10) {
                     Text(app.s.favorites.uppercased())
-                        .font(.system(size: 10, weight: .medium)).tracking(2).foregroundStyle(Palette.faint)
+                        .font(Typo.label(10)).tracking(2).foregroundStyle(Palette.faint)
                     Rectangle().fill(Palette.line).frame(height: 1)
                 }
                 .padding(.bottom, 2)
