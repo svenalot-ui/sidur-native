@@ -42,6 +42,51 @@ final class AppState: ObservableObject {
         refreshZmanim()   // also fetch for the current (fallback) location immediately
     }
 
+    // MARK: - Shabbat mode
+    // The app rests from Friday candle lighting until Saturday nightfall — using
+    // the phone is not for Shabbat. Times are computed in the location's timezone.
+    private func weekday(_ date: Date = Date()) -> Int {
+        var cal = Calendar(identifier: .gregorian); cal.timeZone = tz
+        return cal.component(.weekday, from: date)   // 1=Sun … 6=Fri, 7=Sat
+    }
+
+    private var candleLighting: Date? {
+        currentZmanim.t("CandleLighting") ?? currentZmanim.shkia.map { $0.addingTimeInterval(-18 * 60) }
+    }
+
+    /// When the current Shabbat ends (Saturday nightfall), or nil if not near Shabbat.
+    var shabbatEndsAt: Date? {
+        switch weekday() {
+        case 7: return currentZmanim.tzeit                                  // Saturday → today's tzeit
+        case 6:                                                             // Friday → tomorrow's tzeit
+            var cal = Calendar(identifier: .gregorian); cal.timeZone = tz
+            if let tomorrow = cal.date(byAdding: .day, value: 1, to: Date()) {
+                return zmanim(for: tomorrow).tzeit
+            }
+            return nil
+        default: return nil
+        }
+    }
+
+    /// True from Friday candle lighting until Saturday nightfall.
+    var isShabbat: Bool {
+        switch weekday() {
+        case 6: if let c = candleLighting { return Date() >= c }; return false
+        case 7: if let e = currentZmanim.tzeit { return Date() < e }; return false
+        default: return false
+        }
+    }
+
+    // A deliberate, high-friction escape (wrong location/timezone) — bypass this Shabbat only.
+    var shabbatBypassed: Bool {
+        Date().timeIntervalSince1970 < UserDefaults.standard.double(forKey: "shabbatBypassUntil")
+    }
+    func bypassShabbat() {
+        let until = shabbatEndsAt?.timeIntervalSince1970 ?? (Date().timeIntervalSince1970 + 26 * 3600)
+        UserDefaults.standard.set(until, forKey: "shabbatBypassUntil")
+        objectWillChange.send()
+    }
+
     // MARK: compass
     func startCompass() {
         locationManager.onHeading = { [weak self] h in

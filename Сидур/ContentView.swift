@@ -50,5 +50,18 @@ struct ContentView: View {
         )) {
             OnboardingView()
         }
+        .overlay {
+            if shabbatActive {
+                ShabbatView()
+                    .transition(.opacity)
+            }
+        }
+    }
+
+    private var shabbatActive: Bool {
+        #if DEBUG
+        if CommandLine.arguments.contains("-forceShabbat") { return true }
+        #endif
+        return app.isShabbat && !app.shabbatBypassed
     }
 }

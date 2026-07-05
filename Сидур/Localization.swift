@@ -77,6 +77,9 @@ struct Strings {
     var candleLighting: String { t("Зажигание свечей", "הדלקת נרות") }
     var shabbatEnd: String { t("Исход Шаббата", "צאת השבת") }
     var shabbatShalom: String { t("Шаббат шалом", "שבת שלום") }
+    var shabbatResting: String { t("Приложение отдыхает до исхода Шаббата", "האפליקציה נחה עד צאת השבת") }
+    var shabbatEndsAt: String { t("Исход", "צאת השבת") }
+    var notShabbat: String { t("Сейчас не Шаббат", "עכשיו לא שבת") }
     var sections: String { t("Разделы", "פרקים") }
     var noRu: String { t("Русский перевод недоступен — показана транслитерация", "תרגום רוסי לא זמין") }
     var bookHdr: [String] { lang == .he
