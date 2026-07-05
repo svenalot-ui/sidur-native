@@ -4,9 +4,9 @@ import SwiftUI
 struct SectionLabel: View {
     let text: String
     var body: some View {
-        HStack(spacing: 9) {
+        HStack(spacing: 10) {
             Text(text.uppercased())
-                .font(.system(size: 10.5, weight: .medium)).tracking(2)
+                .font(Typo.label(10.5)).tracking(1.8)
                 .foregroundStyle(Palette.faint)
             Rectangle().fill(Palette.line).frame(height: 1)
         }

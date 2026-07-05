@@ -27,26 +27,33 @@ struct TodayView: View {
 
     var body: some View {
         NavigationStack(path: $path) {
-            ZStack {
-                Palette.paper.ignoresSafeArea()
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 0) {
-                        masthead
-                        if isShabbatWindow { shabbatStrip.padding(.top, 20) }
-                        resumeRow
-                        hero.padding(.top, 26)
-                        indexList.padding(.top, 28)
-                        favoritesBlock
-                        footerLinks.padding(.top, 30)
-                        Spacer(minLength: 28)
+            GeometryReader { geo in
+                ZStack(alignment: .top) {
+                    Palette.paper.ignoresSafeArea()
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 0) {
+                            masthead
+                            quickRow.padding(.top, 20)
+                            if isShabbatWindow { shabbatStrip.padding(.top, 20) }
+                            resumeRow
+                            hero.padding(.top, 26)
+                            indexList.padding(.top, 28)
+                            favoritesBlock
+                            Spacer(minLength: 28)
+                        }
+                        .padding(.horizontal, 26)
+                        .padding(.top, 6)
                     }
-                    .padding(.horizontal, 26)
-                    .padding(.top, Space.sm)
-                }
-                .refreshable {
-                    Haptics.tap()
-                    app.refreshZmanim()
-                    try? await Task.sleep(nanoseconds: 500_000_000)
+                    .refreshable {
+                        Haptics.tap()
+                        app.refreshZmanim()
+                        try? await Task.sleep(nanoseconds: 500_000_000)
+                    }
+                    // mask the status-bar area so scrolled content never collides with the clock
+                    Rectangle().fill(Palette.paper)
+                        .frame(height: max(geo.safeAreaInsets.top, 12))
+                        .frame(maxWidth: .infinity)
+                        .ignoresSafeArea(edges: .top)
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
@@ -295,24 +302,31 @@ struct TodayView: View {
         }
     }
 
-    // MARK: - Footer links
+    // MARK: - Quick actions (clear, tappable row)
 
-    private var footerLinks: some View {
-        HStack(spacing: 14) {
-            Spacer()
-            NavigationLink { MizrahView() } label: { footerLink(app.s.navDir) }.buttonStyle(.plain)
-            dotSep
-            NavigationLink { CalendarView() } label: { footerLink(app.s.navCal) }.buttonStyle(.plain)
-            dotSep
-            NavigationLink { TzedakaView() } label: { footerLink(app.s.navTz) }.buttonStyle(.plain)
-            Spacer()
+    private var quickRow: some View {
+        HStack(spacing: 0) {
+            NavigationLink { MizrahView() } label: { quickItem("location.north.line", app.s.navDir) }.buttonStyle(.plain)
+            vDivider
+            NavigationLink { CalendarView() } label: { quickItem("calendar", app.s.navCal) }.buttonStyle(.plain)
+            vDivider
+            NavigationLink { TzedakaView() } label: { quickItem("heart", app.s.navTz) }.buttonStyle(.plain)
         }
+        .overlay(alignment: .top) { Rectangle().fill(Palette.line).frame(height: 1) }
+        .overlay(alignment: .bottom) { Rectangle().fill(Palette.line).frame(height: 1) }
     }
 
-    private func footerLink(_ t: String) -> some View {
-        Text(t).font(Typo.sans(12.5)).foregroundStyle(Palette.gold)
+    private func quickItem(_ symbol: String, _ label: String) -> some View {
+        VStack(spacing: 6) {
+            Image(systemName: symbol).font(.system(size: 17, weight: .regular)).foregroundStyle(Palette.gold)
+            Text(label).font(Typo.sans(11.5)).foregroundStyle(Palette.soft).lineLimit(1).minimumScaleFactor(0.8)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 15)
+        .contentShape(Rectangle())
     }
-    private var dotSep: some View { Circle().fill(Palette.faint.opacity(0.5)).frame(width: 3, height: 3) }
+
+    private var vDivider: some View { Rectangle().fill(Palette.line).frame(width: 1, height: 28) }
 
     private func serviceTitle(_ k: ServiceKind) -> String {
         switch k { case .shacharit: return app.s.sh; case .mincha: return app.s.mi; case .maariv: return app.s.ma }

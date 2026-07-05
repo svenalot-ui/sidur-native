@@ -342,26 +342,12 @@ struct ServiceReaderView: View {
     }
 
     private var langSegment: some View {
-        HStack(spacing: 6) {
-            seg("he", app.s.he_)
-            seg("translit", app.s.translit)
-        }
+        Segmented(items: [
+            .init(label: app.s.he_, active: mode == "he") { mode = "he" },
+            .init(label: app.s.translit, active: mode == "translit") { mode = "translit" },
+        ], activeFill: Palette.gold, activeText: .white)
         .padding(.horizontal, Space.lg)
         .padding(.vertical, 12)
-    }
-
-    private func seg(_ key: String, _ label: String) -> some View {
-        Button { withAnimation(.easeInOut(duration: 0.15)) { mode = key } } label: {
-            Text(label)
-                .font(Typo.sans(13, mode == key ? .semibold : .regular))
-                .foregroundStyle(mode == key ? .white : Palette.soft)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 10)
-                .background(RoundedRectangle(cornerRadius: 12)
-                    .fill(mode == key ? Palette.gold : Palette.card)
-                    .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Palette.line, lineWidth: mode == key ? 0 : 1)))
-        }
-        .buttonStyle(.plain)
     }
 
     private var serviceNames: (ru: String, he: String) {

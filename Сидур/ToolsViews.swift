@@ -260,22 +260,27 @@ struct SettingsView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: Space.md) {
                     SectionLabel(text: app.s.setLang)
-                    HStack(spacing: 8) {
-                        segButton("Русский", active: app.lang == .ru) { app.lang = .ru }
-                        segButton("עברית", active: app.lang == .he) { app.lang = .he }
-                    }
+                    Segmented(items: [
+                        .init(label: "Русский", active: app.lang == .ru) { app.lang = .ru },
+                        .init(label: "עברית", active: app.lang == .he) { app.lang = .he },
+                    ])
 
                     SectionLabel(text: app.s.setTheme)
-                    HStack(spacing: 8) {
-                        segButton(app.s.themeAuto, active: app.theme == "auto") { app.theme = "auto" }
-                        segButton(app.s.themeLight, active: app.theme == "light") { app.theme = "light" }
-                        segButton(app.s.themeDark, active: app.theme == "dark") { app.theme = "dark" }
-                    }
+                    Segmented(items: [
+                        .init(label: app.s.themeAuto, active: app.theme == "auto") { app.theme = "auto" },
+                        .init(label: app.s.themeLight, active: app.theme == "light") { app.theme = "light" },
+                        .init(label: app.s.themeDark, active: app.theme == "dark") { app.theme = "dark" },
+                    ])
 
                     SectionLabel(text: app.s.setNusach)
-                    LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
-                        ForEach(Nusach.allCases, id: \.rawValue) { n in
-                            segButton(n.name(app.lang), active: app.nusach == n.rawValue) { app.nusach = n.rawValue }
+                    GroupCard {
+                        ForEach(Array(Nusach.allCases.enumerated()), id: \.element.rawValue) { idx, n in
+                            SelectRow(
+                                label: n.name(app.lang),
+                                sub: app.lang != .he ? n.name(.he) : nil,
+                                active: app.nusach == n.rawValue,
+                                first: idx == 0
+                            ) { app.nusach = n.rawValue }
                         }
                     }
 

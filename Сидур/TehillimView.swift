@@ -328,30 +328,13 @@ struct TehillimReaderView: View {
     }
 
     private var langSegment: some View {
-        HStack(spacing: 6) {
-            seg("he", app.s.he_)
-            seg("translit", app.s.translit)
-            seg("ru", app.s.ru_)
-        }
+        Segmented(items: [
+            .init(label: app.s.he_, active: lmode == "he") { lmode = "he"; Task { await load() } },
+            .init(label: app.s.translit, active: lmode == "translit") { lmode = "translit"; Task { await load() } },
+            .init(label: app.s.ru_, active: lmode == "ru") { lmode = "ru"; Task { await load() } },
+        ], activeFill: Palette.gold, activeText: .white)
         .padding(.horizontal, Space.lg)
         .padding(.vertical, 12)
-    }
-
-    private func seg(_ key: String, _ label: String) -> some View {
-        Button {
-            withAnimation(.easeInOut(duration: 0.15)) { lmode = key }
-            Task { await load() }
-        } label: {
-            Text(label)
-                .font(Typo.sans(13, lmode == key ? .semibold : .regular))
-                .foregroundStyle(lmode == key ? .white : Palette.soft)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 10)
-                .background(RoundedRectangle(cornerRadius: 12)
-                    .fill(lmode == key ? Palette.gold : Palette.card)
-                    .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Palette.line, lineWidth: lmode == key ? 0 : 1)))
-        }
-        .buttonStyle(.plain)
     }
 }
 
