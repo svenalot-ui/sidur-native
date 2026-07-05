@@ -4,9 +4,9 @@ import SwiftUI
 struct SectionLabel: View {
     let text: String
     var body: some View {
-        HStack(spacing: 9) {
+        HStack(spacing: 10) {
             Text(text.uppercased())
-                .font(.system(size: 10.5, weight: .medium)).tracking(2)
+                .font(Typo.label(10.5)).tracking(1.8)
                 .foregroundStyle(Palette.faint)
             Rectangle().fill(Palette.line).frame(height: 1)
         }
@@ -57,16 +57,18 @@ struct BrachotView: View {
                 Palette.paper.ignoresSafeArea()
                 ScrollView {
                     VStack(alignment: .leading, spacing: Space.md) {
-                        Text(app.s.brachot).font(Typo.display(29)).foregroundStyle(Palette.ink)
+                        ScreenTitle(text: app.s.brachot)
                         section(app.s.often, Liturgy.brachotOften)
                         section(app.s.beforeEat, Liturgy.brachotBefore)
                         section(app.s.afterEat, Liturgy.brachotAfter)
                         Spacer(minLength: 20)
                     }
-                    .padding(.horizontal, Space.lg).padding(.top, Space.sm)
+                    .padding(.horizontal, Space.lg).padding(.top, 6)
                 }
+                .statusBarMask()
             }
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar(.hidden, for: .navigationBar)
         }
     }
 
@@ -103,7 +105,7 @@ struct PrayersView: View {
                 Palette.paper.ignoresSafeArea()
                 ScrollView {
                     VStack(alignment: .leading, spacing: Space.md) {
-                        Text(app.s.prayers).font(Typo.display(29)).foregroundStyle(Palette.ink)
+                        ScreenTitle(text: app.s.prayers)
 
                         SectionLabel(text: app.s.daily)
                         GroupCard {
@@ -145,10 +147,12 @@ struct PrayersView: View {
                         }
                         Spacer(minLength: 20)
                     }
-                    .padding(.horizontal, Space.lg).padding(.top, Space.sm)
+                    .padding(.horizontal, Space.lg).padding(.top, 6)
                 }
+                .statusBarMask()
             }
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar(.hidden, for: .navigationBar)
         }
     }
 }

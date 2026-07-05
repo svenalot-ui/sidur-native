@@ -19,7 +19,7 @@ struct OnboardingView: View {
                     .foregroundStyle(Palette.gold)
 
                 Text(app.s.onbTitle)
-                    .font(Typo.display(26))
+                    .font(displayFont(26, app.lang))
                     .foregroundStyle(Palette.ink)
                 Text(app.s.onbSub)
                     .font(Typo.sans(13))

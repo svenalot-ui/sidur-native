@@ -17,9 +17,7 @@ struct ZmanimView: View {
                 Palette.paper.ignoresSafeArea()
                 ScrollView {
                     VStack(alignment: .leading, spacing: Space.md) {
-                        Text(app.s.zmanim)
-                            .font(Typo.display(29))
-                            .foregroundStyle(Palette.ink)
+                        ScreenTitle(text: app.s.zmanim)
                         Text(app.s.zIntro)
                             .font(Typo.sans(12.5))
                             .foregroundStyle(Palette.soft)
@@ -53,8 +51,10 @@ struct ZmanimView: View {
                     app.refreshZmanim()
                     try? await Task.sleep(nanoseconds: 500_000_000)
                 }
+                .statusBarMask()
             }
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar(.hidden, for: .navigationBar)
         }
     }
 
@@ -118,7 +118,7 @@ struct ZmanDetailView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: Space.md) {
                     Text(row.name(app.lang))
-                        .font(Typo.display(26))
+                        .font(displayFont(26, app.lang))
                         .foregroundStyle(Palette.ink)
                         .frame(maxWidth: .infinity, alignment: .center)
 
@@ -138,12 +138,12 @@ struct ZmanDetailView: View {
 
                     if reminder.on {
                         SectionLabel(text: app.s.remindBefore)
-                        HStack(spacing: 8) {
-                            beforeButton(0, app.s.onTime)
-                            beforeButton(5, app.s.min5)
-                            beforeButton(10, app.s.min10)
-                            beforeButton(15, app.s.min15)
-                        }
+                        Segmented(items: [
+                            .init(label: app.s.onTime, active: reminder.before == 0) { reminder.before = 0; save() },
+                            .init(label: app.s.min5, active: reminder.before == 5) { reminder.before = 5; save() },
+                            .init(label: app.s.min10, active: reminder.before == 10) { reminder.before = 10; save() },
+                            .init(label: app.s.min15, active: reminder.before == 15) { reminder.before = 15; save() },
+                        ])
                     }
 
                     SectionLabel(text: reminder.on ? app.s.remindWhich : app.s.allVariants)
@@ -212,23 +212,6 @@ struct ZmanDetailView: View {
         .padding(.horizontal, 18).padding(.vertical, 13)
         .background(RoundedRectangle(cornerRadius: 16).fill(Palette.card)
             .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(Palette.line, lineWidth: 1)))
-    }
-
-    private func beforeButton(_ min: Int, _ label: String) -> some View {
-        Button {
-            reminder.before = min
-            save()
-        } label: {
-            Text(label)
-                .font(Typo.sans(12.5, reminder.before == min ? .semibold : .regular))
-                .foregroundStyle(reminder.before == min ? Palette.paper : Palette.soft)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 10)
-                .background(RoundedRectangle(cornerRadius: 11)
-                    .fill(reminder.before == min ? Palette.ink : Palette.card)
-                    .overlay(RoundedRectangle(cornerRadius: 11).strokeBorder(Palette.line, lineWidth: reminder.before == min ? 0 : 1)))
-        }
-        .buttonStyle(.plain)
     }
 
     @ViewBuilder

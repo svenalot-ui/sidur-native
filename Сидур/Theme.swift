@@ -25,17 +25,18 @@ private func dyn(_ light: UInt, _ dark: UInt) -> Color {
     })
 }
 
-// MARK: - Palette ("quiet luxury" — matches the PWA)
+// MARK: - Palette (E-ink / paper editorial — warm, high contrast, WCAG-AAA leaning)
+// Gold is reserved for interaction + the one signature rule; content is ink on paper.
 enum Palette {
-    static let paper  = dyn(0xFAFAF9, 0x13110E)
-    static let card   = dyn(0xFFFFFF, 0x1E1B16)
-    static let cream  = dyn(0xF1EFEA, 0x262119)
-    static let gold   = dyn(0xA16207, 0xCBA250)
-    static let goldL  = dyn(0xBFA46F, 0x9C8350)
-    static let ink    = dyn(0x1C1917, 0xF0EBE1)
-    static let soft   = dyn(0x57534E, 0xA8A096)
-    static let faint  = dyn(0xA8A29E, 0x6E6759)
-    static let line   = dyn(0xE3DFD8, 0x322C23)
+    static let paper  = dyn(0xFCFAF5, 0x121010)
+    static let card   = dyn(0xFFFFFF, 0x1C1A16)
+    static let cream  = dyn(0xF2EEE6, 0x242019)
+    static let gold   = dyn(0x986413, 0xCBA255)
+    static let goldL  = dyn(0xB08A4A, 0x9C8350)
+    static let ink    = dyn(0x1A1714, 0xF2EDE3)
+    static let soft   = dyn(0x554E45, 0xAAA296)
+    static let faint  = dyn(0x8A8175, 0x7C746A)
+    static let line   = dyn(0xE6E0D5, 0x2E2820)
 }
 
 // MARK: - Liquid Glass (native iOS 26; falls back to material)
@@ -59,13 +60,19 @@ enum Space {
     static let xl: CGFloat = 28
 }
 
-// MARK: - Typography
-// display: New York (system serif — supports Cyrillic). digits: Bodoni Moda (Latin/digits only).
-// serif: Frank Ruhl Libre (Hebrew + Latin).
+// MARK: - Typography (editorial system)
+// display: Playfair Display (Latin/Cyrillic display serif). serif: Frank Ruhl Libre (Hebrew).
+// digits: Bodoni Moda (numerals). label: SF Mono for the uppercase micro-labels — the signature.
 enum Typo {
-    static func display(_ size: CGFloat) -> Font { .system(size: size, weight: .semibold, design: .serif) }
+    static func display(_ size: CGFloat) -> Font { .custom("Playfair Display", size: size).weight(.semibold) }
     static func digits(_ size: CGFloat, _ w: Font.Weight = .semibold) -> Font { .custom("Bodoni Moda", size: size).weight(w) }
     static func serif(_ size: CGFloat, _ w: Font.Weight = .regular) -> Font { .custom("Frank Ruhl Libre", size: size).weight(w) }
     static func sans(_ size: CGFloat, _ w: Font.Weight = .regular) -> Font { .system(size: size, weight: w) }
+    static func label(_ size: CGFloat) -> Font { .system(size: size, weight: .medium, design: .monospaced) }
+}
+
+// Display serif that respects script: Playfair for Latin/Cyrillic, Frank Ruhl for Hebrew.
+func displayFont(_ size: CGFloat, _ lang: Lang) -> Font {
+    lang == .he ? Typo.serif(size, .semibold) : Typo.display(size)
 }
 

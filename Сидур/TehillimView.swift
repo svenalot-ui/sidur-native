@@ -11,9 +11,7 @@ struct TehillimView: View {
                 Palette.paper.ignoresSafeArea()
                 ScrollView {
                     VStack(alignment: .leading, spacing: Space.md) {
-                        Text(app.s.tehillim)
-                            .font(Typo.display(29))
-                            .foregroundStyle(Palette.ink)
+                        ScreenTitle(text: app.s.tehillim)
 
                         modeSegment
 
@@ -28,34 +26,22 @@ struct TehillimView: View {
                         Spacer(minLength: 30)
                     }
                     .padding(.horizontal, Space.lg)
-                    .padding(.top, Space.sm)
+                    .padding(.top, 6)
                 }
+                .statusBarMask()
             }
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar(.hidden, for: .navigationBar)
             .onAppear { favs = Teh.favorites }
         }
     }
 
     private var modeSegment: some View {
-        HStack(spacing: 6) {
-            seg("book", app.s.tehBook)
-            seg("day", app.s.tehByDay)
-            seg("seg", app.s.segulot)
-        }
-    }
-
-    private func seg(_ key: String, _ label: String) -> some View {
-        Button { Haptics.tap(); withAnimation(.easeInOut(duration: 0.15)) { mode = key } } label: {
-            Text(label)
-                .font(Typo.sans(13.5, mode == key ? .semibold : .regular))
-                .foregroundStyle(mode == key ? Palette.paper : Palette.soft)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 10)
-                .background(RoundedRectangle(cornerRadius: 12)
-                    .fill(mode == key ? Palette.ink : Palette.card)
-                    .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Palette.line, lineWidth: mode == key ? 0 : 1)))
-        }
-        .buttonStyle(.plain)
+        Segmented(items: [
+            .init(label: app.s.tehBook, active: mode == "book") { mode = "book" },
+            .init(label: app.s.tehByDay, active: mode == "day") { mode = "day" },
+            .init(label: app.s.segulot, active: mode == "seg") { mode = "seg" },
+        ])
     }
 
     // MARK: favorites
@@ -82,7 +68,7 @@ struct TehillimView: View {
                     .frame(width: 26, height: 26)
                     .background(RoundedRectangle(cornerRadius: 8)
                         .fill(LinearGradient(colors: [Palette.gold, Palette.goldL], startPoint: .topLeading, endPoint: .bottomTrailing)))
-                Text(app.s.bookHdr[bi]).font(Typo.display(18)).foregroundStyle(Palette.ink)
+                Text(app.s.bookHdr[bi]).font(displayFont(18, app.lang)).foregroundStyle(Palette.ink)
                 Text("\(rng.from)–\(rng.to)").font(Typo.sans(11.5)).foregroundStyle(Palette.gold).monospacedDigit()
                 Rectangle().fill(Palette.line).frame(height: 1)
             }
@@ -328,30 +314,13 @@ struct TehillimReaderView: View {
     }
 
     private var langSegment: some View {
-        HStack(spacing: 6) {
-            seg("he", app.s.he_)
-            seg("translit", app.s.translit)
-            seg("ru", app.s.ru_)
-        }
+        Segmented(items: [
+            .init(label: app.s.he_, active: lmode == "he") { lmode = "he"; Task { await load() } },
+            .init(label: app.s.translit, active: lmode == "translit") { lmode = "translit"; Task { await load() } },
+            .init(label: app.s.ru_, active: lmode == "ru") { lmode = "ru"; Task { await load() } },
+        ], activeFill: Palette.gold, activeText: .white)
         .padding(.horizontal, Space.lg)
         .padding(.vertical, 12)
-    }
-
-    private func seg(_ key: String, _ label: String) -> some View {
-        Button {
-            withAnimation(.easeInOut(duration: 0.15)) { lmode = key }
-            Task { await load() }
-        } label: {
-            Text(label)
-                .font(Typo.sans(13, lmode == key ? .semibold : .regular))
-                .foregroundStyle(lmode == key ? .white : Palette.soft)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 10)
-                .background(RoundedRectangle(cornerRadius: 12)
-                    .fill(lmode == key ? Palette.gold : Palette.card)
-                    .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Palette.line, lineWidth: lmode == key ? 0 : 1)))
-        }
-        .buttonStyle(.plain)
     }
 }
 
@@ -363,13 +332,13 @@ struct ReaderOptionsSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Space.lg) {
-            Text(app.s.fSize.uppercased()).font(.system(size: 11, weight: .medium)).tracking(1.5).foregroundStyle(Palette.faint)
+            Text(app.s.fSize.uppercased()).font(Typo.label(10.5)).tracking(1.5).foregroundStyle(Palette.faint)
             HStack(spacing: 14) {
                 sizeButton(15) { size = max(16, size - 1) }
                 Text("\(Int(size)) px").font(Typo.sans(15, .medium)).foregroundStyle(Palette.ink).frame(maxWidth: .infinity)
                 sizeButton(23) { size = min(40, size + 1) }
             }
-            Text(app.s.fBg.uppercased()).font(.system(size: 11, weight: .medium)).tracking(1.5).foregroundStyle(Palette.faint)
+            Text(app.s.fBg.uppercased()).font(Typo.label(10.5)).tracking(1.5).foregroundStyle(Palette.faint)
             HStack(spacing: 10) {
                 bgSwatch("paper", app.s.bgPaper)
                 bgSwatch("sepia", app.s.bgSepia)
