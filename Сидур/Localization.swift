@@ -31,6 +31,7 @@ struct Strings {
     var mi: String { t("Минха", "מִנְחָה") }
     var ma: String { t("Маарив", "מַעֲרִיב") }
     var now: String { t("идёт сейчас", "עכשיו") }
+    var startsAt: String { t("начало", "תחילה") }
     var tehTitle: String { t("Теилим сегодня", "תהילים היום") }
     var tehOpen: String { t("Читать главы дня", "קריאת פרקי היום") }
 
