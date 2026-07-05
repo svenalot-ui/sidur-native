@@ -3,7 +3,6 @@ import SwiftUI
 struct TodayView: View {
     @EnvironmentObject var app: AppState
     @State private var pidx: Int? = nil
-    @State private var favPsalms: [Int] = Teh.favorites
     @State private var bookmarks: [Bookmark] = Bookmarks.all
     @State private var lastRead: LastRead? = LastReadStore.current
     @State private var path: [Route] = []
@@ -40,7 +39,7 @@ struct TodayView: View {
                         prayerCard
                         tiles
                         tehillimCard
-                        if !favPsalms.isEmpty || !bookmarks.isEmpty {
+                        if !bookmarks.isEmpty {
                             favoritesHeader
                             favoritesGrid
                         }
@@ -62,7 +61,7 @@ struct TodayView: View {
                 case .text(let id):
                     if let t = Liturgy.bracha(id) { ReaderView(text: t) }
                 case .psalm(let n):
-                    TehillimReaderView(title: "\(app.s.psalm) \(n)", chapters: [n], onFavChange: { favPsalms = Teh.favorites })
+                    TehillimReaderView(title: "\(app.s.psalm) \(n)", chapters: [n])
                 case .service(let raw):
                     if let kind = ServiceKind(rawValue: raw) {
                         ServiceReaderView(service: kind, title: serviceTitle(kind))
@@ -72,7 +71,6 @@ struct TodayView: View {
         }
         .onAppear {
             if pidx == nil { pidx = currentIdx }
-            favPsalms = Teh.favorites
             bookmarks = Bookmarks.all
             lastRead = LastReadStore.current
             app.refreshZmanim()
@@ -339,25 +337,10 @@ struct TodayView: View {
         .padding(.top, Space.sm)
     }
 
-    // Favorite psalms + bookmarked brachot/services — one tap from the home screen.
+    // Bookmarked prayers/brachot/services — one tap from the home screen.
+    // (Psalms are NOT here — they have their own ♥ favorites inside Tehillim.)
     private var favoritesGrid: some View {
         LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3), spacing: 8) {
-            ForEach(favPsalms, id: \.self) { n in
-                NavigationLink(value: Route.psalm(n)) {
-                    HStack(spacing: 7) {
-                        Text("\(n)")
-                            .font(Typo.serif(16, .semibold)).foregroundStyle(Palette.gold).monospacedDigit()
-                        Text(app.s.psalm)
-                            .font(Typo.sans(11.5)).foregroundStyle(Palette.soft)
-                            .lineLimit(1).minimumScaleFactor(0.7)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 11)
-                    .background(RoundedRectangle(cornerRadius: 12).fill(Palette.card)
-                        .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Palette.line, lineWidth: 1)))
-                }
-                .buttonStyle(.plain)
-            }
             ForEach(bookmarks) { b in
                 NavigationLink(value: b.kind == "text" ? Route.text(b.refId) : Route.service(b.refId)) {
                     HStack(spacing: 6) {

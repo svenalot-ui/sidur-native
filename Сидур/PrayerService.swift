@@ -9,7 +9,37 @@ struct ServiceSection: Identifiable {
     let ref: String       // full Sefaria ref ("Siddur Ashkenaz, Weekday, Shacharit, …")
     let heTitle: String
     let enTitle: String
+    let groupHe: String   // immediate part of the service this section belongs to
+    let groupEn: String
     var id: String { ref }
+}
+
+// A major part of the service (Псукей де-Зимра, Амида…) with its sections.
+struct ServicePart: Identifiable {
+    let he: String
+    let en: String
+    let sections: [ServiceSection]
+    var id: String { en.isEmpty ? he : en }
+    /// The scroll anchor — the first section of this part.
+    var anchorRef: String? { sections.first?.ref }
+}
+
+extension Array where Element == ServiceSection {
+    /// Group consecutive sections by their part, preserving order.
+    var parts: [ServicePart] {
+        var out: [ServicePart] = []
+        var bufHe = "", bufEn = ""
+        var buf: [ServiceSection] = []
+        for s in self {
+            if s.groupEn != bufEn || s.groupHe != bufHe {
+                if !buf.isEmpty { out.append(ServicePart(he: bufHe, en: bufEn, sections: buf)) }
+                bufHe = s.groupHe; bufEn = s.groupEn; buf = []
+            }
+            buf.append(s)
+        }
+        if !buf.isEmpty { out.append(ServicePart(he: bufHe, en: bufEn, sections: buf)) }
+        return out
+    }
 }
 
 // Fetches siddur structure + section texts from Sefaria with a disk cache.
@@ -83,9 +113,11 @@ actor SiddurClient {
         }
         guard let svcNode = node else { return [] }
 
-        // DFS collect leaves with full ref path
+        // Collect leaves, remembering the immediate part of the service each belongs to
+        // (Preparatory Prayers / Pesukei Dezimra / Amidah …). A leaf directly under the
+        // service node forms its own single-section part.
         var out: [ServiceSection] = []
-        func walk(_ n: [String: Any], refParts: [String]) {
+        func walk(_ n: [String: Any], refParts: [String], groupHe: String, groupEn: String) {
             let title = (n["title"] as? String) ?? ""
             let parts = refParts + [title]
             let kids = (n["nodes"] as? [[String: Any]]) ?? []
@@ -94,15 +126,21 @@ actor SiddurClient {
                 out.append(ServiceSection(
                     ref: parts.joined(separator: ", "),
                     heTitle: (n["heTitle"] as? String) ?? title,
-                    enTitle: title))
+                    enTitle: title,
+                    groupHe: groupHe,
+                    groupEn: groupEn))
             } else {
-                for k in kids { walk(k, refParts: parts) }
+                for k in kids { walk(k, refParts: parts, groupHe: groupHe, groupEn: groupEn) }
             }
         }
-        // walk the service node itself (its title is the last path step)
         var base = [indexName]
         base.append(contentsOf: path.dropLast())
-        walk(svcNode, refParts: base)
+        let svcParts = base + [(svcNode["title"] as? String) ?? ""]
+        for child in (svcNode["nodes"] as? [[String: Any]]) ?? [] {
+            let cTitle = (child["title"] as? String) ?? ""
+            let cHe = (child["heTitle"] as? String) ?? cTitle
+            walk(child, refParts: svcParts, groupHe: cHe, groupEn: cTitle)
+        }
         return out
     }
 
