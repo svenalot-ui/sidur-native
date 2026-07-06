@@ -44,15 +44,40 @@ enum NotificationScheduler {
     @MainActor
     static func reschedule(app: AppState) {
         let enabled = Reminders.all.filter { $0.value.on }
+        let candlesOn = UserDefaults.standard.bool(forKey: "candleReminder")
         let center = UNUserNotificationCenter.current()
         center.removeAllPendingNotificationRequests()
-        guard !enabled.isEmpty else { return }
+        guard !enabled.isEmpty || candlesOn else { return }
 
         let lang = app.lang
         var cal = Calendar(identifier: .gregorian)
         cal.timeZone = app.tz
         let now = Date()
 
+        // Candle lighting — 30 minutes before Shabbat or Yom Tov comes in.
+        if candlesOn {
+            for off in 0..<7 {
+                guard let day = cal.date(byAdding: .day, value: off, to: now),
+                      let name = app.eveningRestName(of: day) else { continue }
+                let z = off == 0 ? app.currentZmanim : app.zmanim(for: day)
+                guard let candles = z.t("CandleLighting") ?? z.shkia.map({ $0.addingTimeInterval(-18 * 60) }) else { continue }
+                let fireAt = candles.addingTimeInterval(-30 * 60)
+                guard fireAt > now.addingTimeInterval(30) else { continue }
+
+                let content = UNMutableNotificationContent()
+                content.title = "Сидур · \(lang == .he ? "הדלקת נרות" : "Зажигание свечей")"
+                let timeStr = ZFmt.time(candles, app.tz)
+                content.body = lang == .he
+                    ? "\(name) · בעוד 30 דק׳ · \(timeStr)"
+                    : "\(name) · через 30 мин · \(timeStr)"
+                content.sound = .default
+                let comps = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute, .second], from: fireAt)
+                center.add(UNNotificationRequest(identifier: "candles_\(off)", content: content,
+                                                 trigger: UNCalendarNotificationTrigger(dateMatching: comps, repeats: false)))
+            }
+        }
+
+        guard !enabled.isEmpty else { return }
         for off in 0..<7 {
             guard let day = cal.date(byAdding: .day, value: off, to: now) else { continue }
             // today: myzmanim-merged; future days: native engine (values match to the minute)

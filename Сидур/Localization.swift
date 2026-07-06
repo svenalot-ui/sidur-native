@@ -85,6 +85,8 @@ struct Strings {
     var chagEndsAt: String { t("Исход праздника", "צאת החג") }
     var notChag: String { t("Сейчас не праздник", "עכשיו לא חג") }
     var erevChag: String { t("Канун праздника", "ערב חג") }
+    var candleReminderTitle: String { t("Напоминание о свечах", "תזכורת הדלקת נרות") }
+    var candleReminderSub: String { t("За 30 минут до зажигания", "30 דקות לפני ההדלקה") }
     var sections: String { t("Разделы", "פרקים") }
     var noRu: String { t("Русский перевод недоступен — показана транслитерация", "תרגום רוסי לא זמין") }
     var bookHdr: [String] { lang == .he

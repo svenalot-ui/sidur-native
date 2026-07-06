@@ -253,6 +253,7 @@ struct TzedakaView: View {
 // MARK: - Settings
 struct SettingsView: View {
     @EnvironmentObject var app: AppState
+    @AppStorage("candleReminder") private var candleReminder = false
 
     var body: some View {
         ZStack {
@@ -281,6 +282,34 @@ struct SettingsView: View {
                                 active: app.nusach == n.rawValue,
                                 first: idx == 0
                             ) { app.nusach = n.rawValue }
+                        }
+                    }
+
+                    SectionLabel(text: app.s.remind)
+                    GroupCard {
+                        HStack(spacing: 12) {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 10).fill(Palette.cream).frame(width: 36, height: 36)
+                                Image(systemName: "flame").font(.system(size: 15)).foregroundStyle(Palette.gold)
+                            }
+                            VStack(alignment: .leading, spacing: 1) {
+                                Text(app.s.candleReminderTitle)
+                                    .font(Typo.sans(14, .medium)).foregroundStyle(Palette.ink)
+                                Text(app.s.candleReminderSub)
+                                    .font(Typo.sans(11)).foregroundStyle(Palette.faint)
+                            }
+                            Spacer(minLength: 0)
+                            Toggle("", isOn: $candleReminder)
+                                .labelsHidden()
+                                .tint(Palette.gold)
+                        }
+                        .padding(.horizontal, 16).padding(.vertical, 12)
+                    }
+                    .onChange(of: candleReminder) { on in
+                        Haptics.tap()
+                        Task { @MainActor in
+                            if on { _ = await NotificationScheduler.requestAuth() }
+                            NotificationScheduler.reschedule(app: app)
                         }
                     }
 

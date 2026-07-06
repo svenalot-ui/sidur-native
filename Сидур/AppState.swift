@@ -119,6 +119,19 @@ final class AppState: ObservableObject {
     /// Legacy name used by the Today strip.
     var shabbatEndsAt: Date? { restEndsAt }
 
+    /// Name of the rest span that begins on the evening of `date` (Шаббат / holiday),
+    /// or nil when that evening is ordinary or `date` itself already rests
+    /// (second-day candles are lit after nightfall — no reminder then).
+    func eveningRestName(of date: Date) -> String? {
+        let next = addDays(1, to: date)
+        guard !isRestDay(date), isRestDay(next) else { return nil }
+        if weekday(next) == 7 { return lang == .he ? "שבת" : "Шаббат" }
+        if let yt = yomTov(on: next) {
+            return lang == .he ? HolidayService.heName(yt.hebrew) : HolidayService.ruName(yt.title)
+        }
+        return nil
+    }
+
     /// True when `date` falls inside any rest span in the next week — used to keep
     /// zman notifications silent on Shabbat and Yom Tov.
     func isRestTime(_ date: Date) -> Bool {
