@@ -345,7 +345,7 @@ struct ServiceReaderView: View {
         Segmented(items: [
             .init(label: app.s.he_, active: mode == "he") { mode = "he" },
             .init(label: app.s.translit, active: mode == "translit") { mode = "translit" },
-        ], activeFill: Palette.gold, activeText: .white)
+        ], ink: palette.fg, muted: palette.fg.opacity(0.5), baseline: palette.fg.opacity(0.18))
         .padding(.horizontal, Space.lg)
         .padding(.vertical, 12)
     }

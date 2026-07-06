@@ -318,7 +318,7 @@ struct TehillimReaderView: View {
             .init(label: app.s.he_, active: lmode == "he") { lmode = "he"; Task { await load() } },
             .init(label: app.s.translit, active: lmode == "translit") { lmode = "translit"; Task { await load() } },
             .init(label: app.s.ru_, active: lmode == "ru") { lmode = "ru"; Task { await load() } },
-        ], activeFill: Palette.gold, activeText: .white)
+        ], ink: palette.fg, muted: palette.fg.opacity(0.5), baseline: palette.fg.opacity(0.18))
         .padding(.horizontal, Space.lg)
         .padding(.vertical, 12)
     }

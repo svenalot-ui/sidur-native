@@ -87,7 +87,7 @@ struct ReaderView: View {
             .init(label: app.s.he_, active: mode == "he") { mode = "he" },
             .init(label: app.s.translit, active: mode == "translit") { mode = "translit" },
             .init(label: app.s.ru_, active: mode == "ru") { mode = "ru" },
-        ], activeFill: Palette.gold, activeText: .white)
+        ], ink: palette.fg, muted: palette.fg.opacity(0.5), baseline: palette.fg.opacity(0.18))
         .padding(.horizontal, Space.lg)
         .padding(.vertical, 12)
     }

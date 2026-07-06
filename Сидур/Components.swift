@@ -38,39 +38,34 @@ struct Segmented: View {
         let action: () -> Void
     }
     let items: [Item]
-    var activeFill: Color = Palette.ink
-    var activeText: Color = Palette.paper
-
-    @Namespace private var ns
+    // Colors are overridable so the control works on a reader's paper/sepia/night background.
+    var ink: Color = Palette.ink
+    var muted: Color = Palette.soft
+    var accent: Color = Palette.gold
+    var baseline: Color = Palette.line
 
     var body: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: 0) {
             ForEach(items) { it in
                 Button {
                     Haptics.tap()
-                    withAnimation(.spring(response: 0.32, dampingFraction: 0.82)) { it.action() }
+                    withAnimation(.easeInOut(duration: 0.18)) { it.action() }
                 } label: {
                     Text(it.label)
                         .font(Typo.sans(14, it.active ? .semibold : .regular))
-                        .foregroundStyle(it.active ? activeText : Palette.soft)
+                        .foregroundStyle(it.active ? ink : muted)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 11)
-                        .background(
-                            ZStack {
-                                if it.active {
-                                    RoundedRectangle(cornerRadius: 11, style: .continuous)
-                                        .fill(activeFill)
-                                        .matchedGeometryEffect(id: "seg", in: ns)
-                                }
-                            }
-                        )
+                        .overlay(alignment: .bottom) {
+                            Rectangle()
+                                .fill(it.active ? accent : baseline)
+                                .frame(height: it.active ? 2 : 1)
+                        }
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
             }
         }
-        .padding(4)
-        .background(RoundedRectangle(cornerRadius: 15, style: .continuous).fill(Palette.cream))
     }
 }
 
