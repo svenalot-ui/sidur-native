@@ -63,6 +63,8 @@ enum NotificationScheduler {
                 guard let t = z.t(r.vk) ?? row.main else { continue }
                 let fireAt = t.addingTimeInterval(-Double(r.before) * 60)
                 guard fireAt > now.addingTimeInterval(30) else { continue }
+                // the phone stays silent on Shabbat and Yom Tov
+                guard !app.isRestTime(fireAt) else { continue }
 
                 let content = UNMutableNotificationContent()
                 content.title = "Сидур · \(row.name(lang))"

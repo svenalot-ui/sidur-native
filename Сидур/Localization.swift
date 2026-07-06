@@ -80,6 +80,11 @@ struct Strings {
     var shabbatResting: String { t("Приложение отдыхает до исхода Шаббата", "האפליקציה נחה עד צאת השבת") }
     var shabbatEndsAt: String { t("Исход", "צאת השבת") }
     var notShabbat: String { t("Сейчас не Шаббат", "עכשיו לא שבת") }
+    var chagSameach: String { t("Хаг самеах", "חג שמח") }
+    var chagResting: String { t("Приложение отдыхает до исхода праздника", "האפליקציה נחה עד צאת החג") }
+    var chagEndsAt: String { t("Исход праздника", "צאת החג") }
+    var notChag: String { t("Сейчас не праздник", "עכשיו לא חג") }
+    var erevChag: String { t("Канун праздника", "ערב חג") }
     var sections: String { t("Разделы", "פרקים") }
     var noRu: String { t("Русский перевод недоступен — показана транслитерация", "תרגום רוסי לא זמין") }
     var bookHdr: [String] { lang == .he

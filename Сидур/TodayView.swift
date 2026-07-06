@@ -212,10 +212,17 @@ struct TodayView: View {
 
     // MARK: - Shabbat / Resume (quiet rows)
 
+    // Tomorrow's Yom Tov (erev chag) — shown like erev Shabbat.
+    private var erevChag: HolidayService.Day? {
+        var cal = Calendar(identifier: .gregorian); cal.timeZone = app.tz
+        guard let tomorrow = cal.date(byAdding: .day, value: 1, to: Date()) else { return nil }
+        return app.yomTov(on: tomorrow)
+    }
+
     private var isShabbatWindow: Bool {
         var cal = Calendar(identifier: .gregorian); cal.timeZone = app.tz
         let wd = cal.component(.weekday, from: Date())
-        return wd == 6 || wd == 7
+        return wd == 6 || wd == 7 || erevChag != nil
     }
 
     @ViewBuilder
@@ -223,11 +230,21 @@ struct TodayView: View {
         var cal = Calendar(identifier: .gregorian)
         let _ = { cal.timeZone = app.tz }()
         let isFriday = cal.component(.weekday, from: Date()) == 6
-        let time = isFriday ? (z.t("CandleLighting") ?? z.shkia.map { $0.addingTimeInterval(-18 * 60) }) : z.tzeit
+        let candles = isFriday || erevChag != nil
+        let time = candles ? (z.t("CandleLighting") ?? z.shkia.map { $0.addingTimeInterval(-18 * 60) }) : z.tzeit
+        let label: String = {
+            if isFriday { return app.s.candleLighting }
+            if let yt = erevChag {
+                let name = app.lang == .he ? HolidayService.heName(yt.hebrew) : HolidayService.ruName(yt.title)
+                return "\(app.s.candleLighting) · \(name)"
+            }
+            return app.s.shabbatEnd
+        }()
         HStack(spacing: 12) {
-            Image(systemName: isFriday ? "flame" : "sparkles").font(.system(size: 15)).foregroundStyle(Palette.gold)
-            Text(isFriday ? app.s.candleLighting : app.s.shabbatEnd)
+            Image(systemName: candles ? "flame" : "sparkles").font(.system(size: 15)).foregroundStyle(Palette.gold)
+            Text(label)
                 .font(Typo.sans(14)).foregroundStyle(Palette.ink)
+                .lineLimit(1).minimumScaleFactor(0.75)
             Spacer(minLength: 0)
             Text(app.fmt(time)).font(Typo.digits(18)).foregroundStyle(Palette.gold).monospacedDigit()
         }

@@ -1,8 +1,11 @@
 import SwiftUI
 
-// Full-screen block shown during Shabbat — the app rests. Calm, no navigation.
+// Full-screen block shown during Shabbat or Yom Tov — the app rests. Calm, no navigation.
 struct ShabbatView: View {
     @EnvironmentObject var app: AppState
+
+    // Shabbat wording wins when Shabbat and a chag coincide.
+    private var isChag: Bool { !app.isShabbat && app.currentYomTov != nil }
 
     var body: some View {
         ZStack {
@@ -14,28 +17,35 @@ struct ShabbatView: View {
                     .stroke(Palette.gold, style: StrokeStyle(lineWidth: 1.6, lineCap: .round, lineJoin: .round))
                     .frame(width: 66, height: 66)
 
-                Text("שַׁבָּת שָׁלוֹם")
+                Text(isChag ? "חַג שָׂמֵחַ" : "שַׁבָּת שָׁלוֹם")
                     .font(Typo.serif(36, .semibold))
                     .foregroundStyle(Palette.gold)
                     .padding(.top, 26)
 
                 if app.lang != .he {
-                    Text(app.s.shabbatShalom)
+                    Text(isChag ? app.s.chagSameach : app.s.shabbatShalom)
                         .font(Typo.display(24))
                         .foregroundStyle(Palette.ink)
                         .padding(.top, 4)
                 }
 
-                Text(app.s.shabbatResting)
+                if isChag, let yt = app.currentYomTov {
+                    Text(app.lang == .he ? HolidayService.heName(yt.hebrew) : HolidayService.ruName(yt.title))
+                        .font(Typo.serif(17))
+                        .foregroundStyle(Palette.soft)
+                        .padding(.top, 8)
+                }
+
+                Text(isChag ? app.s.chagResting : app.s.shabbatResting)
                     .font(Typo.sans(14))
                     .foregroundStyle(Palette.soft)
                     .multilineTextAlignment(.center)
                     .padding(.top, 14)
                     .padding(.horizontal, 40)
 
-                if let end = app.shabbatEndsAt {
+                if let end = app.restEndsAt {
                     VStack(spacing: 4) {
-                        Text(app.s.shabbatEndsAt.uppercased())
+                        Text((isChag ? app.s.chagEndsAt : app.s.shabbatEndsAt).uppercased())
                             .font(Typo.label(10)).tracking(2)
                             .foregroundStyle(Palette.faint)
                         Text(app.fmt(end))
@@ -54,7 +64,7 @@ struct ShabbatView: View {
                     Haptics.tap()
                     app.bypassShabbat()
                 } label: {
-                    Text(app.s.notShabbat)
+                    Text(isChag ? app.s.notChag : app.s.notShabbat)
                         .font(Typo.sans(12))
                         .foregroundStyle(Palette.faint)
                         .padding(10)

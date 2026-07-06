@@ -63,10 +63,12 @@ enum Space {
 // MARK: - Typography (editorial system)
 // display: Playfair Display (Latin/Cyrillic display serif). serif: Frank Ruhl Libre (Hebrew).
 // digits: Bodoni Moda (numerals). label: SF Mono for the uppercase micro-labels — the signature.
+// Custom fonts scale with the user's Dynamic Type setting via relativeTo;
+// the mono micro-labels stay fixed on purpose (uppercase kickers shouldn't balloon).
 enum Typo {
-    static func display(_ size: CGFloat) -> Font { .custom("Playfair Display", size: size).weight(.semibold) }
-    static func digits(_ size: CGFloat, _ w: Font.Weight = .semibold) -> Font { .custom("Bodoni Moda", size: size).weight(w) }
-    static func serif(_ size: CGFloat, _ w: Font.Weight = .regular) -> Font { .custom("Frank Ruhl Libre", size: size).weight(w) }
+    static func display(_ size: CGFloat) -> Font { .custom("Playfair Display", size: size, relativeTo: .title).weight(.semibold) }
+    static func digits(_ size: CGFloat, _ w: Font.Weight = .semibold) -> Font { .custom("Bodoni Moda", size: size, relativeTo: .title).weight(w) }
+    static func serif(_ size: CGFloat, _ w: Font.Weight = .regular) -> Font { .custom("Frank Ruhl Libre", size: size, relativeTo: .body).weight(w) }
     static func sans(_ size: CGFloat, _ w: Font.Weight = .regular) -> Font { .system(size: size, weight: w) }
     static func label(_ size: CGFloat) -> Font { .system(size: size, weight: .medium, design: .monospaced) }
 }
