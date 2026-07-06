@@ -62,6 +62,6 @@ struct ContentView: View {
         #if DEBUG
         if CommandLine.arguments.contains("-forceShabbat") { return true }
         #endif
-        return app.isShabbat && !app.shabbatBypassed
+        return app.isResting && !app.shabbatBypassed
     }
 }
