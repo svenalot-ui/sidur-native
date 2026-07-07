@@ -36,6 +36,10 @@ struct Strings {
     var startsAt: String { t("начало", "תחילה") }
     var tehTitle: String { t("Теилим сегодня", "תהילים היום") }
     var tehOpen: String { t("Читать главы дня", "קריאת פרקי היום") }
+    var shmaWord: String { t("Шма", "ק״ש") }
+    var nightWord: String { t("ночь", "לילה") }
+    var graShort: String { t("Гра", "גר״א") }
+    var untilShort: String { t("до", "עד") }
 
     // zmanim
     var zIntro: String { t("Основные времена дня. Нажмите на любое, чтобы увидеть варианты и включить напоминание.",
@@ -62,6 +66,7 @@ struct Strings {
     var afterEat: String { t("После еды", "לאחר האכילה") }
     var daily: String { t("Ежедневные", "יומיות") }
     var personal: String { t("Личные молитвы", "תפילות אישיות") }
+    var otherPrayers: String { t("Другие", "אחרות") }
     var brachotMore: String { t("Все благословения", "עוד ברכות") }
     var soon: String { t("Полный текст скоро", "הטקסט המלא בקרוב") }
     var soonComing: String { t("Текст скоро появится", "הטקסט יתווסף בקרוב") }

@@ -72,13 +72,15 @@ enum Bookmarks {
         all = a
     }
     static func remove(id: String) { all = all.filter { $0.id != id } }
+    static func saveOrder(_ items: [Bookmark]) { all = items }
 }
 
 // MARK: - Programmatic navigation target (used by Today's resume banner + favorites)
 enum Route: Hashable {
     case text(String)
     case psalm(Int)
-    case service(String)   // ServiceKind.rawValue
+    case service(String)      // ServiceKind.rawValue
+    case tehillimDay(Int)     // day of the Hebrew month → that day's psalms
 }
 
 // MARK: - Haptics

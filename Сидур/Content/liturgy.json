@@ -66,7 +66,7 @@
           "id": "hamotzi",
           "ru": "Хлеб · а-Моци",
           "he": "הַמּוֹצִיא",
-          "icon": "birthday.cake",
+          "icon": "g.bread",
           "textHe": "בָּרוּךְ אַתָּה ה׳ אֱלֹהֵינוּ מֶלֶךְ הָעוֹלָם, הַמּוֹצִיא לֶחֶם מִן הָאָרֶץ.",
           "textTranslit": "Барух ата Адо-най Эло-эйну мэлэх а-олам, а-моци лэхэм мин а-арэц.",
           "textRu": "Благословен Ты, Г-сподь, Б-г наш, Царь вселенной, извлекающий хлеб из земли."
@@ -75,7 +75,7 @@
           "id": "mezonot",
           "ru": "Мучное · Мезонот",
           "he": "מְזוֹנוֹת",
-          "icon": "takeoutbag.and.cup.and.straw",
+          "icon": "g.bun",
           "textHe": "",
           "textTranslit": null,
           "textRu": null
@@ -93,7 +93,7 @@
           "id": "haetz",
           "ru": "Фрукты · а-Эц",
           "he": "הָעֵץ",
-          "icon": "apple.logo",
+          "icon": "g.fruit",
           "textHe": "בָּרוּךְ אַתָּה ה׳ אֱלֹהֵינוּ מֶלֶךְ הָעוֹלָם, בּוֹרֵא פְּרִי הָעֵץ.",
           "textTranslit": "Барух ата Адо-най Эло-эйну мэлэх а-олам, борэ при а-эц.",
           "textRu": "Благословен Ты, Г-сподь, Б-г наш, Царь вселенной, сотворивший плод дерева."
@@ -102,7 +102,7 @@
           "id": "haadama",
           "ru": "Овощи · а-Адама",
           "he": "הָאֲדָמָה",
-          "icon": "leaf",
+          "icon": "carrot",
           "textHe": "בָּרוּךְ אַתָּה ה׳ אֱלֹהֵינוּ מֶלֶךְ הָעוֹלָם, בּוֹרֵא פְּרִי הָאֲדָמָה.",
           "textTranslit": "Барух ата Адо-най Эло-эйну мэлэх а-олам, борэ при а-адама.",
           "textRu": "Благословен Ты, Г-сподь, Б-г наш, Царь вселенной, сотворивший плод земли."
@@ -122,7 +122,7 @@
       "id": "smells",
       "ru": "Благословения на запахи",
       "he": "בִּרְכוֹת הָרֵיחַ",
-      "icon": "nose",
+      "icon": "camera.macro",
       "items": [
         {
           "id": "smell_trees",
@@ -146,7 +146,7 @@
           "id": "smell_fruit",
           "ru": "Аромат плодов",
           "he": "רֵיחַ פֵּרוֹת",
-          "icon": "apple.logo",
+          "icon": "g.etrog",
           "textHe": "",
           "textTranslit": null,
           "textRu": null
@@ -166,13 +166,13 @@
       "id": "mitzvot",
       "ru": "На различные заповеди",
       "he": "בִּרְכוֹת הַמִּצְווֹת",
-      "icon": "checkmark.seal",
+      "icon": "scroll",
       "items": [
         {
           "id": "hafrashat_challah",
           "ru": "Отделение халы",
           "he": "הַפְרָשַׁת חַלָּה",
-          "icon": "birthday.cake",
+          "icon": "g.challah",
           "textHe": "",
           "textTranslit": null,
           "textRu": null
@@ -181,7 +181,7 @@
           "id": "ner_chanukah",
           "ru": "Зажигание ханукальных свечей",
           "he": "נֵר חֲנֻכָּה",
-          "icon": "flame",
+          "icon": "g.menorah",
           "textHe": "",
           "textTranslit": null,
           "textRu": null
@@ -199,7 +199,7 @@
           "id": "mezuzah",
           "ru": "Мезуза",
           "he": "מְזוּזָה",
-          "icon": "door.left.hand.closed",
+          "icon": "g.mezuzah",
           "textHe": "",
           "textTranslit": null,
           "textRu": null

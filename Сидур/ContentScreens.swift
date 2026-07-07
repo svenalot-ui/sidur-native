@@ -22,7 +22,7 @@ struct TextRow: View {
         HStack(spacing: 13) {
             ZStack {
                 RoundedRectangle(cornerRadius: 11).fill(Palette.cream).frame(width: 40, height: 40)
-                Image(systemName: item.icon).font(.system(size: 19)).foregroundStyle(item.ready ? Palette.gold : Palette.faint)
+                Glyph(name: item.icon, size: 19, color: item.ready ? Palette.gold : Palette.faint)
             }
             Text(item.name(app.lang))
                 .font(Typo.sans(15, .medium)).foregroundStyle(item.ready ? Palette.ink : Palette.faint)
@@ -80,17 +80,17 @@ struct BrachotView: View {
                     VStack(alignment: .leading, spacing: Space.md) {
                         ScreenTitle(text: app.s.brachot)
 
+                        SectionLabel(text: app.s.brachotMore)
+                        ForEach(Liturgy.brachotFolders) { folder in
+                            NavigationLink { BrachotFolderView(folder: folder) } label: { folderCard(folder) }
+                                .buttonStyle(.plain)
+                        }
+
                         SectionLabel(text: app.s.often)
                         GroupCard {
                             ForEach(Array(Liturgy.brachotOften.enumerated()), id: \.element.id) { idx, it in
                                 LiturgyRow(item: it, first: idx == 0)
                             }
-                        }
-
-                        SectionLabel(text: app.s.brachotMore)
-                        ForEach(Liturgy.brachotFolders) { folder in
-                            NavigationLink { BrachotFolderView(folder: folder) } label: { folderCard(folder) }
-                                .buttonStyle(.plain)
                         }
                         Spacer(minLength: 20)
                     }
@@ -107,7 +107,7 @@ struct BrachotView: View {
         HStack(spacing: 14) {
             ZStack {
                 RoundedRectangle(cornerRadius: 13).fill(Palette.cream).frame(width: 46, height: 46)
-                Image(systemName: folder.icon).font(.system(size: 20)).foregroundStyle(Palette.gold)
+                Glyph(name: folder.icon, size: 20, color: Palette.gold)
             }
             VStack(alignment: .leading, spacing: 2) {
                 Text(folder.name(app.lang)).font(Typo.sans(16, .semibold)).foregroundStyle(Palette.ink)
@@ -166,6 +166,12 @@ struct PrayersView: View {
         Nusach(rawValue: app.nusach ?? "")?.name(app.lang) ?? ""
     }
 
+    // Morning blessings sit above Shacharit; everything else moves to "Другие".
+    private var birkatShachar: SacredText? { Liturgy.bracha("birkat_hashachar") }
+    private var otherPrayers: [SacredText] {
+        Liturgy.personal.filter { $0.id != "birkat_hashachar" } + [Liturgy.havdalah]
+    }
+
     var body: some View {
         NavigationStack {
             ZStack {
@@ -176,7 +182,10 @@ struct PrayersView: View {
 
                         SectionLabel(text: app.s.daily)
                         GroupCard {
-                            ForEach(Array(daily.enumerated()), id: \.offset) { idx, d in
+                            if let bs = birkatShachar {
+                                LiturgyRow(item: bs, first: true)
+                            }
+                            ForEach(Array(daily.enumerated()), id: \.offset) { _, d in
                                 NavigationLink {
                                     ServiceReaderView(service: d.kind, title: d.name)
                                 } label: {
@@ -201,19 +210,16 @@ struct PrayersView: View {
                                     .contentShape(Rectangle())
                                 }
                                 .buttonStyle(.plain)
-                                .overlay(alignment: .top) { if idx != 0 { Rectangle().fill(Palette.line).frame(height: 1) } }
+                                .overlay(alignment: .top) { Rectangle().fill(Palette.line).frame(height: 1) }
                             }
                         }
 
-                        SectionLabel(text: app.s.personal)
+                        SectionLabel(text: app.s.otherPrayers)
                         GroupCard {
-                            ForEach(Array(Liturgy.personal.enumerated()), id: \.element.id) { idx, it in
+                            ForEach(Array(otherPrayers.enumerated()), id: \.element.id) { idx, it in
                                 LiturgyRow(item: it, first: idx == 0)
                             }
                         }
-
-                        SectionLabel(text: Liturgy.havdalah.name(app.lang))
-                        GroupCard { LiturgyRow(item: Liturgy.havdalah, first: true) }
                         Spacer(minLength: 20)
                     }
                     .padding(.horizontal, Space.lg).padding(.top, 6)

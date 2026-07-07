@@ -13,10 +13,11 @@ struct TodayView: View {
 
     private var z: Zmanim { app.currentZmanim }
 
+    // start = earliest, end = latest permissible time to pray.
     private var prayers: [(name: String, start: Date?, end: Date?)] {
-        [(app.s.sh, z.netz, z.chatzot),
-         (app.s.mi, z.minchaG, z.shkia),
-         (app.s.ma, z.tzeit, z.t("SolarMidnight"))]
+        [(app.s.sh, z.netz, z.t("SofTfilaGRA")),   // Shacharit until Sof Zman Tfila (Gra)
+         (app.s.mi, z.minchaG, z.shkia),           // Mincha until sunset
+         (app.s.ma, z.tzeit, z.t("SolarMidnight"))] // Maariv until midnight
     }
 
     private var currentIdx: Int {
@@ -34,11 +35,12 @@ struct TodayView: View {
                     ScrollView {
                         VStack(alignment: .leading, spacing: 0) {
                             masthead
-                            quickRow.padding(.top, 20)
-                            if isShabbatWindow { shabbatStrip.padding(.top, 20) }
+                            shmaLine
+                            quickRow.padding(.top, 18)
+                            tehillimTodayCard.padding(.top, 12)
+                            if isShabbatWindow { shabbatStrip.padding(.top, 18) }
                             resumeRow
                             hero.padding(.top, 26)
-                            indexList.padding(.top, 28)
                             favoritesBlock
                             Spacer(minLength: 28)
                         }
@@ -69,6 +71,8 @@ struct TodayView: View {
                     if let kind = ServiceKind(rawValue: raw) {
                         ServiceReaderView(service: kind, title: serviceTitle(kind))
                     }
+                case .tehillimDay(let day):
+                    TehillimReaderView(title: "\(app.s.tehDay) \(day)", chapters: Teh.chapters(day: day))
                 }
             }
         }
@@ -91,7 +95,7 @@ struct TodayView: View {
                         .font(Typo.label(10.5)).tracking(1.5)
                         .foregroundStyle(Palette.faint)
                     Text(HebrewDate.hebrew(app.lang, tz: app.tz))
-                        .font(displayFont(32, app.lang))
+                        .font(displayFontLining(32, app.lang))
                         .foregroundStyle(Palette.ink)
                         .lineLimit(1).minimumScaleFactor(0.6)
                     if let p = parsha {
@@ -143,6 +147,13 @@ struct TodayView: View {
                         .foregroundStyle(Palette.gold)
                         .monospacedDigit()
                         .padding(.top, 4)
+                    if let end = p.end {
+                        Text("\(app.s.untilShort) \(app.fmt(end))")
+                            .font(Typo.sans(13, .medium))
+                            .foregroundStyle(Palette.soft)
+                            .monospacedDigit()
+                            .padding(.top, 2)
+                    }
                     if live {
                         Text(app.s.now.uppercased())
                             .font(Typo.label(10)).tracking(1.5)
@@ -179,41 +190,63 @@ struct TodayView: View {
         }
     }
 
-    // MARK: - Index (editorial rows)
+    // MARK: - Shma quick control (under the masthead rule)
 
-    private var indexList: some View {
-        let day = min(HebrewDate.dayOfMonth(tz: app.tz), 30)
-        return VStack(spacing: 10) {
-            navCard(app.s.prayers, "תְּפִלּוֹת", "book", nil) { app.tab = 2 }
-            navCard(app.s.brachot, "בְּרָכוֹת", "leaf", nil) { app.tab = 3 }
-            navCard(app.s.tehTitle, "תְּהִלִּים", "star", "\(app.s.psalm) \(TEHILLIM_RANGE(day))") { app.tab = 4 }
+    @ViewBuilder
+    private var shmaLine: some View {
+        let now = Date()
+        let sofShma = z.t("SofShmaGRA")
+        if let sofShma, now < sofShma {
+            // daytime: (zman tzitzit) – Sof Zman Shma (Gra)
+            let start = z.t("Misheyakir11.5")
+            shmaRow("sun.max", app.s.shmaWord,
+                    (start != nil ? "\(app.fmt(start)) – " : "\(app.s.untilShort) ") + "\(app.fmt(sofShma)) · \(app.s.graShort)")
+        } else {
+            // after Sof Zman Shma: night Shma, from tzeit (chosen variant) until midnight
+            let vk = ZmanDisplay.get("tzeit") ?? "Tzais8.5"
+            let tzeit = z.t(vk) ?? z.tzeit
+            shmaRow("moon.stars", "\(app.s.shmaWord) · \(app.s.nightWord)",
+                    "\(app.fmt(tzeit)) – \(app.fmt(z.t("SolarMidnight")))")
         }
     }
 
-    private func navCard(_ title: String, _ he: String, _ icon: String, _ trailing: String?, _ action: @escaping () -> Void) -> some View {
-        Button { Haptics.tap(); action() } label: {
+    private func shmaRow(_ icon: String, _ title: String, _ times: String) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: icon).font(.system(size: 11)).foregroundStyle(Palette.gold)
+            Text(title.uppercased()).font(Typo.label(9.5)).tracking(1.3).foregroundStyle(Palette.faint)
+            Text(times).font(Typo.sans(12.5, .medium)).foregroundStyle(Palette.ink).monospacedDigit()
+            Spacer(minLength: 0)
+        }
+        .padding(.top, 12)
+    }
+
+    // MARK: - Tehillim of the day (highlighted, opens the day's text directly)
+
+    private var tehillimTodayCard: some View {
+        let day = min(HebrewDate.dayOfMonth(tz: app.tz), 30)
+        return Button {
+            Haptics.tap()
+            path.append(.tehillimDay(day))
+        } label: {
             HStack(spacing: 14) {
                 ZStack {
-                    RoundedRectangle(cornerRadius: 13)
-                        .fill(LinearGradient(colors: [Palette.gold.opacity(0.16), Palette.cream], startPoint: .topLeading, endPoint: .bottomTrailing))
-                        .frame(width: 48, height: 48)
-                    Image(systemName: icon).font(.system(size: 21)).foregroundStyle(Palette.gold)
+                    RoundedRectangle(cornerRadius: 13).fill(Palette.gold).frame(width: 46, height: 46)
+                    Image(systemName: "star.fill").font(.system(size: 18)).foregroundStyle(.white)
                 }
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(title).font(Typo.sans(16.5, .semibold)).foregroundStyle(Palette.ink)
-                    if let trailing {
-                        Text(trailing).font(Typo.sans(12)).foregroundStyle(Palette.gold).monospacedDigit()
-                    }
+                    Text(app.s.tehTitle).font(Typo.sans(16.5, .semibold)).foregroundStyle(Palette.ink)
+                    Text("\(app.s.psalm) \(TEHILLIM_RANGE(day))").font(Typo.sans(12.5, .medium)).foregroundStyle(Palette.gold).monospacedDigit()
                 }
                 Spacer(minLength: 0)
                 if app.lang != .he {
-                    Text(he).font(Typo.serif(17)).foregroundStyle(Palette.faint)
+                    Text("תְּהִלִּים").font(Typo.serif(17)).foregroundStyle(Palette.gold.opacity(0.7))
                 }
-                Image(systemName: "chevron.forward").font(.system(size: 13, weight: .semibold)).foregroundStyle(Palette.faint.opacity(0.7))
+                Image(systemName: "chevron.forward").font(.system(size: 13, weight: .semibold)).foregroundStyle(Palette.gold)
             }
-            .padding(14)
-            .background(RoundedRectangle(cornerRadius: 18).fill(Palette.card)
-                .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(Palette.line, lineWidth: 1)))
+            .padding(15)
+            .background(RoundedRectangle(cornerRadius: 18)
+                .fill(LinearGradient(colors: [Palette.gold.opacity(0.15), Palette.gold.opacity(0.04)], startPoint: .topLeading, endPoint: .bottomTrailing))
+                .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(Palette.gold.opacity(0.45), lineWidth: 1.5)))
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -300,10 +333,12 @@ struct TodayView: View {
 
     // MARK: - Favorites
 
+    private let favCols = Array(repeating: GridItem(.flexible(), spacing: 10), count: 3)
+
     @ViewBuilder
     private var favoritesBlock: some View {
         if !bookmarks.isEmpty {
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 12) {
                 HStack(spacing: 10) {
                     Text(app.s.favorites.uppercased())
                         .font(Typo.label(10)).tracking(2).foregroundStyle(Palette.faint)
@@ -316,51 +351,70 @@ struct TodayView: View {
                     }
                     .buttonStyle(.plain)
                 }
-                ForEach(bookmarks) { b in favRow(b) }
+                LazyVGrid(columns: favCols, spacing: 10) {
+                    ForEach(bookmarks) { b in favCard(b) }
+                }
             }
             .padding(.top, 28)
         }
     }
 
-    @ViewBuilder
-    private func favRow(_ b: Bookmark) -> some View {
-        if editingFavs {
-            favContent(b)
-        } else {
-            NavigationLink(value: b.kind == "text" ? Route.text(b.refId) : Route.service(b.refId)) {
-                favContent(b)
+    // A favorite as a compact card — tap to open, long-press to drag & reorder.
+    private func favCard(_ b: Bookmark) -> some View {
+        let card = VStack(spacing: 8) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 12).fill(Palette.cream).frame(width: 44, height: 44)
+                Glyph(name: b.icon, size: 20, color: Palette.gold)
             }
-            .buttonStyle(.plain)
+            Text(b.title(app.lang))
+                .font(Typo.sans(11.5, .medium)).foregroundStyle(Palette.ink)
+                .lineLimit(2).multilineTextAlignment(.center).minimumScaleFactor(0.8)
+                .frame(height: 30)
         }
-    }
-
-    private func favContent(_ b: Bookmark) -> some View {
-        HStack(spacing: 13) {
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 14).padding(.horizontal, 6)
+        .background(RoundedRectangle(cornerRadius: 16).fill(Palette.card)
+            .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(Palette.line, lineWidth: 1)))
+        .overlay(alignment: .topTrailing) {
             if editingFavs {
                 Button {
                     Haptics.tap()
                     Bookmarks.remove(id: b.id)
                     withAnimation { bookmarks = Bookmarks.all }
                 } label: {
-                    Image(systemName: "minus.circle.fill").font(.system(size: 22)).foregroundStyle(Color.red.opacity(0.85))
+                    Image(systemName: "minus.circle.fill")
+                        .font(.system(size: 19)).foregroundStyle(Color.red.opacity(0.9))
+                        .background(Circle().fill(.white).frame(width: 15, height: 15))
                 }
                 .buttonStyle(.plain)
-            } else {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 11).fill(Palette.cream).frame(width: 40, height: 40)
-                    Image(systemName: b.icon).font(.system(size: 17)).foregroundStyle(Palette.gold)
-                }
-            }
-            Text(b.title(app.lang)).font(Typo.sans(15.5, .medium)).foregroundStyle(Palette.ink)
-            Spacer(minLength: 0)
-            if !editingFavs {
-                Image(systemName: "chevron.forward").font(.system(size: 13, weight: .semibold)).foregroundStyle(Palette.faint.opacity(0.7))
+                .offset(x: 6, y: -6)
             }
         }
-        .padding(14)
-        .background(RoundedRectangle(cornerRadius: 16).fill(Palette.card)
-            .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(Palette.line, lineWidth: 1)))
         .contentShape(Rectangle())
+
+        return card
+            .onTapGesture {
+                guard !editingFavs else { return }
+                Haptics.tap()
+                switch b.kind {
+                case "text": path.append(.text(b.refId))
+                case "service": path.append(.service(b.refId))
+                default: break
+                }
+            }
+            .draggable(b.id) { card.opacity(0.9) }
+            .dropDestination(for: String.self) { items, _ in
+                guard let dragged = items.first,
+                      let from = bookmarks.firstIndex(where: { $0.id == dragged }),
+                      let to = bookmarks.firstIndex(where: { $0.id == b.id }), from != to else { return false }
+                withAnimation {
+                    let item = bookmarks.remove(at: from)
+                    bookmarks.insert(item, at: to)
+                }
+                Bookmarks.saveOrder(bookmarks)
+                Haptics.success()
+                return true
+            }
     }
 
     // MARK: - Quick actions (clear, tappable row)

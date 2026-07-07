@@ -1,4 +1,5 @@
 import SwiftUI
+import CoreText
 
 // MARK: - Color from hex
 extension Color {
@@ -76,5 +77,20 @@ enum Typo {
 // Display serif that respects script: Playfair for Latin/Cyrillic, Frank Ruhl for Hebrew.
 func displayFont(_ size: CGFloat, _ lang: Lang) -> Font {
     lang == .he ? Typo.serif(size, .semibold) : Typo.display(size)
+}
+
+// Same as displayFont, but forces LINING figures so numerals share one baseline —
+// Playfair's default oldstyle figures made the year digits (5,7 vs 8,6) jump.
+func displayFontLining(_ size: CGFloat, _ lang: Lang) -> Font {
+    if lang == .he { return Typo.serif(size, .semibold) }
+    let base = UIFont(name: "Playfair Display", size: size) ?? .systemFont(ofSize: size, weight: .semibold)
+    let desc = base.fontDescriptor.addingAttributes([
+        .featureSettings: [[
+            UIFontDescriptor.FeatureKey.type: kNumberCaseType,
+            UIFontDescriptor.FeatureKey.selector: kUpperCaseNumbersSelector,
+        ]],
+        .traits: [UIFontDescriptor.TraitKey.weight: UIFont.Weight.semibold.rawValue],
+    ])
+    return Font(UIFont(descriptor: desc, size: size))
 }
 

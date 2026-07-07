@@ -53,7 +53,7 @@ final class CalendarModel: ObservableObject {
         // Out of range → Hebcal API fallback (still cached per month).
         let key = "\(year)-\(month)"
         guard force || !loadedMonths.contains(key) else { return }
-        guard let url = URL(string: "https://www.hebcal.com/hebcal?v=1&cfg=json&year=\(year)&month=\(month)&maj=on&min=on&nx=on&mf=on&ss=on&o=on&s=on&i=on") else { return }
+        guard let url = URL(string: "https://www.hebcal.com/hebcal?v=1&cfg=json&year=\(year)&month=\(month)&maj=on&min=on&nx=on&mf=on&ss=on&o=on&s=on&i=on&lg=ru") else { return }
         do {
             var req = URLRequest(url: url); req.timeoutInterval = 12
             let (data, _) = try await URLSession.shared.data(for: req)

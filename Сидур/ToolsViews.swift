@@ -27,10 +27,12 @@ struct MizrahView: View {
 
     @State private var wasAligned = false
     @State private var lastTickBucket = -1
+    @State private var contHeading = 0.0     // continuous (unwrapped) heading for smooth rotation
+    @State private var headingReady = false
 
     private var bearing: Double { Geo.bearing(from: app.loc, to: Geo.kotel) }
     private var distance: Double { Geo.distanceKm(from: app.loc, to: Geo.kotel) }
-    private var arrowAngle: Double { bearing - (app.heading ?? 0) }
+    private var arrowAngle: Double { bearing - contHeading }
     /// How many degrees the arrow is away from straight up (0 = facing Jerusalem).
     private var offBy: Double {
         let a = (arrowAngle.truncatingRemainder(dividingBy: 360) + 360).truncatingRemainder(dividingBy: 360)
@@ -86,9 +88,22 @@ struct MizrahView: View {
         }
         .navigationTitle(app.s.mizrahTitle)
         .navigationBarTitleDisplayMode(.inline)
-        .onChange(of: app.heading) { _, _ in updateHaptics() }
+        .onChange(of: app.heading) { _, new in
+            smoothHeading(new)
+            updateHaptics()
+        }
         .onAppear { app.startCompass() }
         .onDisappear { app.stopCompass() }
+    }
+
+    /// Unwrap the heading into a continuous angle so the dial never spins a full
+    /// turn at the 359°→0° seam — that seam was the source of the jerkiness.
+    private func smoothHeading(_ new: Double?) {
+        guard let new else { return }
+        if !headingReady { contHeading = new; headingReady = true; return }
+        let delta = ((new - contHeading).truncatingRemainder(dividingBy: 360) + 540)
+            .truncatingRemainder(dividingBy: 360) - 180
+        withAnimation(.easeOut(duration: 0.3)) { contHeading += delta }
     }
 
     /// Soft ticks while turning (denser and stronger near the target), then a firm
@@ -110,7 +125,7 @@ struct MizrahView: View {
     }
 
     private var compass: some View {
-        let rose = -(app.heading ?? 0)
+        let rose = -contHeading
         return ZStack {
             Circle().fill(Palette.card)
                 .overlay(Circle().strokeBorder(Palette.line, lineWidth: 1))
@@ -136,7 +151,6 @@ struct MizrahView: View {
                 }
             }
             .rotationEffect(.degrees(rose))
-            .animation(.linear(duration: 0.15), value: rose)
 
             // arrow to Jerusalem with Magen David tip
             ZStack {
@@ -150,7 +164,6 @@ struct MizrahView: View {
                     .offset(y: -100)
             }
             .rotationEffect(.degrees(arrowAngle))
-            .animation(.linear(duration: 0.15), value: arrowAngle)
 
             Circle().fill(Palette.ink).frame(width: 14, height: 14)
             Circle().fill(Palette.goldL).frame(width: 6, height: 6)
