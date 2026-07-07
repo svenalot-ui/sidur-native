@@ -22,19 +22,40 @@ struct TextRow: View {
         HStack(spacing: 13) {
             ZStack {
                 RoundedRectangle(cornerRadius: 11).fill(Palette.cream).frame(width: 40, height: 40)
-                Image(systemName: item.icon).font(.system(size: 19)).foregroundStyle(Palette.gold)
+                Image(systemName: item.icon).font(.system(size: 19)).foregroundStyle(item.ready ? Palette.gold : Palette.faint)
             }
-            Text(item.ru == item.name(app.lang) ? item.ru : item.name(app.lang))
-                .font(Typo.sans(15, .medium)).foregroundStyle(Palette.ink)
+            Text(item.name(app.lang))
+                .font(Typo.sans(15, .medium)).foregroundStyle(item.ready ? Palette.ink : Palette.faint)
             Spacer(minLength: 0)
-            if app.lang != .he {
-                Text(item.he).font(Typo.serif(16)).foregroundStyle(Palette.ink)
+            if !item.ready {
+                Text(app.s.soonBadge.uppercased())
+                    .font(Typo.label(9)).tracking(1).foregroundStyle(Palette.faint)
+                    .padding(.horizontal, 8).padding(.vertical, 4)
+                    .background(Capsule().strokeBorder(Palette.line, lineWidth: 1))
+            } else {
+                if app.lang != .he {
+                    Text(item.he).font(Typo.serif(16)).foregroundStyle(Palette.ink)
+                }
+                Image(systemName: "chevron.forward").font(.system(size: 13, weight: .semibold)).foregroundStyle(Palette.faint)
             }
-            Image(systemName: "chevron.forward").font(.system(size: 13, weight: .semibold)).foregroundStyle(Palette.faint)
         }
         .padding(.horizontal, 18).padding(.vertical, 14)
         .overlay(alignment: .top) { if !first { Rectangle().fill(Palette.line).frame(height: 1) } }
         .contentShape(Rectangle())
+    }
+}
+
+// A text row that navigates when ready, or sits as a "Скоро" placeholder otherwise.
+struct LiturgyRow: View {
+    let item: SacredText
+    let first: Bool
+    var body: some View {
+        if item.ready {
+            NavigationLink { ReaderView(text: item) } label: { TextRow(item: item, first: first) }
+                .buttonStyle(.plain)
+        } else {
+            TextRow(item: item, first: first)
+        }
     }
 }
 
@@ -58,9 +79,19 @@ struct BrachotView: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: Space.md) {
                         ScreenTitle(text: app.s.brachot)
-                        section(app.s.often, Liturgy.brachotOften)
-                        section(app.s.beforeEat, Liturgy.brachotBefore)
-                        section(app.s.afterEat, Liturgy.brachotAfter)
+
+                        SectionLabel(text: app.s.often)
+                        GroupCard {
+                            ForEach(Array(Liturgy.brachotOften.enumerated()), id: \.element.id) { idx, it in
+                                LiturgyRow(item: it, first: idx == 0)
+                            }
+                        }
+
+                        SectionLabel(text: app.s.brachotMore)
+                        ForEach(Liturgy.brachotFolders) { folder in
+                            NavigationLink { BrachotFolderView(folder: folder) } label: { folderCard(folder) }
+                                .buttonStyle(.plain)
+                        }
                         Spacer(minLength: 20)
                     }
                     .padding(.horizontal, Space.lg).padding(.top, 6)
@@ -72,15 +103,51 @@ struct BrachotView: View {
         }
     }
 
-    @ViewBuilder
-    private func section(_ label: String, _ items: [SacredText]) -> some View {
-        SectionLabel(text: label)
-        GroupCard {
-            ForEach(Array(items.enumerated()), id: \.element.id) { idx, it in
-                NavigationLink { ReaderView(text: it) } label: { TextRow(item: it, first: idx == 0) }
-                    .buttonStyle(.plain)
+    private func folderCard(_ folder: LiturgyFolder) -> some View {
+        HStack(spacing: 14) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 13).fill(Palette.cream).frame(width: 46, height: 46)
+                Image(systemName: folder.icon).font(.system(size: 20)).foregroundStyle(Palette.gold)
+            }
+            VStack(alignment: .leading, spacing: 2) {
+                Text(folder.name(app.lang)).font(Typo.sans(16, .semibold)).foregroundStyle(Palette.ink)
+                Text("\(folder.items.count)").font(Typo.sans(11.5)).foregroundStyle(Palette.faint)
+                    + Text(app.lang == .he ? " ברכות" : " шт.").font(Typo.sans(11.5)).foregroundStyle(Palette.faint)
+            }
+            Spacer(minLength: 0)
+            if app.lang != .he {
+                Text(folder.he).font(Typo.serif(15)).foregroundStyle(Palette.faint)
+            }
+            Image(systemName: "chevron.forward").font(.system(size: 13, weight: .semibold)).foregroundStyle(Palette.faint)
+        }
+        .padding(15)
+        .background(RoundedRectangle(cornerRadius: 18).fill(Palette.card)
+            .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(Palette.line, lineWidth: 1)))
+        .contentShape(Rectangle())
+    }
+}
+
+// Drill-in list of one blessing folder.
+struct BrachotFolderView: View {
+    @EnvironmentObject var app: AppState
+    let folder: LiturgyFolder
+    var body: some View {
+        ZStack {
+            Palette.paper.ignoresSafeArea()
+            ScrollView {
+                VStack(alignment: .leading, spacing: Space.md) {
+                    GroupCard {
+                        ForEach(Array(folder.items.enumerated()), id: \.element.id) { idx, it in
+                            LiturgyRow(item: it, first: idx == 0)
+                        }
+                    }
+                    Spacer(minLength: 20)
+                }
+                .padding(.horizontal, Space.lg).padding(.top, Space.sm)
             }
         }
+        .navigationTitle(folder.name(app.lang))
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 
@@ -141,10 +208,12 @@ struct PrayersView: View {
                         SectionLabel(text: app.s.personal)
                         GroupCard {
                             ForEach(Array(Liturgy.personal.enumerated()), id: \.element.id) { idx, it in
-                                NavigationLink { ReaderView(text: it) } label: { TextRow(item: it, first: idx == 0) }
-                                    .buttonStyle(.plain)
+                                LiturgyRow(item: it, first: idx == 0)
                             }
                         }
+
+                        SectionLabel(text: Liturgy.havdalah.name(app.lang))
+                        GroupCard { LiturgyRow(item: Liturgy.havdalah, first: true) }
                         Spacer(minLength: 20)
                     }
                     .padding(.horizontal, Space.lg).padding(.top, 6)

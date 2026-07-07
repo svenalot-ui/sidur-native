@@ -9,6 +9,7 @@ struct TodayView: View {
     @State private var lastRead: LastRead? = LastReadStore.current
     @State private var path: [Route] = []
     @State private var parsha: ParshaService.Parsha? = nil
+    @State private var editingFavs = false
 
     private var z: Zmanim { app.currentZmanim }
 
@@ -146,10 +147,11 @@ struct TodayView: View {
                         Text(app.s.now.uppercased())
                             .font(Typo.label(10)).tracking(1.5)
                             .foregroundStyle(Palette.gold)
-                            .padding(.top, 2)
+                            .padding(.top, 4)
                     }
                 }
                 .frame(maxWidth: .infinity)
+                .padding(.bottom, 6)
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
@@ -172,7 +174,7 @@ struct TodayView: View {
                     .buttonStyle(.plain)
                 }
             }
-            .padding(.top, 20)
+            .padding(.top, 32)
             .overlay(alignment: .top) { Rectangle().fill(Palette.line).frame(height: 1) }
         }
     }
@@ -181,34 +183,41 @@ struct TodayView: View {
 
     private var indexList: some View {
         let day = min(HebrewDate.dayOfMonth(tz: app.tz), 30)
-        return VStack(spacing: 0) {
-            indexRow(app.s.prayers, "תְּפִלּוֹת") { app.tab = 2 }
-            hair
-            indexRow(app.s.brachot, "בְּרָכוֹת") { app.tab = 3 }
-            hair
-            indexRow(app.s.tehTitle, "\(app.s.psalm) \(TEHILLIM_RANGE(day))", trailingGold: true) { app.tab = 4 }
+        return VStack(spacing: 10) {
+            navCard(app.s.prayers, "תְּפִלּוֹת", "book", nil) { app.tab = 2 }
+            navCard(app.s.brachot, "בְּרָכוֹת", "leaf", nil) { app.tab = 3 }
+            navCard(app.s.tehTitle, "תְּהִלִּים", "star", "\(app.s.psalm) \(TEHILLIM_RANGE(day))") { app.tab = 4 }
         }
-        .overlay(alignment: .top) { Rectangle().fill(Palette.line).frame(height: 1) }
-        .overlay(alignment: .bottom) { Rectangle().fill(Palette.line).frame(height: 1) }
     }
 
-    private func indexRow(_ title: String, _ trailing: String, trailingGold: Bool = false, _ action: @escaping () -> Void) -> some View {
+    private func navCard(_ title: String, _ he: String, _ icon: String, _ trailing: String?, _ action: @escaping () -> Void) -> some View {
         Button { Haptics.tap(); action() } label: {
-            HStack(spacing: 12) {
-                Text(title).font(Typo.sans(16.5)).foregroundStyle(Palette.ink)
-                Spacer(minLength: 8)
-                Text(trailing)
-                    .font(trailingGold ? Typo.serif(14) : Typo.serif(16))
-                    .foregroundStyle(trailingGold ? Palette.gold : Palette.faint)
-                Image(systemName: "chevron.forward").font(.system(size: 12, weight: .semibold)).foregroundStyle(Palette.faint.opacity(0.7))
+            HStack(spacing: 14) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 13)
+                        .fill(LinearGradient(colors: [Palette.gold.opacity(0.16), Palette.cream], startPoint: .topLeading, endPoint: .bottomTrailing))
+                        .frame(width: 48, height: 48)
+                    Image(systemName: icon).font(.system(size: 21)).foregroundStyle(Palette.gold)
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title).font(Typo.sans(16.5, .semibold)).foregroundStyle(Palette.ink)
+                    if let trailing {
+                        Text(trailing).font(Typo.sans(12)).foregroundStyle(Palette.gold).monospacedDigit()
+                    }
+                }
+                Spacer(minLength: 0)
+                if app.lang != .he {
+                    Text(he).font(Typo.serif(17)).foregroundStyle(Palette.faint)
+                }
+                Image(systemName: "chevron.forward").font(.system(size: 13, weight: .semibold)).foregroundStyle(Palette.faint.opacity(0.7))
             }
-            .padding(.vertical, 17)
+            .padding(14)
+            .background(RoundedRectangle(cornerRadius: 18).fill(Palette.card)
+                .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(Palette.line, lineWidth: 1)))
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }
-
-    private var hair: some View { Rectangle().fill(Palette.line).frame(height: 1) }
 
     // MARK: - Shabbat / Resume (quiet rows)
 
@@ -294,30 +303,64 @@ struct TodayView: View {
     @ViewBuilder
     private var favoritesBlock: some View {
         if !bookmarks.isEmpty {
-            VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 10) {
                     Text(app.s.favorites.uppercased())
                         .font(Typo.label(10)).tracking(2).foregroundStyle(Palette.faint)
                     Rectangle().fill(Palette.line).frame(height: 1)
-                }
-                .padding(.bottom, 2)
-                ForEach(Array(bookmarks.enumerated()), id: \.element.id) { idx, b in
-                    NavigationLink(value: b.kind == "text" ? Route.text(b.refId) : Route.service(b.refId)) {
-                        HStack(spacing: 12) {
-                            Image(systemName: b.icon).font(.system(size: 14)).foregroundStyle(Palette.gold)
-                            Text(b.title(app.lang)).font(Typo.sans(15.5)).foregroundStyle(Palette.ink)
-                            Spacer(minLength: 0)
-                            Image(systemName: "chevron.forward").font(.system(size: 12, weight: .semibold)).foregroundStyle(Palette.faint.opacity(0.7))
-                        }
-                        .padding(.vertical, 14)
-                        .contentShape(Rectangle())
+                    Button {
+                        Haptics.tap(); withAnimation { editingFavs.toggle() }
+                    } label: {
+                        Text(editingFavs ? app.s.editDone : app.s.edit)
+                            .font(Typo.sans(12, .medium)).foregroundStyle(Palette.gold)
                     }
                     .buttonStyle(.plain)
-                    .overlay(alignment: .top) { if idx != 0 { Rectangle().fill(Palette.line).frame(height: 1) } }
                 }
+                ForEach(bookmarks) { b in favRow(b) }
             }
             .padding(.top, 28)
         }
+    }
+
+    @ViewBuilder
+    private func favRow(_ b: Bookmark) -> some View {
+        if editingFavs {
+            favContent(b)
+        } else {
+            NavigationLink(value: b.kind == "text" ? Route.text(b.refId) : Route.service(b.refId)) {
+                favContent(b)
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private func favContent(_ b: Bookmark) -> some View {
+        HStack(spacing: 13) {
+            if editingFavs {
+                Button {
+                    Haptics.tap()
+                    Bookmarks.remove(id: b.id)
+                    withAnimation { bookmarks = Bookmarks.all }
+                } label: {
+                    Image(systemName: "minus.circle.fill").font(.system(size: 22)).foregroundStyle(Color.red.opacity(0.85))
+                }
+                .buttonStyle(.plain)
+            } else {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 11).fill(Palette.cream).frame(width: 40, height: 40)
+                    Image(systemName: b.icon).font(.system(size: 17)).foregroundStyle(Palette.gold)
+                }
+            }
+            Text(b.title(app.lang)).font(Typo.sans(15.5, .medium)).foregroundStyle(Palette.ink)
+            Spacer(minLength: 0)
+            if !editingFavs {
+                Image(systemName: "chevron.forward").font(.system(size: 13, weight: .semibold)).foregroundStyle(Palette.faint.opacity(0.7))
+            }
+        }
+        .padding(14)
+        .background(RoundedRectangle(cornerRadius: 16).fill(Palette.card)
+            .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(Palette.line, lineWidth: 1)))
+        .contentShape(Rectangle())
     }
 
     // MARK: - Quick actions (clear, tappable row)

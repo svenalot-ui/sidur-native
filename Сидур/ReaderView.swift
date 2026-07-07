@@ -46,6 +46,12 @@ struct ReaderView: View {
     var body: some View {
         ZStack {
             palette.bg.ignoresSafeArea()
+            if !text.ready {
+                VStack(spacing: 12) {
+                    Image(systemName: "hourglass").font(.system(size: 30)).foregroundStyle(palette.fg.opacity(0.4))
+                    Text(app.s.soonComing).font(Typo.sans(15)).foregroundStyle(palette.fg.opacity(0.7))
+                }
+            } else {
             VStack(spacing: 0) {
                 if !zen && showLangToggle { langSegment }
                 ScrollView {
@@ -67,6 +73,7 @@ struct ReaderView: View {
                     .scrollTargetLayout()
                 }
                 .scrollPosition(id: $scrollPos, anchor: .top)
+            }
             }
         }
         .readerChrome(title: text.name(app.lang), tint: palette.fg, zen: $zen) {
@@ -106,8 +113,4 @@ struct ReaderView: View {
         .padding(.horizontal, Space.lg)
         .padding(.vertical, 12)
     }
-}
-
-extension SacredText {
-    func name(_ lang: Lang) -> String { lang == .he ? he : ru }
 }

@@ -71,6 +71,7 @@ enum Bookmarks {
         if let i = a.firstIndex(where: { $0.id == b.id }) { a.remove(at: i) } else { a.append(b) }
         all = a
     }
+    static func remove(id: String) { all = all.filter { $0.id != id } }
 }
 
 // MARK: - Programmatic navigation target (used by Today's resume banner + favorites)

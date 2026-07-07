@@ -27,6 +27,8 @@ struct Strings {
     var navCal: String { t("Календарь", "לוח") }
     var navTz: String { t("Цдака", "צדקה") }
     var favorites: String { t("Избранное", "שמורים") }
+    var edit: String { t("Изменить", "עריכה") }
+    var editDone: String { t("Готово", "סיום") }
     var sh: String { t("Шахарит", "שַׁחֲרִית") }
     var mi: String { t("Минха", "מִנְחָה") }
     var ma: String { t("Маарив", "מַעֲרִיב") }
@@ -60,7 +62,9 @@ struct Strings {
     var afterEat: String { t("После еды", "לאחר האכילה") }
     var daily: String { t("Ежедневные", "יומיות") }
     var personal: String { t("Личные молитвы", "תפילות אישיות") }
+    var brachotMore: String { t("Все благословения", "עוד ברכות") }
     var soon: String { t("Полный текст скоро", "הטקסט המלא בקרוב") }
+    var soonComing: String { t("Текст скоро появится", "הטקסט יתווסף בקרוב") }
 
     // tehillim
     var tehBook: String { t("Вся книга", "כל הספר") }
