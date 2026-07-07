@@ -30,6 +30,16 @@ enum LastReadStore {
     static func dismiss() { current = nil }
 }
 
+// MARK: - Exact reading position (paragraph index per reader), so "Continue reading"
+// returns to the exact place, not just the top of the section.
+enum ReadPos {
+    private static func k(_ key: String) -> String { "rpos_\(key)" }
+    static func save(_ key: String, _ idx: Int) { UserDefaults.standard.set(idx, forKey: k(key)) }
+    static func get(_ key: String) -> Int? {
+        UserDefaults.standard.object(forKey: k(key)) as? Int
+    }
+}
+
 // MARK: - Bookmarks (brachot / personal texts / services)
 // Tehillim psalms keep their own store (Teh.favorites) — merged for display on Today.
 struct Bookmark: Codable, Equatable, Identifiable {
@@ -74,4 +84,14 @@ enum Route: Hashable {
 enum Haptics {
     static func tap() { UIImpactFeedbackGenerator(style: .light).impactOccurred() }
     static func success() { UINotificationFeedbackGenerator().notificationOccurred(.success) }
+    /// Very soft tick — used repeatedly while the compass rotates.
+    static func soft(_ intensity: CGFloat = 0.5) {
+        let g = UIImpactFeedbackGenerator(style: .soft); g.impactOccurred(intensity: intensity)
+    }
+    /// A distinct, satisfying double-pulse — used when the compass locks onto Jerusalem.
+    static func lock() {
+        let g = UIImpactFeedbackGenerator(style: .rigid)
+        g.impactOccurred(intensity: 1.0)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.09) { g.impactOccurred(intensity: 0.7) }
+    }
 }

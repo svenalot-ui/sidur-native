@@ -17,15 +17,21 @@ struct ReaderView: View {
     @EnvironmentObject var app: AppState
     let text: SacredText
 
-    @AppStorage("rdrMode") private var mode: String = "he"        // he | translit | ru
+    @AppStorage("rdrMode") private var storedMode: String = "he"  // he | translit | ru
     @AppStorage("rdrSize") private var size: Double = 23
     @AppStorage("rdrBg") private var bgKey: String = "paper"
     @State private var showSettings = false
     @State private var zen = false
     @State private var bookmarked = false
+    @State private var scrollPos: Int?
+
+    // On a Hebrew interface the transliteration/translation toggle is unnecessary.
+    private var showLangToggle: Bool { app.lang != .he }
+    private var mode: String { showLangToggle ? storedMode : "he" }
 
     private var palette: ReaderBG { ReaderBG.get(bgKey) }
     private var isRTL: Bool { mode == "he" }
+    private var posKey: String { "text_\(text.id)" }
 
     private var lines: [String] {
         let raw: String
@@ -41,10 +47,10 @@ struct ReaderView: View {
         ZStack {
             palette.bg.ignoresSafeArea()
             VStack(spacing: 0) {
-                if !zen { langSegment }
+                if !zen && showLangToggle { langSegment }
                 ScrollView {
                     VStack(alignment: isRTL ? .trailing : .leading, spacing: 16) {
-                        ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
+                        ForEach(Array(lines.enumerated()), id: \.offset) { idx, line in
                             Text(line)
                                 .font(mode == "he" ? Typo.serif(size) : Typo.sans(size - 4))
                                 .foregroundStyle(palette.fg)
@@ -52,18 +58,21 @@ struct ReaderView: View {
                                 .frame(maxWidth: .infinity, alignment: isRTL ? .trailing : .leading)
                                 .multilineTextAlignment(isRTL ? .trailing : .leading)
                                 .environment(\.layoutDirection, isRTL ? .rightToLeft : .leftToRight)
+                                .id(idx)
                         }
                     }
                     .padding(.horizontal, Space.lg)
                     .padding(.top, Space.lg)
                     .padding(.bottom, 110)
+                    .scrollTargetLayout()
                 }
+                .scrollPosition(id: $scrollPos, anchor: .top)
             }
         }
-        .readerChrome(title: text.name(app.lang), zen: $zen) {
+        .readerChrome(title: text.name(app.lang), tint: palette.fg, zen: $zen) {
             HStack(spacing: 6) {
-                ReaderIconButton(symbol: bookmarked ? "bookmark.fill" : "bookmark", a11y: "Закладка", action: toggleBookmark)
-                ReaderIconButton(symbol: "textformat.size", a11y: "Оформление текста") { showSettings = true }
+                ReaderIconButton(symbol: bookmarked ? "bookmark.fill" : "bookmark", tint: palette.fg, a11y: "Закладка", action: toggleBookmark)
+                ReaderIconButton(symbol: "textformat.size", tint: palette.fg, a11y: "Оформление текста") { showSettings = true }
             }
         }
         .sheet(isPresented: $showSettings) {
@@ -71,9 +80,15 @@ struct ReaderView: View {
                 .presentationDetents([.height(300)])
                 .presentationDragIndicator(.visible)
         }
+        .onChange(of: scrollPos) { _, new in
+            if let new { ReadPos.save(posKey, new) }
+        }
         .onAppear {
             bookmarked = Bookmarks.contains(kind: "text", refId: text.id)
             LastReadStore.save(kind: "text", refId: text.id, title: text.name(app.lang))
+            if let saved = ReadPos.get(posKey), saved < lines.count {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { scrollPos = saved }
+            }
         }
     }
 
@@ -84,9 +99,9 @@ struct ReaderView: View {
 
     private var langSegment: some View {
         Segmented(items: [
-            .init(label: app.s.he_, active: mode == "he") { mode = "he" },
-            .init(label: app.s.translit, active: mode == "translit") { mode = "translit" },
-            .init(label: app.s.ru_, active: mode == "ru") { mode = "ru" },
+            .init(label: app.s.he_, active: mode == "he") { storedMode = "he" },
+            .init(label: app.s.translit, active: mode == "translit") { storedMode = "translit" },
+            .init(label: app.s.ru_, active: mode == "ru") { storedMode = "ru" },
         ], ink: palette.fg, muted: palette.fg.opacity(0.5), baseline: palette.fg.opacity(0.18))
         .padding(.horizontal, Space.lg)
         .padding(.vertical, 12)

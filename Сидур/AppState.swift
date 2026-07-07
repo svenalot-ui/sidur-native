@@ -212,7 +212,13 @@ final class AppState: ObservableObject {
             lang = (code == "he" || code == "iw") ? .he : .ru
         }
         theme = d.string(forKey: "theme") ?? "auto"
-        nusach = d.string(forKey: "nusach")
+        // Only Edot HaMizrach ships with texts for now — migrate any older selection.
+        let savedNusach = d.string(forKey: "nusach")
+        if let sn = savedNusach, Nusach(rawValue: sn)?.available == false {
+            nusach = Nusach.edot.rawValue
+        } else {
+            nusach = savedNusach
+        }
         loc = .jerusalem
     }
 
@@ -241,7 +247,7 @@ final class AppState: ObservableObject {
 }
 
 enum Nusach: String, CaseIterable {
-    case ashkenaz, sefard, chabad, edot
+    case edot, ashkenaz, sefard, chabad
     func name(_ lang: Lang) -> String {
         switch self {
         case .ashkenaz: return lang == .he ? "אַשְׁכְּנַז" : "Ашкеназ"
@@ -250,4 +256,6 @@ enum Nusach: String, CaseIterable {
         case .edot:     return lang == .he ? "עֵדוֹת הַמִּזְרָח" : "Эдот а-Мизрах"
         }
     }
+    /// Only Edot HaMizrach ships with texts for now; the rest are placeholders.
+    var available: Bool { self == .edot }
 }

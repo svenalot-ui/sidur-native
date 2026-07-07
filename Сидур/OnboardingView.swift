@@ -28,14 +28,20 @@ struct OnboardingView: View {
                 VStack(spacing: 0) {
                     ForEach(Array(Nusach.allCases.enumerated()), id: \.element.rawValue) { idx, n in
                         Button {
-                            app.nusach = n.rawValue
+                            if n.available { Haptics.tap(); app.nusach = n.rawValue }
                         } label: {
-                            HStack {
+                            HStack(spacing: 10) {
                                 Text(n.name(app.lang))
                                     .font(Typo.sans(15.5, .medium))
-                                    .foregroundStyle(Palette.ink)
+                                    .foregroundStyle(n.available ? Palette.ink : Palette.faint)
                                 Spacer(minLength: 0)
-                                if app.lang != .he {
+                                if !n.available {
+                                    Text(app.s.soonBadge.uppercased())
+                                        .font(Typo.label(9)).tracking(1)
+                                        .foregroundStyle(Palette.faint)
+                                        .padding(.horizontal, 8).padding(.vertical, 4)
+                                        .background(Capsule().strokeBorder(Palette.line, lineWidth: 1))
+                                } else if app.lang != .he {
                                     Text(n.name(.he)).font(Typo.serif(16)).foregroundStyle(Palette.faint)
                                 }
                             }
@@ -43,6 +49,7 @@ struct OnboardingView: View {
                             .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
+                        .disabled(!n.available)
                         .overlay(alignment: .top) {
                             if idx != 0 { Rectangle().fill(Palette.line).frame(height: 1) }
                         }

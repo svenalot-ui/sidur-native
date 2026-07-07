@@ -189,7 +189,7 @@ struct TehillimReaderView: View {
     var intro: String? = nil
     var onFavChange: () -> Void = {}
 
-    @AppStorage("rdrMode") private var lmode: String = "he"      // he | translit | ru
+    @AppStorage("rdrMode") private var storedMode: String = "he"  // he | translit | ru
     @AppStorage("rdrSize") private var size: Double = 23
     @AppStorage("rdrBg") private var bgKey: String = "paper"
     @State private var showSettings = false
@@ -198,16 +198,20 @@ struct TehillimReaderView: View {
     @State private var loading = true
     @State private var favTick = false
     @State private var zen = false
+    @State private var scrollPos: Int?
 
+    private var showLangToggle: Bool { app.lang != .he }
+    private var lmode: String { showLangToggle ? storedMode : "he" }
     private var palette: ReaderBG { ReaderBG.get(bgKey) }
     private var isRTL: Bool { lmode == "he" }
     private var singlePsalm: Int? { chapters.count == 1 ? chapters[0] : nil }
+    private var posKey: String { "teh_\(chapters.first ?? 0)_\(chapters.count)" }
 
     var body: some View {
         ZStack {
             palette.bg.ignoresSafeArea()
             VStack(spacing: 0) {
-                if !zen { langSegment }
+                if !zen && showLangToggle { langSegment }
                 if loading {
                     Spacer()
                     ProgressView().tint(Palette.gold)
@@ -230,19 +234,21 @@ struct TehillimReaderView: View {
                         .padding(.horizontal, Space.lg)
                         .padding(.top, Space.md)
                         .padding(.bottom, 110)
+                        .scrollTargetLayout()
                     }
+                    .scrollPosition(id: $scrollPos, anchor: .top)
                 }
             }
         }
-        .readerChrome(title: title, zen: $zen) {
+        .readerChrome(title: title, tint: palette.fg, zen: $zen) {
             HStack(spacing: 6) {
                 if let n = singlePsalm {
-                    ReaderIconButton(symbol: Teh.favorites.contains(n) ? "heart.fill" : "heart", a11y: "В избранное") {
+                    ReaderIconButton(symbol: Teh.favorites.contains(n) ? "heart.fill" : "heart", tint: palette.fg, a11y: "В избранное") {
                         Teh.toggleFav(n); favTick.toggle(); onFavChange()
                     }
                     .id(favTick)
                 }
-                ReaderIconButton(symbol: "textformat.size", a11y: "Оформление текста") { showSettings = true }
+                ReaderIconButton(symbol: "textformat.size", tint: palette.fg, a11y: "Оформление текста") { showSettings = true }
             }
         }
         .sheet(isPresented: $showSettings) {
@@ -250,10 +256,17 @@ struct TehillimReaderView: View {
                 .presentationDetents([.height(300)])
                 .presentationDragIndicator(.visible)
         }
+        .onChange(of: scrollPos) { _, new in
+            if let new { ReadPos.save(posKey, new) }
+        }
         .task {
             await load()
             if let n = singlePsalm {
                 LastReadStore.save(kind: "psalm", refId: "\(n)", title: title)
+            }
+            if let saved = ReadPos.get(posKey) {
+                try? await Task.sleep(nanoseconds: 300_000_000)
+                scrollPos = saved
             }
         }
     }
@@ -315,9 +328,9 @@ struct TehillimReaderView: View {
 
     private var langSegment: some View {
         Segmented(items: [
-            .init(label: app.s.he_, active: lmode == "he") { lmode = "he"; Task { await load() } },
-            .init(label: app.s.translit, active: lmode == "translit") { lmode = "translit"; Task { await load() } },
-            .init(label: app.s.ru_, active: lmode == "ru") { lmode = "ru"; Task { await load() } },
+            .init(label: app.s.he_, active: lmode == "he") { storedMode = "he"; Task { await load() } },
+            .init(label: app.s.translit, active: lmode == "translit") { storedMode = "translit"; Task { await load() } },
+            .init(label: app.s.ru_, active: lmode == "ru") { storedMode = "ru"; Task { await load() } },
         ], ink: palette.fg, muted: palette.fg.opacity(0.5), baseline: palette.fg.opacity(0.18))
         .padding(.horizontal, Space.lg)
         .padding(.vertical, 12)

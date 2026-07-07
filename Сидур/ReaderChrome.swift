@@ -5,6 +5,7 @@ import SwiftUI
 struct ReaderChromeModifier<Accessory: View>: ViewModifier {
     @Environment(\.dismiss) private var dismiss
     let title: String
+    var tint: Color = Palette.ink        // reader foreground — keeps chrome legible on night paper
     @Binding var zen: Bool
     @ViewBuilder var accessory: () -> Accessory
 
@@ -23,36 +24,41 @@ struct ReaderChromeModifier<Accessory: View>: ViewModifier {
             }
     }
 
+    // Quiet, floating chrome: a frosted round back button, a serif title, frosted
+    // accessories — no heavy opaque band. A single hairline separates it from the text.
     private var topBar: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 10) {
             Button { dismiss() } label: {
                 Image(systemName: "chevron.backward")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(Palette.ink)
-                    .frame(width: 34, height: 34)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(tint)
+                    .frame(width: 36, height: 36)
                     .background(Circle().fill(.ultraThinMaterial))
+                    .overlay(Circle().strokeBorder(tint.opacity(0.08), lineWidth: 1))
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Назад")
 
             Text(title)
-                .font(Typo.sans(15, .semibold))
-                .foregroundStyle(Palette.ink)
-                .lineLimit(1)
+                .font(Typo.serif(18, .semibold))
+                .foregroundStyle(tint)
+                .lineLimit(1).minimumScaleFactor(0.7)
                 .frame(maxWidth: .infinity)
 
             accessory()
         }
-        .padding(.horizontal, 12)
-        .padding(.top, 6)
-        .padding(.bottom, 8)
-        .background(.ultraThinMaterial)
+        .padding(.horizontal, 14)
+        .padding(.top, 4)
+        .padding(.bottom, 10)
+        .overlay(alignment: .bottom) {
+            Rectangle().fill(tint.opacity(0.08)).frame(height: 1)
+        }
     }
 }
 
 extension View {
-    func readerChrome<A: View>(title: String, zen: Binding<Bool>, @ViewBuilder accessory: @escaping () -> A) -> some View {
-        modifier(ReaderChromeModifier(title: title, zen: zen, accessory: accessory))
+    func readerChrome<A: View>(title: String, tint: Color = Palette.ink, zen: Binding<Bool>, @ViewBuilder accessory: @escaping () -> A) -> some View {
+        modifier(ReaderChromeModifier(title: title, tint: tint, zen: zen, accessory: accessory))
     }
 }
 
@@ -69,10 +75,23 @@ struct ReaderIconButton: View {
             Image(systemName: symbol)
                 .font(.system(size: 15))
                 .foregroundStyle(tint)
-                .frame(width: 34, height: 34)
+                .frame(width: 36, height: 36)
                 .background(Circle().fill(.ultraThinMaterial))
+                .overlay(Circle().strokeBorder(tint.opacity(0.12), lineWidth: 1))
         }
         .buttonStyle(.plain)
         .accessibilityLabel(a11y ?? "")
+    }
+}
+
+// Re-enables the interactive swipe-back gesture even when the navigation bar is
+// hidden (SwiftUI otherwise disables it, so the readers lost edge-swipe to go back).
+extension UINavigationController: @retroactive UIGestureRecognizerDelegate {
+    override open func viewDidLoad() {
+        super.viewDidLoad()
+        interactivePopGestureRecognizer?.delegate = self
+    }
+    public func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        viewControllers.count > 1
     }
 }

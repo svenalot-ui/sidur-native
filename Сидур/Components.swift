@@ -75,19 +75,27 @@ struct SelectRow: View {
     var sub: String? = nil
     let active: Bool
     let first: Bool
+    var soon: Bool = false          // placeholder option: greyed, shows a "soon" badge
+    var soonLabel: String = ""
     let action: () -> Void
 
     var body: some View {
-        Button { Haptics.tap(); action() } label: {
+        Button { if !soon { Haptics.tap(); action() } } label: {
             HStack(spacing: 12) {
                 Text(label)
                     .font(Typo.sans(15.5, active ? .semibold : .regular))
-                    .foregroundStyle(Palette.ink)
+                    .foregroundStyle(soon ? Palette.faint : Palette.ink)
                 if let sub {
-                    Text(sub).font(Typo.serif(15)).foregroundStyle(Palette.faint)
+                    Text(sub).font(Typo.serif(15)).foregroundStyle(Palette.faint.opacity(soon ? 0.7 : 1))
                 }
                 Spacer(minLength: 8)
-                if active {
+                if soon {
+                    Text(soonLabel.uppercased())
+                        .font(Typo.label(9)).tracking(1)
+                        .foregroundStyle(Palette.faint)
+                        .padding(.horizontal, 8).padding(.vertical, 4)
+                        .background(Capsule().strokeBorder(Palette.line, lineWidth: 1))
+                } else if active {
                     Image(systemName: "checkmark")
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(Palette.gold)
@@ -98,6 +106,7 @@ struct SelectRow: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .disabled(soon)
         .overlay(alignment: .top) {
             if !first { Rectangle().fill(Palette.line).frame(height: 1).padding(.leading, 16) }
         }

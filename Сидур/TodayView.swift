@@ -94,7 +94,7 @@ struct TodayView: View {
                         .foregroundStyle(Palette.ink)
                         .lineLimit(1).minimumScaleFactor(0.6)
                     if let p = parsha {
-                        Text(app.lang == .he ? p.hebrew : "\(p.hebrew) · \(ParshaService.shortTitle(p))")
+                        Text(app.lang == .he ? p.hebrew : "\(p.hebrew) · \(ParshaService.ruName(p))")
                             .font(Typo.serif(14))
                             .foregroundStyle(Palette.gold)
                             .padding(.top, 1)

@@ -9,7 +9,10 @@ struct ServiceReaderView: View {
 
     @AppStorage("rdrSize") private var size: Double = 23
     @AppStorage("rdrBg") private var bgKey: String = "paper"
-    @AppStorage("svcMode") private var mode: String = "he"    // he | translit
+    @AppStorage("svcMode") private var storedMode: String = "he"   // he | translit
+    // Transliteration is only offered on a Russian interface.
+    private var showLangToggle: Bool { app.lang != .he }
+    private var mode: String { showLangToggle ? storedMode : "he" }
     @State private var sections: [ServiceSection] = []
     @State private var texts: [String: [String]] = [:]        // ref → hebrew paragraphs
     @State private var loadFailed = false
@@ -54,8 +57,8 @@ struct ServiceReaderView: View {
             } else {
                 VStack(spacing: 0) {
                     if !zen {
-                        langSegment
-                        if parts.count > 1 { partChips }
+                        if showLangToggle { langSegment }
+                        if parts.count > 1 { partChips.padding(.top, showLangToggle ? 0 : 12) }
                     }
                     ScrollViewReader { proxy in
                         ScrollView {
@@ -95,11 +98,11 @@ struct ServiceReaderView: View {
                 }
             }
         }
-        .readerChrome(title: title, zen: $zen) {
+        .readerChrome(title: title, tint: palette.fg, zen: $zen) {
             HStack(spacing: 6) {
-                ReaderIconButton(symbol: "list.bullet", a11y: "Разделы") { showSections = true }
-                ReaderIconButton(symbol: bookmarked ? "bookmark.fill" : "bookmark", a11y: "Закладка", action: toggleBookmark)
-                ReaderIconButton(symbol: "textformat.size", a11y: "Оформление текста") { showSettings = true }
+                ReaderIconButton(symbol: "list.bullet", tint: palette.fg, a11y: "Разделы") { showSections = true }
+                ReaderIconButton(symbol: bookmarked ? "bookmark.fill" : "bookmark", tint: palette.fg, a11y: "Закладка", action: toggleBookmark)
+                ReaderIconButton(symbol: "textformat.size", tint: palette.fg, a11y: "Оформление текста") { showSettings = true }
             }
         }
         .sheet(isPresented: $showSettings) {
@@ -136,13 +139,13 @@ struct ServiceReaderView: View {
                             }
                         } label: {
                             Text(part.he)
-                                .font(Typo.serif(14, active ? .semibold : .regular))
-                                .foregroundStyle(active ? .white : Palette.soft)
-                                .padding(.horizontal, 13)
+                                .font(Typo.serif(14.5, active ? .semibold : .regular))
+                                .foregroundStyle(active ? palette.bg : palette.fg.opacity(0.7))
+                                .padding(.horizontal, 14)
                                 .padding(.vertical, 7)
                                 .background(Capsule()
-                                    .fill(active ? Palette.gold : Palette.card)
-                                    .overlay(Capsule().strokeBorder(Palette.line, lineWidth: active ? 0 : 1)))
+                                    .fill(active ? Palette.gold : palette.fg.opacity(0.06))
+                                    .overlay(Capsule().strokeBorder(palette.fg.opacity(active ? 0 : 0.12), lineWidth: 1)))
                         }
                         .buttonStyle(.plain)
                         .id("chip_\(part.id)")
@@ -343,8 +346,8 @@ struct ServiceReaderView: View {
 
     private var langSegment: some View {
         Segmented(items: [
-            .init(label: app.s.he_, active: mode == "he") { mode = "he" },
-            .init(label: app.s.translit, active: mode == "translit") { mode = "translit" },
+            .init(label: app.s.he_, active: mode == "he") { storedMode = "he" },
+            .init(label: app.s.translit, active: mode == "translit") { storedMode = "translit" },
         ], ink: palette.fg, muted: palette.fg.opacity(0.5), baseline: palette.fg.opacity(0.18))
         .padding(.horizontal, Space.lg)
         .padding(.vertical, 12)

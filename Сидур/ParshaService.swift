@@ -18,6 +18,31 @@ actor ParshaService {
         p.title.replacingOccurrences(of: "Parashat ", with: "")
     }
 
+    /// Russian name of the weekly portion (handles combined parshiot like "Matot-Masei").
+    static func ruName(_ p: Parsha) -> String {
+        shortTitle(p)
+            .split(separator: "-")
+            .map { ruMap[$0.trimmingCharacters(in: .whitespaces)] ?? String($0) }
+            .joined(separator: "-")
+    }
+
+    private static let ruMap: [String: String] = [
+        "Bereshit": "Берешит", "Noach": "Ноах", "Lech-Lecha": "Лех-Леха", "Vayera": "Вайера",
+        "Chayei Sara": "Хаей Сара", "Toldot": "Тольдот", "Vayetzei": "Вайеце", "Vayishlach": "Ваишлах",
+        "Vayeshev": "Вайешев", "Miketz": "Микец", "Vayigash": "Ваигаш", "Vayechi": "Вайехи",
+        "Shemot": "Шмот", "Vaera": "Ваэра", "Bo": "Бо", "Beshalach": "Бешалах", "Yitro": "Итро",
+        "Mishpatim": "Мишпатим", "Terumah": "Трума", "Tetzaveh": "Тецаве", "Ki Tisa": "Ки Тиса",
+        "Vayakhel": "Ваякъель", "Pekudei": "Пкудей", "Vayikra": "Ваикра", "Tzav": "Цав",
+        "Shmini": "Шмини", "Tazria": "Тазриа", "Metzora": "Мецора", "Achrei Mot": "Ахарей Мот",
+        "Kedoshim": "Кдошим", "Emor": "Эмор", "Behar": "Беар", "Bechukotai": "Бехукотай",
+        "Bamidbar": "Бемидбар", "Nasso": "Насо", "Beha'alotcha": "Беаалотха", "Sh'lach": "Шлах",
+        "Korach": "Корах", "Chukat": "Хукат", "Balak": "Балак", "Pinchas": "Пинхас",
+        "Matot": "Матот", "Masei": "Масей", "Devarim": "Дварим", "Vaetchanan": "Ваэтханан",
+        "Eikev": "Экев", "Re'eh": "Реэ", "Shoftim": "Шофтим", "Ki Teitzei": "Ки Теце",
+        "Ki Tavo": "Ки Таво", "Nitzavim": "Ницавим", "Vayeilech": "Вайелех", "Ha'azinu": "Аазину",
+        "Vezot Haberakhah": "Везот аБраха",
+    ]
+
     func next() async -> Parsha? {
         let today = Self.ymd(Date())
         if let m = memo, m.date >= today { return m }

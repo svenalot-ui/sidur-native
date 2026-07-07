@@ -25,41 +25,56 @@ enum Geo {
 struct MizrahView: View {
     @EnvironmentObject var app: AppState
 
+    @State private var wasAligned = false
+    @State private var lastTickBucket = -1
+
     private var bearing: Double { Geo.bearing(from: app.loc, to: Geo.kotel) }
     private var distance: Double { Geo.distanceKm(from: app.loc, to: Geo.kotel) }
     private var arrowAngle: Double { bearing - (app.heading ?? 0) }
-    private var aligned: Bool {
-        guard app.heading != nil else { return false }
-        let diff = abs((arrowAngle + 540).truncatingRemainder(dividingBy: 360) - 180)
-        return diff > 175   // arrow within ±5° of "up"
+    /// How many degrees the arrow is away from straight up (0 = facing Jerusalem).
+    private var offBy: Double {
+        let a = (arrowAngle.truncatingRemainder(dividingBy: 360) + 360).truncatingRemainder(dividingBy: 360)
+        return min(a, 360 - a)
     }
+    private var aligned: Bool { app.heading != nil && offBy <= 5 }
 
     var body: some View {
         ZStack {
             Palette.paper.ignoresSafeArea()
             ScrollView {
-                VStack(spacing: Space.md) {
+                VStack(spacing: Space.sm) {
                     Text("מִזְרָח")
-                        .font(Typo.serif(19))
+                        .font(Typo.serif(26, .semibold))
                         .foregroundStyle(Palette.gold)
+                    Text(app.s.mizrahTitle.uppercased())
+                        .font(Typo.label(10)).tracking(2.4)
+                        .foregroundStyle(Palette.faint)
 
                     compass
-                        .frame(width: 270, height: 270)
+                        .frame(width: 280, height: 280)
+                        .padding(.top, Space.md)
+
+                    Text("\(Int(distance.rounded()).formatted())")
+                        .font(Typo.digits(52)).foregroundStyle(Palette.ink).monospacedDigit()
                         .padding(.top, Space.xs)
+                    Text("\(app.s.km) · \(app.s.toJerusalem)")
+                        .font(Typo.label(10.5)).tracking(1.8)
+                        .foregroundStyle(Palette.soft)
 
-                    Text("\(Int(distance.rounded()).formatted()) \(app.s.km)")
-                        .font(Typo.display(30)).foregroundStyle(Palette.ink).monospacedDigit()
-                    Text("\(Int(bearing.rounded()))° · \(app.s.toJerusalem)")
-                        .font(Typo.sans(13)).foregroundStyle(Palette.gold).tracking(1)
-
-                    if aligned {
-                        Label(app.s.facing, systemImage: "checkmark.circle")
-                            .font(Typo.sans(14, .medium)).foregroundStyle(Palette.gold)
-                            .padding(.top, 2)
+                    Group {
+                        if aligned {
+                            Label(app.s.facing, systemImage: "checkmark.circle.fill")
+                                .font(Typo.sans(15, .semibold)).foregroundStyle(Palette.gold)
+                        } else {
+                            Text("\(Int(bearing.rounded()))°")
+                                .font(Typo.digits(18)).foregroundStyle(Palette.gold).monospacedDigit()
+                        }
                     }
+                    .padding(.top, Space.sm)
+                    .frame(height: 26)
 
                     Text("\(app.s.rotateHint)\n\(app.s.calibHint)")
-                        .font(Typo.sans(12.5)).foregroundStyle(Palette.soft)
+                        .font(Typo.sans(12.5)).foregroundStyle(Palette.faint)
                         .multilineTextAlignment(.center)
                         .padding(.top, Space.sm)
                     Spacer(minLength: 30)
@@ -71,8 +86,27 @@ struct MizrahView: View {
         }
         .navigationTitle(app.s.mizrahTitle)
         .navigationBarTitleDisplayMode(.inline)
+        .onChange(of: app.heading) { _, _ in updateHaptics() }
         .onAppear { app.startCompass() }
         .onDisappear { app.stopCompass() }
+    }
+
+    /// Soft ticks while turning (denser and stronger near the target), then a firm
+    /// double-pulse the moment the arrow locks onto Jerusalem.
+    private func updateHaptics() {
+        guard app.heading != nil else { return }
+        if aligned {
+            if !wasAligned { Haptics.lock(); wasAligned = true }
+            return
+        }
+        wasAligned = false
+        // Bucket size shrinks as you approach → ticks speed up like a "getting warmer" cue.
+        let step = offBy < 25 ? 5.0 : 15.0
+        let bucket = Int(offBy / step)
+        if bucket != lastTickBucket {
+            lastTickBucket = bucket
+            Haptics.soft(offBy < 25 ? 0.7 : 0.35)
+        }
     }
 
     private var compass: some View {
@@ -280,7 +314,9 @@ struct SettingsView: View {
                                 label: n.name(app.lang),
                                 sub: app.lang != .he ? n.name(.he) : nil,
                                 active: app.nusach == n.rawValue,
-                                first: idx == 0
+                                first: idx == 0,
+                                soon: !n.available,
+                                soonLabel: app.s.soonBadge
                             ) { app.nusach = n.rawValue }
                         }
                     }

@@ -5,10 +5,16 @@ struct ZmanimView: View {
 
     private var rows: [ZmanRow] { app.currentZmanim.rows() }
 
+    // The time to display for a row — the user's chosen variant, or the default.
+    private func displayed(_ row: ZmanRow) -> Date? {
+        let vk = ZmanDisplay.get(row.id) ?? row.variants.first?.key
+        return vk.flatMap { app.currentZmanim.t($0) } ?? row.main
+    }
+
     // First zman still ahead of us today → highlighted as "next".
     private var nextId: String? {
         let now = Date()
-        return rows.first { ($0.main ?? .distantPast) > now }?.id
+        return rows.first { (displayed($0) ?? .distantPast) > now }?.id
     }
 
     var body: some View {
@@ -21,6 +27,8 @@ struct ZmanimView: View {
                         Text(app.s.zIntro)
                             .font(Typo.sans(12.5))
                             .foregroundStyle(Palette.soft)
+
+                        disclaimer
 
                         VStack(spacing: 0) {
                             ForEach(Array(rows.enumerated()), id: \.element.id) { idx, row in
@@ -58,6 +66,22 @@ struct ZmanimView: View {
         }
     }
 
+    // A quiet справочная note — the times are approximate, not a halachic ruling.
+    private var disclaimer: some View {
+        HStack(alignment: .top, spacing: 9) {
+            Image(systemName: "info.circle")
+                .font(.system(size: 12)).foregroundStyle(Palette.gold)
+                .padding(.top, 1)
+            Text(app.s.zDisclaimer)
+                .font(Typo.sans(11.5)).foregroundStyle(Palette.faint)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.horizontal, 14).padding(.vertical, 11)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 12).fill(Palette.gold.opacity(0.06))
+            .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Palette.gold.opacity(0.15), lineWidth: 1)))
+    }
+
     private func rowView(_ row: ZmanRow, first: Bool, isNext: Bool) -> some View {
         HStack(spacing: 13) {
             ZStack {
@@ -85,9 +109,9 @@ struct ZmanimView: View {
             if Reminders.get(row.id)?.on == true {
                 Image(systemName: "bell.fill").font(.system(size: 10)).foregroundStyle(Palette.gold)
             }
-            Text(app.fmt(row.main))
+            Text(app.fmt(displayed(row)))
                 .font(Typo.sans(16, .semibold))
-                .foregroundStyle(row.main == nil ? Palette.faint : Palette.gold)
+                .foregroundStyle(displayed(row) == nil ? Palette.faint : Palette.gold)
                 .monospacedDigit()
             Image(systemName: "chevron.forward").font(.system(size: 13, weight: .semibold)).foregroundStyle(Palette.faint)
         }
@@ -107,9 +131,10 @@ struct ZmanDetailView: View {
 
     @State private var reminder = ZmanReminder(on: false, before: 10, vk: "")
     @State private var denied = false
+    @State private var displayVk = ""       // variant chosen to display (and remind on)
 
     private var shownTime: Date? {
-        reminder.on ? (app.currentZmanim.t(reminder.vk) ?? row.main) : row.main
+        app.currentZmanim.t(displayVk) ?? row.main
     }
 
     var body: some View {
@@ -146,7 +171,7 @@ struct ZmanDetailView: View {
                         ])
                     }
 
-                    SectionLabel(text: reminder.on ? app.s.remindWhich : app.s.allVariants)
+                    SectionLabel(text: row.variants.count > 1 ? app.s.chooseTime : app.s.allVariants)
 
                     VStack(spacing: 0) {
                         ForEach(Array(row.variants.enumerated()), id: \.element.id) { idx, v in
@@ -171,7 +196,8 @@ struct ZmanDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             if let r = Reminders.get(row.id) { reminder = r }
-            else { reminder.vk = row.variants.first?.key ?? "" }
+            displayVk = ZmanDisplay.get(row.id) ?? row.variants.first?.key ?? ""
+            if reminder.vk.isEmpty { reminder.vk = displayVk }
         }
     }
 
@@ -216,9 +242,10 @@ struct ZmanDetailView: View {
 
     @ViewBuilder
     private func variantRow(_ v: ZmanVariant, first: Bool) -> some View {
-        let selected = reminder.on && reminder.vk == v.key
+        let selected = v.key == displayVk
+        let selectable = v.time != nil && row.variants.count > 1
         HStack(spacing: 11) {
-            if reminder.on {
+            if selectable {
                 ZStack {
                     Circle().strokeBorder(selected ? Palette.gold : Palette.line, lineWidth: 2)
                         .frame(width: 19, height: 19)
@@ -241,9 +268,11 @@ struct ZmanDetailView: View {
         .padding(.vertical, 11)
         .contentShape(Rectangle())
         .onTapGesture {
-            guard reminder.on, v.time != nil else { return }
-            reminder.vk = v.key
-            save()
+            guard selectable else { return }
+            Haptics.tap()
+            displayVk = v.key
+            ZmanDisplay.set(row.id, v.key)
+            if reminder.on { reminder.vk = v.key; save() }
         }
         .overlay(alignment: .top) {
             if !first { Rectangle().fill(Palette.line).frame(height: 1).padding(.horizontal, 18) }
@@ -251,7 +280,7 @@ struct ZmanDetailView: View {
     }
 
     private func save() {
-        if reminder.vk.isEmpty { reminder.vk = row.variants.first?.key ?? "" }
+        if reminder.vk.isEmpty { reminder.vk = displayVk.isEmpty ? (row.variants.first?.key ?? "") : displayVk }
         Reminders.set(row.id, reminder)
         NotificationScheduler.reschedule(app: app)
     }

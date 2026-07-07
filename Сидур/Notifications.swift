@@ -28,6 +28,17 @@ enum Reminders {
     static func set(_ id: String, _ r: ZmanReminder) { var a = all; a[id] = r; all = a }
 }
 
+// Which variant of each zman to show in the list (independent of reminders).
+enum ZmanDisplay {
+    private static let key = "zmanDisplayVK"
+    static var all: [String: String] {
+        get { (UserDefaults.standard.dictionary(forKey: key) as? [String: String]) ?? [:] }
+        set { UserDefaults.standard.set(newValue, forKey: key) }
+    }
+    static func get(_ id: String) -> String? { all[id] }
+    static func set(_ id: String, _ vk: String) { var a = all; a[id] = vk; all = a }
+}
+
 // Schedules local notifications for the next 7 days — they fire with the app closed.
 enum NotificationScheduler {
     static func requestAuth() async -> Bool {
