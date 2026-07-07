@@ -184,15 +184,23 @@ struct TehillimView: View {
 // MARK: - Psalm reader (fetched text, same reading options as ReaderView)
 struct TehillimReaderView: View {
     @EnvironmentObject var app: AppState
-    let title: String
-    let chapters: [Int]
-    var intro: String? = nil
-    var onFavChange: () -> Void = {}
+    let baseTitle: String
+    let intro: String?
+    let onFavChange: () -> Void
+
+    init(title: String, chapters: [Int], intro: String? = nil, onFavChange: @escaping () -> Void = {}) {
+        self.baseTitle = title
+        self.intro = intro
+        self.onFavChange = onFavChange
+        _psalms = State(initialValue: chapters)
+    }
 
     @AppStorage("rdrMode") private var storedMode: String = "he"  // he | translit | ru
     @AppStorage("rdrSize") private var size: Double = 23
     @AppStorage("rdrBg") private var bgKey: String = "paper"
+    @State private var psalms: [Int]
     @State private var showSettings = false
+    @State private var showPicker = false
     @State private var loaded: [Int: [String]] = [:]   // psalm → hebrew lines
     @State private var loadedRu: [Int: [String]] = [:]
     @State private var loading = true
@@ -204,8 +212,9 @@ struct TehillimReaderView: View {
     private var lmode: String { showLangToggle ? storedMode : "he" }
     private var palette: ReaderBG { ReaderBG.get(bgKey) }
     private var isRTL: Bool { lmode == "he" }
-    private var singlePsalm: Int? { chapters.count == 1 ? chapters[0] : nil }
-    private var posKey: String { "teh_\(chapters.first ?? 0)_\(chapters.count)" }
+    private var singlePsalm: Int? { psalms.count == 1 ? psalms[0] : nil }
+    private var displayTitle: String { singlePsalm != nil ? "\(app.s.psalm) \(singlePsalm!)" : baseTitle }
+    private var posKey: String { "teh_\(psalms.first ?? 0)_\(psalms.count)" }
 
     var body: some View {
         ZStack {
@@ -227,7 +236,7 @@ struct TehillimReaderView: View {
                                     .frame(maxWidth: .infinity, alignment: .center)
                                     .padding(.top, 6)
                             }
-                            ForEach(chapters, id: \.self) { n in
+                            ForEach(psalms, id: \.self) { n in
                                 psalmBlock(n)
                             }
                         }
@@ -239,8 +248,9 @@ struct TehillimReaderView: View {
                     .scrollPosition(id: $scrollPos, anchor: .top)
                 }
             }
+            if let n = singlePsalm, !zen { psalmNavBar(n) }
         }
-        .readerChrome(title: title, tint: palette.fg, zen: $zen) {
+        .readerChrome(title: displayTitle, tint: palette.fg, zen: $zen) {
             HStack(spacing: 6) {
                 if let n = singlePsalm {
                     ReaderIconButton(symbol: Teh.favorites.contains(n) ? "heart.fill" : "heart", tint: palette.fg, a11y: "В избранное") {
@@ -256,13 +266,14 @@ struct TehillimReaderView: View {
                 .presentationDetents([.height(300)])
                 .presentationDragIndicator(.visible)
         }
+        .sheet(isPresented: $showPicker) { psalmPicker }
         .onChange(of: scrollPos) { _, new in
             if let new { ReadPos.save(posKey, new) }
         }
         .task {
             await load()
             if let n = singlePsalm {
-                LastReadStore.save(kind: "psalm", refId: "\(n)", title: title)
+                LastReadStore.save(kind: "psalm", refId: "\(n)", title: displayTitle)
             }
             if let saved = ReadPos.get(posKey) {
                 try? await Task.sleep(nanoseconds: 300_000_000)
@@ -271,9 +282,87 @@ struct TehillimReaderView: View {
         }
     }
 
+    // MARK: - Psalm navigation (single-psalm reading)
+
+    private func goTo(_ n: Int) {
+        let c = min(max(n, 1), 150)
+        guard c != singlePsalm else { return }
+        Haptics.tap()
+        scrollPos = nil
+        psalms = [c]
+        Task {
+            await load()
+            LastReadStore.save(kind: "psalm", refId: "\(c)", title: displayTitle)
+            onFavChange()
+        }
+    }
+
+    private func psalmNavBar(_ n: Int) -> some View {
+        HStack(spacing: 0) {
+            navArrow("chevron.left", enabled: n > 1) { goTo(n - 1) }
+            Button {
+                Haptics.tap(); showPicker = true
+            } label: {
+                Text("\(app.s.psalm) \(n)")
+                    .font(Typo.serif(15, .semibold)).foregroundStyle(palette.fg)
+                    .frame(minWidth: 96)
+                    .padding(.vertical, 10)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            navArrow("chevron.right", enabled: n < 150) { goTo(n + 1) }
+        }
+        .background(Capsule().fill(.ultraThinMaterial)
+            .overlay(Capsule().strokeBorder(palette.fg.opacity(0.12), lineWidth: 1)))
+        .frame(maxHeight: .infinity, alignment: .bottom)
+        .padding(.bottom, 28)
+    }
+
+    private func navArrow(_ symbol: String, enabled: Bool, _ action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: symbol)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(enabled ? Palette.gold : palette.fg.opacity(0.25))
+                .frame(width: 46, height: 42)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(!enabled)
+    }
+
+    private var psalmPicker: some View {
+        NavigationStack {
+            ScrollView {
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 6), spacing: 8) {
+                    ForEach(1...150, id: \.self) { p in
+                        Button {
+                            showPicker = false
+                            goTo(p)
+                        } label: {
+                            Text("\(p)")
+                                .font(Typo.serif(16, .semibold))
+                                .foregroundStyle(p == singlePsalm ? .white : Palette.ink)
+                                .frame(maxWidth: .infinity, minHeight: 46)
+                                .background(RoundedRectangle(cornerRadius: 12)
+                                    .fill(p == singlePsalm ? Palette.gold : Palette.card)
+                                    .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Palette.line, lineWidth: 1)))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(Space.lg)
+            }
+            .background(Palette.paper)
+            .navigationTitle(app.s.tehillim)
+            .navigationBarTitleDisplayMode(.inline)
+        }
+        .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.visible)
+    }
+
     private func load() async {
         loading = true
-        for n in chapters {
+        for n in psalms {
             if loaded[n] == nil { loaded[n] = await TehTexts.shared.hebrew(n) ?? [] }
             if lmode == "ru", loadedRu[n] == nil { loadedRu[n] = await TehTexts.shared.russian(n) ?? [] }
         }

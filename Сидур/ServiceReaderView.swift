@@ -281,45 +281,46 @@ struct ServiceReaderView: View {
         }
     }
 
-    // Table of contents — the service's parts with their sections, jump to any.
+    // Table of contents — parts (ornamental headers) with their sections on a gold
+    // spine; the current spot is highlighted. Tap any to jump (with a light tap).
     private var sectionsSheet: some View {
-        NavigationStack {
+        let current = UserDefaults.standard.string(forKey: posKey)
+        return NavigationStack {
             ScrollView {
-                let current = UserDefaults.standard.string(forKey: posKey)
-                VStack(alignment: .leading, spacing: 0) {
+                VStack(alignment: .leading, spacing: 2) {
                     ForEach(parts) { part in
-                        if parts.count > 1 {
-                            HStack(spacing: 9) {
-                                Text(part.he)
-                                    .font(Typo.serif(17, .semibold))
-                                    .foregroundStyle(Palette.gold)
-                                if app.lang != .he && !part.en.isEmpty {
-                                    Text(part.en)
-                                        .font(.system(size: 10, weight: .medium)).tracking(1.2)
-                                        .foregroundStyle(Palette.faint)
-                                        .textCase(.uppercase)
-                                }
-                                Rectangle().fill(Palette.line).frame(height: 1)
+                        HStack(spacing: 10) {
+                            Rectangle().fill(Palette.goldL.opacity(0.5)).frame(width: 20, height: 1)
+                            Text(part.he)
+                                .font(Typo.serif(17, .semibold)).foregroundStyle(Palette.gold)
+                                .lineLimit(1)
+                            if app.lang != .he && !part.en.isEmpty {
+                                Text(part.en)
+                                    .font(Typo.label(9)).tracking(1.2)
+                                    .foregroundStyle(Palette.faint).textCase(.uppercase)
                             }
-                            .padding(.horizontal, 18)
-                            .padding(.top, 18).padding(.bottom, 6)
+                            Rectangle().fill(Palette.line).frame(height: 1)
                         }
+                        .padding(.horizontal, 20)
+                        .padding(.top, 22).padding(.bottom, 8)
+
                         ForEach(part.sections) { sec in
                             let isCurrent = sec.id == current
                             Button {
                                 Haptics.tap()
                                 UserDefaults.standard.set(sec.id, forKey: posKey)
                                 showSections = false
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-                                    pendingScroll = sec.id
-                                }
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { pendingScroll = sec.id }
                             } label: {
-                                HStack(spacing: 10) {
-                                    Circle()
-                                        .fill(isCurrent ? Palette.gold : Palette.line)
-                                        .frame(width: 5, height: 5)
+                                HStack(spacing: 13) {
+                                    ZStack {
+                                        Circle()
+                                            .fill(isCurrent ? Palette.gold : Palette.card)
+                                            .overlay(Circle().strokeBorder(isCurrent ? Palette.gold : Palette.line, lineWidth: 1.5))
+                                            .frame(width: 11, height: 11)
+                                    }
                                     Text(sec.heTitle)
-                                        .font(Typo.serif(16, isCurrent ? .semibold : .regular))
+                                        .font(Typo.serif(16.5, isCurrent ? .semibold : .regular))
                                         .foregroundStyle(isCurrent ? Palette.gold : Palette.ink)
                                     Spacer(minLength: 8)
                                     if app.lang != .he {
@@ -327,12 +328,16 @@ struct ServiceReaderView: View {
                                             .font(Typo.sans(11.5)).foregroundStyle(Palette.faint)
                                             .lineLimit(1)
                                     }
+                                    if isCurrent {
+                                        Image(systemName: "location.fill").font(.system(size: 10)).foregroundStyle(Palette.gold)
+                                    }
                                 }
-                                .padding(.horizontal, 22).padding(.vertical, 10)
-                                .background(isCurrent ? Palette.cream.opacity(0.6) : .clear)
+                                .padding(.horizontal, 14).padding(.vertical, 12)
+                                .background(RoundedRectangle(cornerRadius: 12).fill(isCurrent ? Palette.gold.opacity(0.09) : .clear))
                                 .contentShape(Rectangle())
                             }
                             .buttonStyle(.plain)
+                            .padding(.horizontal, 10)
                         }
                     }
                 }

@@ -73,24 +73,32 @@ enum MyZmanimClient {
     }
 
     // Map myzmanim fields → our internal named keys (same keys the native engine uses).
+    // Field names verified against the live getDay response. Degree-based alos/tzais
+    // are left to the native NOAA engine (accurate for the angle); everything with a
+    // clear myzmanim equivalent is overridden so the list matches the myzmanim app.
     static func named(from zman: [String: String], tz: TimeZone) -> [String: Date] {
         var out: [String: Date] = [:]
         func put(_ key: String, _ candidates: [String]) {
             if let d = firstValid(zman, candidates, tz: tz) { out[key] = d }
         }
-        put("Alos72",       ["Dawn72fix", "Dawn90", "Dawn72"])
-        put("Sunrise",      ["SunriseDefault", "SunriseLevel"])
-        put("SofShmaGRA",   ["ShemaGra"])
-        put("SofShmaMGA",   ["ShemaMA72fix", "ShemaMA72"])
-        put("SofTfilaGRA",  ["ShachrisGra"])
-        put("SofTfilaMGA",  ["ShachrisMA72fix", "ShachrisMA72"])
-        put("Chatzos",      ["Midday"])
-        put("MinchaGedola", ["MinchaGra", "Mincha30fix"])
-        put("Plag",         ["PlagGra", "PlagMA72fix"])
-        put("Sunset",       ["SunsetDefault", "SunsetLevel"])
+        put("Alos72",        ["Dawn72fix"])
+        put("Alos90",        ["Dawn90"])
+        put("Misheyakir11.5",["Yakir115", "YakirDefault"])
+        put("Misheyakir11",  ["Yakir110"])
+        put("Misheyakir10.2",["Yakir102"])
+        put("Sunrise",       ["SunriseDefault", "SunriseElevated", "SunriseLevel"])
+        put("SofShmaMGA",    ["ShemaMA72fix"])
+        put("SofShmaGRA",    ["ShemaGra"])
+        put("SofTfilaMGA",   ["ShachrisMA72fix"])
+        put("SofTfilaGRA",   ["ShachrisGra"])
+        put("Chatzos",       ["Midday"])
+        put("MinchaGedola",  ["MinchaGra"])
+        put("MinchaGedola30",["Mincha30fix"])
+        put("MinchaKetana",  ["KetanaGra"])
+        put("Plag",          ["PlagGra"])
+        put("Sunset",        ["SunsetDefault", "SunsetElevated"])
         put("CandleLighting", ["Candles"])
-        put("Tzais8.5",     ["NightGra240", "Night72fixLevel", "Night72fix", "Night50fix"])
-        put("Tzais72",      ["Night72fixLevel", "Night72fix", "Night72"])
+        put("Tzais72",       ["Night72fix"])
         put("SolarMidnight", ["Midnight"])
         return out
     }
@@ -101,5 +109,17 @@ enum MyZmanimClient {
         guard let zman = await getDay(locationID: id, date: date) else { return nil }
         let mapped = named(from: zman, tz: tz)
         return mapped.isEmpty ? nil : mapped
+    }
+}
+
+// Disk cache of the last myzmanim result per location+day, so the app shows the
+// myzmanim times immediately on launch (and offline) instead of native fallbacks.
+enum MyZmanimCache {
+    static func load(_ key: String) -> [String: Date]? {
+        guard let d = UserDefaults.standard.dictionary(forKey: key) as? [String: Double], !d.isEmpty else { return nil }
+        return d.mapValues { Date(timeIntervalSince1970: $0) }
+    }
+    static func save(_ key: String, _ named: [String: Date]) {
+        UserDefaults.standard.set(named.mapValues { $0.timeIntervalSince1970 }, forKey: key)
     }
 }

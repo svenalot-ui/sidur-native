@@ -133,7 +133,7 @@ struct CalendarView: View {
     private var selectedCard: some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(HebrewDate.hebrew(app.lang, selected))
-                .font(Typo.display(24)).foregroundStyle(Palette.ink)
+                .font(displayFontLining(24, app.lang)).foregroundStyle(Palette.ink)
             Text(selected.formatted(.dateTime.weekday(.wide).day().month(.wide).year().locale(app.lang.locale)))
                 .font(Typo.sans(12.5)).foregroundStyle(Palette.soft)
         }
@@ -148,7 +148,7 @@ struct CalendarView: View {
             navBtn("chevron.backward") { shiftMonth(-1) }
             Spacer()
             Text(monthAnchor.formatted(.dateTime.month(.wide).year().locale(app.lang.locale)))
-                .font(Typo.display(19)).foregroundStyle(Palette.ink)
+                .font(displayFontLining(19, app.lang)).foregroundStyle(Palette.ink)
             Spacer()
             navBtn("chevron.forward") { shiftMonth(1) }
         }

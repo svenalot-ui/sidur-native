@@ -37,7 +37,7 @@ struct TodayView: View {
                             masthead
                             shmaLine
                             quickRow.padding(.top, 18)
-                            tehillimTodayCard.padding(.top, 12)
+                            tehillimTodayCard
                             if isShabbatWindow { shabbatStrip.padding(.top, 18) }
                             resumeRow
                             hero.padding(.top, 26)
@@ -222,31 +222,26 @@ struct TodayView: View {
 
     // MARK: - Tehillim of the day (highlighted, opens the day's text directly)
 
+    // Same visual family as the quick-actions row, but a full-width highlighted strip.
     private var tehillimTodayCard: some View {
         let day = min(HebrewDate.dayOfMonth(tz: app.tz), 30)
         return Button {
             Haptics.tap()
             path.append(.tehillimDay(day))
         } label: {
-            HStack(spacing: 14) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 13).fill(Palette.gold).frame(width: 46, height: 46)
-                    Image(systemName: "star.fill").font(.system(size: 18)).foregroundStyle(.white)
-                }
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(app.s.tehTitle).font(Typo.sans(16.5, .semibold)).foregroundStyle(Palette.ink)
-                    Text("\(app.s.psalm) \(TEHILLIM_RANGE(day))").font(Typo.sans(12.5, .medium)).foregroundStyle(Palette.gold).monospacedDigit()
-                }
+            HStack(spacing: 11) {
+                Image(systemName: "star.fill").font(.system(size: 15)).foregroundStyle(Palette.gold)
+                Text(app.s.tehTitle).font(Typo.sans(14.5, .semibold)).foregroundStyle(Palette.ink)
+                Text("· \(app.s.psalm) \(TEHILLIM_RANGE(day))")
+                    .font(Typo.sans(12.5, .medium)).foregroundStyle(Palette.gold).monospacedDigit()
                 Spacer(minLength: 0)
-                if app.lang != .he {
-                    Text("תְּהִלִּים").font(Typo.serif(17)).foregroundStyle(Palette.gold.opacity(0.7))
-                }
-                Image(systemName: "chevron.forward").font(.system(size: 13, weight: .semibold)).foregroundStyle(Palette.gold)
+                Image(systemName: "chevron.forward").font(.system(size: 12, weight: .semibold)).foregroundStyle(Palette.gold.opacity(0.85))
             }
-            .padding(15)
-            .background(RoundedRectangle(cornerRadius: 18)
-                .fill(LinearGradient(colors: [Palette.gold.opacity(0.15), Palette.gold.opacity(0.04)], startPoint: .topLeading, endPoint: .bottomTrailing))
-                .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(Palette.gold.opacity(0.45), lineWidth: 1.5)))
+            .padding(.vertical, 15)
+            .padding(.horizontal, 12)
+            .frame(maxWidth: .infinity)
+            .background(Palette.gold.opacity(0.07))
+            .overlay(alignment: .bottom) { Rectangle().fill(Palette.line).frame(height: 1) }
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -331,13 +326,18 @@ struct TodayView: View {
         }
     }
 
-    // MARK: - Favorites
+    // MARK: - Favorites (3-per-row, live drag-to-reorder)
 
-    private let favCols = Array(repeating: GridItem(.flexible(), spacing: 10), count: 3)
+    @State private var dragId: String? = nil
+    @State private var dragLoc: CGPoint = .zero
 
     @ViewBuilder
     private var favoritesBlock: some View {
         if !bookmarks.isEmpty {
+            let spacing: CGFloat = 10
+            let itemH: CGFloat = 104
+            let rows = (bookmarks.count + 2) / 3
+            let gridH = CGFloat(rows) * itemH + CGFloat(max(rows - 1, 0)) * spacing
             VStack(alignment: .leading, spacing: 12) {
                 HStack(spacing: 10) {
                     Text(app.s.favorites.uppercased())
@@ -351,17 +351,70 @@ struct TodayView: View {
                     }
                     .buttonStyle(.plain)
                 }
-                LazyVGrid(columns: favCols, spacing: 10) {
-                    ForEach(bookmarks) { b in favCard(b) }
+                GeometryReader { geo in
+                    favGrid(width: geo.size.width, spacing: spacing, itemH: itemH)
                 }
+                .frame(height: gridH)
             }
             .padding(.top, 28)
         }
     }
 
-    // A favorite as a compact card — tap to open, long-press to drag & reorder.
+    private func favGrid(width: CGFloat, spacing: CGFloat, itemH: CGFloat) -> some View {
+        let itemW = (width - spacing * 2) / 3
+        func center(_ idx: Int) -> CGPoint {
+            CGPoint(x: CGFloat(idx % 3) * (itemW + spacing) + itemW / 2,
+                    y: CGFloat(idx / 3) * (itemH + spacing) + itemH / 2)
+        }
+        return ZStack(alignment: .topLeading) {
+            ForEach(Array(bookmarks.enumerated()), id: \.element.id) { idx, b in
+                favCard(b)
+                    .frame(width: itemW, height: itemH)
+                    .scaleEffect(dragId == b.id ? 1.06 : 1)
+                    .shadow(color: dragId == b.id ? Color.black.opacity(0.18) : .clear, radius: 9, y: 5)
+                    .position(dragId == b.id ? dragLoc : center(idx))
+                    .zIndex(dragId == b.id ? 1 : 0)
+                    .gesture(reorderGesture(b, itemW: itemW, itemH: itemH, spacing: spacing))
+                    .onTapGesture {
+                        guard dragId == nil, !editingFavs else { return }
+                        Haptics.tap()
+                        switch b.kind {
+                        case "text": path.append(.text(b.refId))
+                        case "service": path.append(.service(b.refId))
+                        default: break
+                        }
+                    }
+            }
+        }
+        .coordinateSpace(name: "favgrid")
+        .animation(.spring(response: 0.32, dampingFraction: 0.78), value: bookmarks.map(\.id))
+    }
+
+    private func reorderGesture(_ b: Bookmark, itemW: CGFloat, itemH: CGFloat, spacing: CGFloat) -> some Gesture {
+        LongPressGesture(minimumDuration: 0.22)
+            .sequenced(before: DragGesture(minimumDistance: 0, coordinateSpace: .named("favgrid")))
+            .onChanged { value in
+                guard case .second(true, let drag?) = value else { return }
+                if dragId != b.id { dragId = b.id; Haptics.tap() }
+                dragLoc = drag.location
+                let col = min(max(Int(drag.location.x / (itemW + spacing)), 0), 2)
+                let row = max(Int(drag.location.y / (itemH + spacing)), 0)
+                let target = min(max(row * 3 + col, 0), bookmarks.count - 1)
+                if let from = bookmarks.firstIndex(where: { $0.id == b.id }), from != target {
+                    let it = bookmarks.remove(at: from)
+                    bookmarks.insert(it, at: target)
+                }
+            }
+            .onEnded { _ in
+                dragId = nil
+                Bookmarks.saveOrder(bookmarks)
+                Haptics.success()
+            }
+    }
+
+    // A favorite as a compact card.
     private func favCard(_ b: Bookmark) -> some View {
-        let card = VStack(spacing: 8) {
+        VStack(spacing: 8) {
             ZStack {
                 RoundedRectangle(cornerRadius: 12).fill(Palette.cream).frame(width: 44, height: 44)
                 Glyph(name: b.icon, size: 20, color: Palette.gold)
@@ -371,10 +424,10 @@ struct TodayView: View {
                 .lineLimit(2).multilineTextAlignment(.center).minimumScaleFactor(0.8)
                 .frame(height: 30)
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 14).padding(.horizontal, 6)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(.vertical, 12).padding(.horizontal, 6)
         .background(RoundedRectangle(cornerRadius: 16).fill(Palette.card)
-            .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(Palette.line, lineWidth: 1)))
+            .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(dragId == b.id ? Palette.gold : Palette.line, lineWidth: 1)))
         .overlay(alignment: .topTrailing) {
             if editingFavs {
                 Button {
@@ -390,31 +443,6 @@ struct TodayView: View {
                 .offset(x: 6, y: -6)
             }
         }
-        .contentShape(Rectangle())
-
-        return card
-            .onTapGesture {
-                guard !editingFavs else { return }
-                Haptics.tap()
-                switch b.kind {
-                case "text": path.append(.text(b.refId))
-                case "service": path.append(.service(b.refId))
-                default: break
-                }
-            }
-            .draggable(b.id) { card.opacity(0.9) }
-            .dropDestination(for: String.self) { items, _ in
-                guard let dragged = items.first,
-                      let from = bookmarks.firstIndex(where: { $0.id == dragged }),
-                      let to = bookmarks.firstIndex(where: { $0.id == b.id }), from != to else { return false }
-                withAnimation {
-                    let item = bookmarks.remove(at: from)
-                    bookmarks.insert(item, at: to)
-                }
-                Bookmarks.saveOrder(bookmarks)
-                Haptics.success()
-                return true
-            }
     }
 
     // MARK: - Quick actions (clear, tappable row)

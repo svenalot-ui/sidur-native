@@ -1,4 +1,5 @@
 import SwiftUI
+import Combine
 import CoreImage.CIFilterBuiltins
 
 // MARK: - Geo helpers (Kotel bearing / distance)
@@ -27,8 +28,10 @@ struct MizrahView: View {
 
     @State private var wasAligned = false
     @State private var lastTickBucket = -1
-    @State private var contHeading = 0.0     // continuous (unwrapped) heading for smooth rotation
+    @State private var contHeading = 0.0     // displayed angle (eased toward target every frame)
+    @State private var targetHeading = 0.0   // latest sensor heading, unwrapped
     @State private var headingReady = false
+    private let tick = Timer.publish(every: 1.0 / 60.0, on: .main, in: .common).autoconnect()
 
     private var bearing: Double { Geo.bearing(from: app.loc, to: Geo.kotel) }
     private var distance: Double { Geo.distanceKm(from: app.loc, to: Geo.kotel) }
@@ -88,22 +91,26 @@ struct MizrahView: View {
         }
         .navigationTitle(app.s.mizrahTitle)
         .navigationBarTitleDisplayMode(.inline)
-        .onChange(of: app.heading) { _, new in
-            smoothHeading(new)
+        .onChange(of: app.heading) { _, new in setTarget(new) }
+        .onReceive(tick) { _ in
+            guard headingReady else { return }
+            // ease the displayed angle toward the target every frame → buttery motion
+            let diff = targetHeading - contHeading
+            if abs(diff) > 0.03 { contHeading += diff * 0.16 }
             updateHaptics()
         }
         .onAppear { app.startCompass() }
         .onDisappear { app.stopCompass() }
     }
 
-    /// Unwrap the heading into a continuous angle so the dial never spins a full
-    /// turn at the 359°→0° seam — that seam was the source of the jerkiness.
-    private func smoothHeading(_ new: Double?) {
+    /// Track the sensor heading, unwrapped so the dial never spins the long way
+    /// round at the 359°→0° seam. The per-frame easing above does the smoothing.
+    private func setTarget(_ new: Double?) {
         guard let new else { return }
-        if !headingReady { contHeading = new; headingReady = true; return }
-        let delta = ((new - contHeading).truncatingRemainder(dividingBy: 360) + 540)
+        if !headingReady { contHeading = new; targetHeading = new; headingReady = true; return }
+        let delta = ((new - targetHeading).truncatingRemainder(dividingBy: 360) + 540)
             .truncatingRemainder(dividingBy: 360) - 180
-        withAnimation(.easeOut(duration: 0.3)) { contHeading += delta }
+        targetHeading += delta
     }
 
     /// Soft ticks while turning (denser and stronger near the target), then a firm

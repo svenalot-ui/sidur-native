@@ -175,11 +175,14 @@ final class AppState: ObservableObject {
         var cal = Calendar(identifier: .gregorian); cal.timeZone = tz
         let d = cal.dateComponents([.year, .month, .day], from: Date())
         let key = "\(Int((lat * 100).rounded()))_\(Int((lng * 100).rounded()))_\(d.year ?? 0)-\(d.month ?? 0)-\(d.day ?? 0)"
+        // offline-first: show the last myzmanim result for this day/place immediately.
+        if let cached = MyZmanimCache.load("mzc_" + key) { remoteNamed = cached }
         if key == lastFetchKey && remoteNamed != nil { return }
         lastFetchKey = key
         Task { @MainActor in
             if let named = await MyZmanimClient.fetchNamed(lat: lat, lng: lng, date: Date(), tz: tz) {
                 self.remoteNamed = named
+                MyZmanimCache.save("mzc_" + key, named)
                 // Times changed (new place/day) → pending notifications are stale.
                 NotificationScheduler.reschedule(app: self)
             }

@@ -51,7 +51,10 @@ final class LocationManager: NSObject, CLLocationManagerDelegate {
 
     // MARK: compass heading
     func startHeading() {
-        if CLLocationManager.headingAvailable() { manager.startUpdatingHeading() }
+        if CLLocationManager.headingAvailable() {
+            manager.headingFilter = kCLHeadingFilterNone   // report every change → smoothing handles the rest
+            manager.startUpdatingHeading()
+        }
     }
     func stopHeading() { manager.stopUpdatingHeading() }
 
