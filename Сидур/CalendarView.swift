@@ -20,17 +20,40 @@ struct CalEvent: Identifiable {
     }
 }
 
-// Month events from Hebcal (free JSON API), cached per month.
+// Calendar events from a bundled dataset (offline, pre-generated for 2024–2036).
+// Only years outside that range fall back to the Hebcal API.
 @MainActor
 final class CalendarModel: ObservableObject {
     @Published var events: [String: [CalEvent]] = [:]   // "yyyy-MM-dd" → events
     @Published var failed = false
     private var loadedMonths: Set<String> = []
+    private var bundleLoaded = false
+    private static let bundledYears = 2024...2036
+
+    private struct Bundled: Decodable { let t: String; let h: String; let c: String }
+
+    private func loadBundle() {
+        guard !bundleLoaded else { return }
+        bundleLoaded = true
+        guard let url = Bundle.main.url(forResource: "calendar", withExtension: "json"),
+              let data = try? Data(contentsOf: url),
+              let raw = try? JSONDecoder().decode([String: [Bundled]].self, from: data) else { return }
+        var map = events
+        for (date, evs) in raw {
+            map[date] = evs.map { CalEvent(title: $0.t, hebrew: $0.h, category: $0.c) }
+        }
+        events = map
+    }
 
     func load(year: Int, month: Int, force: Bool = false) async {
+        loadBundle()
+        // Covered by the bundle → nothing to fetch.
+        if Self.bundledYears.contains(year) { failed = false; return }
+
+        // Out of range → Hebcal API fallback (still cached per month).
         let key = "\(year)-\(month)"
         guard force || !loadedMonths.contains(key) else { return }
-        guard let url = URL(string: "https://www.hebcal.com/hebcal?v=1&cfg=json&year=\(year)&month=\(month)&maj=on&min=on&nx=on&mf=on&ss=on&o=on&s=on") else { return }
+        guard let url = URL(string: "https://www.hebcal.com/hebcal?v=1&cfg=json&year=\(year)&month=\(month)&maj=on&min=on&nx=on&mf=on&ss=on&o=on&s=on&i=on") else { return }
         do {
             var req = URLRequest(url: url); req.timeoutInterval = 12
             let (data, _) = try await URLSession.shared.data(for: req)
