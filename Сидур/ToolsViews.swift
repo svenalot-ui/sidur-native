@@ -28,10 +28,8 @@ struct MizrahView: View {
 
     @State private var wasAligned = false
     @State private var lastTickBucket = -1
-    @State private var contHeading = 0.0     // displayed angle (eased toward target every frame)
-    @State private var targetHeading = 0.0   // latest sensor heading, unwrapped
+    @State private var contHeading = 0.0     // continuous (unwrapped) heading; animated by SwiftUI
     @State private var headingReady = false
-    private let tick = Timer.publish(every: 1.0 / 60.0, on: .main, in: .common).autoconnect()
 
     private var bearing: Double { Geo.bearing(from: app.loc, to: Geo.kotel) }
     private var distance: Double { Geo.distanceKm(from: app.loc, to: Geo.kotel) }
@@ -91,26 +89,23 @@ struct MizrahView: View {
         }
         .navigationTitle(app.s.mizrahTitle)
         .navigationBarTitleDisplayMode(.inline)
-        .onChange(of: app.heading) { _, new in setTarget(new) }
-        .onReceive(tick) { _ in
-            guard headingReady else { return }
-            // ease the displayed angle toward the target every frame → buttery motion
-            let diff = targetHeading - contHeading
-            if abs(diff) > 0.03 { contHeading += diff * 0.16 }
-            updateHaptics()
-        }
+        .onChange(of: app.heading) { _, new in updateHeading(new) }
         .onAppear { app.startCompass() }
         .onDisappear { app.stopCompass() }
     }
 
-    /// Track the sensor heading, unwrapped so the dial never spins the long way
-    /// round at the 359°→0° seam. The per-frame easing above does the smoothing.
-    private func setTarget(_ new: Double?) {
+    /// Fold each sensor reading into a continuous angle (no 359°→0° jump) and let
+    /// SwiftUI animate the rotation between readings — cheap and smooth, no timer.
+    private func updateHeading(_ new: Double?) {
         guard let new else { return }
-        if !headingReady { contHeading = new; targetHeading = new; headingReady = true; return }
-        let delta = ((new - targetHeading).truncatingRemainder(dividingBy: 360) + 540)
-            .truncatingRemainder(dividingBy: 360) - 180
-        targetHeading += delta
+        if !headingReady {
+            contHeading = new; headingReady = true
+        } else {
+            let delta = ((new - contHeading).truncatingRemainder(dividingBy: 360) + 540)
+                .truncatingRemainder(dividingBy: 360) - 180
+            contHeading += delta
+        }
+        updateHaptics()
     }
 
     /// Soft ticks while turning (denser and stronger near the target), then a firm
@@ -133,44 +128,36 @@ struct MizrahView: View {
 
     private var compass: some View {
         let rose = -contHeading
+        let spin = Animation.easeOut(duration: 0.16)
         return ZStack {
             Circle().fill(Palette.card)
                 .overlay(Circle().strokeBorder(Palette.line, lineWidth: 1))
             Circle().strokeBorder(Palette.cream, lineWidth: 1).padding(8)
 
-            // rotating rose: ticks + cardinal letters
+            // rotating rose — drawn once in a Canvas, so rotation only moves a
+            // transform (the old 72 rebuilt views were what made it sluggish).
+            CompassRose()
+                .rotationEffect(.degrees(rose))
+                .animation(spin, value: rose)
+
+            // upright cardinal letters (only 4 views — cheap to keep counter-rotated)
             ZStack {
-                ForEach(0..<72, id: \.self) { i in
-                    let major = i % 9 == 0
-                    Rectangle()
-                        .fill(major ? Palette.goldL : Palette.line)
-                        .frame(width: major ? 2 : 1, height: major ? 14 : 7)
-                        .offset(y: -122)
-                        .rotationEffect(.degrees(Double(i) * 5))
-                }
                 ForEach(Array(cardinals.enumerated()), id: \.offset) { i, c in
                     Text(c)
                         .font(Typo.sans(14, i == 0 ? .semibold : .regular))
                         .foregroundStyle(i == 0 ? Palette.gold : Palette.faint)
-                        .rotationEffect(.degrees(-Double(i) * 90 - rose))   // keep glyphs upright
+                        .rotationEffect(.degrees(-Double(i) * 90 - rose))
                         .offset(y: -96)
                         .rotationEffect(.degrees(Double(i) * 90))
                 }
             }
             .rotationEffect(.degrees(rose))
+            .animation(spin, value: rose)
 
             // arrow to Jerusalem with Magen David tip
-            ZStack {
-                ArrowShape()
-                    .fill(Palette.gold)
-                    .frame(width: 26, height: 200)
-                MagenDavid()
-                    .stroke(Palette.gold, lineWidth: 1.6)
-                    .frame(width: 26, height: 26)
-                    .background(Circle().fill(Palette.card).frame(width: 34, height: 34))
-                    .offset(y: -100)
-            }
-            .rotationEffect(.degrees(arrowAngle))
+            CompassArrow()
+                .rotationEffect(.degrees(arrowAngle))
+                .animation(spin, value: arrowAngle)
 
             Circle().fill(Palette.ink).frame(width: 14, height: 14)
             Circle().fill(Palette.goldL).frame(width: 6, height: 6)
@@ -179,6 +166,42 @@ struct MizrahView: View {
 
     private var cardinals: [String] {
         app.lang == .he ? ["צ", "מז", "ד", "מע"] : ["С", "В", "Ю", "З"]
+    }
+}
+
+// Compass tick ring drawn once in a Canvas (rotated as a whole for smoothness).
+struct CompassRose: View {
+    var body: some View {
+        Canvas { ctx, size in
+            let c = CGPoint(x: size.width / 2, y: size.height / 2)
+            let r = min(size.width, size.height) / 2
+            for i in 0..<72 {
+                let major = i % 9 == 0
+                let a = Double(i) * 5 * .pi / 180
+                let outer = r - 8
+                let inner = outer - (major ? 14 : 7)
+                var p = Path()
+                p.move(to: CGPoint(x: c.x + sin(a) * outer, y: c.y - cos(a) * outer))
+                p.addLine(to: CGPoint(x: c.x + sin(a) * inner, y: c.y - cos(a) * inner))
+                ctx.stroke(p, with: .color(major ? Palette.goldL : Palette.line), lineWidth: major ? 2 : 1)
+            }
+        }
+    }
+}
+
+// The gold arrow that points to Jerusalem, with a Magen David tip.
+struct CompassArrow: View {
+    var body: some View {
+        ZStack {
+            ArrowShape()
+                .fill(Palette.gold)
+                .frame(width: 26, height: 200)
+            MagenDavid()
+                .stroke(Palette.gold, lineWidth: 1.6)
+                .frame(width: 26, height: 26)
+                .background(Circle().fill(Palette.card).frame(width: 34, height: 34))
+                .offset(y: -100)
+        }
     }
 }
 

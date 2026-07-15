@@ -88,7 +88,11 @@ struct Zmanim {
         put("Sunset", shkia)
         put("CandleLighting", plus(shkia, -18))
         put("Tzais8.5", ev(8.5, false))
+        put("TzeisZalman", ev(6, false))          // Baal HaTanya ~ tzeit; myzmanim overrides online
+        put("TzeisChazonIsh", plus(shkia, 40))    // approximate offline; myzmanim overrides online
         put("Tzais72", plus(shkia, 72))
+        put("Tzeis50", plus(shkia, 50))
+        put("Tzeis90", plus(shkia, 90))
         put("Tzais16.1", ev(16.1, false))
         put("Tzais18", ev(18, false))
         put("SolarMidnight", plus(chatzot, 720))
@@ -129,8 +133,12 @@ struct Zmanim {
             ZmanRow(id: "shkia", ru: "Шкия · закат", he: "שְׁקִיעָה", icon: "sunset", main: t("Sunset"),
                     variants: [v("Sunset","Закат","שקיעה"), v("CandleLighting","Зажигание свечей","הדלקת נרות")]),
             ZmanRow(id: "tzeit", ru: "Цет а-кохавим", he: "צֵאת הַכּוֹכָבִים", icon: "moon.stars", main: t("Tzais8.5"),
-                    variants: [v("Tzais8.5","8.5° (Геоним)","8.5°"), v("Tzais72","72 мин · Рабейну Там","72 ר״ת"),
-                               v("Tzais16.1","16.1°","16.1°"), v("Tzais18","18°","18°")]),
+                    variants: [v("Tzais8.5","Геоним","גאונים"),
+                               v("TzeisZalman","Баал а-Тания","בעל התניא"),
+                               v("TzeisChazonIsh","Хазон Иш","חזון איש"),
+                               v("Tzeis50","50 минут","50 דק׳"),
+                               v("Tzais72","Рабейну Там (72 мин)","ר״ת 72"),
+                               v("Tzeis90","90 минут","90 דק׳")]),
             ZmanRow(id: "midnight", ru: "Хацот ночи", he: "חֲצוֹת הַלַּיְלָה", icon: "moon", main: t("SolarMidnight"),
                     variants: [v("SolarMidnight","Полночь","חצות")]),
         ]

@@ -52,7 +52,7 @@ final class LocationManager: NSObject, CLLocationManagerDelegate {
     // MARK: compass heading
     func startHeading() {
         if CLLocationManager.headingAvailable() {
-            manager.headingFilter = kCLHeadingFilterNone   // report every change → smoothing handles the rest
+            manager.headingFilter = 1   // ~1° steps; SwiftUI animation smooths between them
             manager.startUpdatingHeading()
         }
     }

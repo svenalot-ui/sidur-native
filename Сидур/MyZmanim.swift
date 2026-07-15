@@ -98,7 +98,12 @@ enum MyZmanimClient {
         put("Plag",          ["PlagGra"])
         put("Sunset",        ["SunsetDefault", "SunsetElevated"])
         put("CandleLighting", ["Candles"])
+        put("Tzais8.5",      ["NightGra240", "NightGra225"])   // geonim-style nightfall
+        put("TzeisZalman",   ["NightZalman"])
+        put("TzeisChazonIsh",["NightChazonIsh"])
+        put("Tzeis50",       ["Night50fix"])
         put("Tzais72",       ["Night72fix"])
+        put("Tzeis90",       ["Night90"])
         put("SolarMidnight", ["Midnight"])
         return out
     }

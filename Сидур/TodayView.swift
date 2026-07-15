@@ -374,9 +374,10 @@ struct TodayView: View {
                     .shadow(color: dragId == b.id ? Color.black.opacity(0.18) : .clear, radius: 9, y: 5)
                     .position(dragId == b.id ? dragLoc : center(idx))
                     .zIndex(dragId == b.id ? 1 : 0)
-                    .gesture(reorderGesture(b, itemW: itemW, itemH: itemH, spacing: spacing))
+                    // Reorder only in edit mode → a normal tap always opens the item.
+                    .applyIf(editingFavs) { $0.gesture(reorderGesture(b, itemW: itemW, itemH: itemH, spacing: spacing)) }
                     .onTapGesture {
-                        guard dragId == nil, !editingFavs else { return }
+                        guard !editingFavs else { return }
                         Haptics.tap()
                         switch b.kind {
                         case "text": path.append(.text(b.refId))

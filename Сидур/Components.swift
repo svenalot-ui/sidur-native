@@ -1,5 +1,12 @@
 import SwiftUI
 
+extension View {
+    @ViewBuilder
+    func applyIf<V: View>(_ condition: Bool, _ transform: (Self) -> V) -> some View {
+        if condition { transform(self) } else { self }
+    }
+}
+
 // Masks the status-bar safe area with the page color so scrolled content
 // never collides with the clock (screens use a custom in-scroll serif title).
 extension View {
