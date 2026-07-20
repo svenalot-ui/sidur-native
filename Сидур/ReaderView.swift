@@ -57,9 +57,7 @@ struct ReaderView: View {
                 ScrollView {
                     VStack(alignment: isRTL ? .trailing : .leading, spacing: 16) {
                         ForEach(Array(lines.enumerated()), id: \.offset) { idx, line in
-                            Text(line)
-                                .font(mode == "he" ? Typo.serif(size + 1) : Typo.read(size - 3))
-                                .foregroundStyle(palette.fg)
+                            Text(RichText.attributed(line, base: mode == "he" ? Typo.serif(size + 1) : Typo.read(size - 3), color: palette.fg, highlight: Palette.gold.opacity(0.28)))
                                 .lineSpacing(mode == "he" ? 12 : 9)
                                 .frame(maxWidth: .infinity, alignment: isRTL ? .trailing : .leading)
                                 .multilineTextAlignment(isRTL ? .trailing : .leading)

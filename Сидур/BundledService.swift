@@ -201,15 +201,13 @@ struct BundledServiceReaderView: View {
     private func blockView(_ b: BundledService.Block) -> some View {
         switch b.k {
         case "sub":
-            Text(b.he)
-                .font(Typo.serif(17, .semibold))
-                .foregroundStyle(Palette.gold.opacity(0.85))
+            Text(RichText.attributed(b.he, base: Typo.serif(17, .semibold), color: Palette.gold.opacity(0.85), highlight: Palette.gold.opacity(0.25)))
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.top, 16)
         case "rubric":
-            Text(text(b))
-                .font(Typo.read(13).italic())
-                .foregroundStyle(b.isInsert ? Palette.gold : palette.fg.opacity(0.5))
+            Text(RichText.attributed(text(b), base: Typo.read(13).italic(),
+                                     color: b.isInsert ? Palette.gold : palette.fg.opacity(0.5),
+                                     highlight: Palette.gold.opacity(0.25)))
                 .frame(maxWidth: .infinity, alignment: .center)
                 .multilineTextAlignment(.center)
                 .padding(.vertical, 3)
@@ -220,9 +218,8 @@ struct BundledServiceReaderView: View {
 
     @ViewBuilder
     private func bodyText(_ b: BundledService.Block) -> some View {
-        let t = Text(text(b))
-            .font(mode == "he" ? Typo.serif(size + 1) : Typo.read(size - 3))
-            .foregroundStyle(palette.fg)
+        let base = mode == "he" ? Typo.serif(size + 1) : Typo.read(size - 3)
+        let t = Text(RichText.attributed(text(b), base: base, color: palette.fg, highlight: Palette.gold.opacity(0.28)))
             .lineSpacing(mode == "he" ? 12 : 8)
         if b.isInsert {
             t.frame(maxWidth: .infinity, alignment: isRTL ? .trailing : .leading)

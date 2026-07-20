@@ -12,58 +12,70 @@
   *{box-sizing:border-box}
   body{margin:0;background:var(--paper);color:var(--ink);
     font-family:-apple-system,"SF Pro Text",Helvetica,Arial,sans-serif;font-size:15px}
-  header{position:sticky;top:0;z-index:10;background:rgba(252,250,245,.92);backdrop-filter:blur(10px);
-    border-bottom:1px solid var(--line);padding:10px 18px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  header{position:sticky;top:0;z-index:20;background:rgba(252,250,245,.94);backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line)}
+  .row1{padding:9px 18px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
   h1{font-family:"Playfair Display",Georgia,serif;font-size:20px;margin:0;font-weight:700}
-  h1 .heb{font-family:"Frank Ruhl Libre","Times New Roman",serif;color:var(--gold);margin-right:8px}
+  h1 .heb{font-family:"Frank Ruhl Libre","Times New Roman",serif;color:var(--gold);margin-inline-end:8px}
   select,button,input{font:inherit}
-  select#fileSel{padding:7px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card);min-width:200px}
+  select#fileSel{padding:7px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card);min-width:210px}
   .btn{padding:8px 14px;border:1px solid var(--line);border-radius:10px;background:var(--card);cursor:pointer;color:var(--ink)}
   .btn:hover{background:var(--cream)}
   .btn.gold{background:var(--gold);color:#fff;border-color:var(--gold);font-weight:600}
   .btn.gold[disabled]{opacity:.5;cursor:default}
   .spacer{flex:1}
-  .dirty{color:var(--gold);font-size:13px;font-weight:600}
+  .dirty{color:var(--gold);font-size:13px;font-weight:600;white-space:nowrap}
   #fontctl{display:flex;align-items:center;gap:6px;color:var(--faint);font-size:13px}
-  main{display:flex;gap:0}
-  #editor{flex:1;padding:18px 22px;max-width:900px;margin:0 auto}
-  #previewPane{width:0;overflow:hidden;border-left:1px solid var(--line);transition:width .2s}
+  /* formatting toolbar */
+  .toolbar{padding:6px 18px;display:flex;gap:6px;align-items:center;border-top:1px solid var(--line);flex-wrap:wrap}
+  .tb{width:34px;height:30px;border:1px solid var(--line);border-radius:8px;background:var(--card);cursor:pointer;
+    display:flex;align-items:center;justify-content:center;font-size:15px}
+  .tb:hover{background:var(--cream)}
+  .tb.b{font-weight:800} .tb.i{font-style:italic;font-family:Georgia,serif} .tb.u{text-decoration:underline}
+  .tb.mk{background:rgba(152,100,19,.18)}
+  .sw{width:24px;height:24px;border-radius:6px;border:1px solid rgba(0,0,0,.15);cursor:pointer}
+  .tb-label{color:var(--faint);font-size:12px;margin-inline-start:6px;margin-inline-end:2px}
+  main{display:flex}
+  #editor{flex:1;padding:16px 22px;max-width:920px;margin:0 auto}
+  #previewPane{width:0;overflow:hidden;border-inline-start:1px solid var(--line);transition:width .2s}
   body.preview #previewPane{width:44%}
   body.preview #editor{margin:0}
-  .doc-title{display:flex;gap:12px;margin-bottom:14px;align-items:flex-end}
+  .doc-title{display:flex;gap:12px;margin-bottom:12px}
   .doc-title input{flex:1;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card)}
   .doc-title .he{direction:rtl;font-family:"Frank Ruhl Libre",serif;font-size:20px;color:var(--gold)}
-  .part{border:1px solid var(--line);border-radius:16px;background:var(--card);margin:14px 0;overflow:hidden}
-  .part-head{display:flex;gap:10px;align-items:center;padding:12px 14px;background:var(--cream);border-bottom:1px solid var(--line)}
+  .part{border:1px solid var(--line);border-radius:16px;background:var(--card);margin:13px 0;overflow:hidden}
+  .part-head{display:flex;gap:10px;align-items:center;padding:11px 13px;background:var(--cream);border-bottom:1px solid var(--line)}
   .part-head .num{width:26px;height:26px;border-radius:8px;background:var(--gold);color:#fff;display:flex;
     align-items:center;justify-content:center;font-weight:700;font-size:13px;flex:none}
   .part-head input{flex:1;padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card)}
   .part-head input.he{direction:rtl;font-family:"Frank Ruhl Libre",serif;font-size:18px;color:var(--gold)}
   .part-head input.ru{font-weight:600}
   .blocks{padding:8px}
-  .block{border:1px solid var(--line);border-radius:12px;margin:8px 0;padding:10px;background:var(--paper);position:relative}
+  .block{border:1px solid var(--line);border-radius:12px;margin:8px 0;padding:10px;background:var(--paper)}
   .block.insert{border-color:var(--goldL);background:rgba(152,100,19,.06);box-shadow:inset 3px 0 0 var(--gold)}
   .block.rubric{background:var(--cream)}
   .block-top{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
   .block-top select{padding:5px 8px;border:1px solid var(--line);border-radius:8px;background:var(--card);font-size:13px}
   .toggle{padding:5px 11px;border-radius:20px;border:1px solid var(--line);background:var(--card);cursor:pointer;font-size:13px;font-weight:600}
   .toggle.on{background:var(--gold);color:#fff;border-color:var(--gold)}
-  .mini{width:30px;height:30px;border:1px solid var(--line);border-radius:8px;background:var(--card);cursor:pointer;font-size:15px;line-height:1}
-  .mini:hover{background:var(--cream)}
-  .mini.del:hover{background:#fdeaea;border-color:#e3b3b3}
-  .fields{display:grid;grid-template-columns:1fr;gap:6px}
+  .mini{width:30px;height:30px;border:1px solid var(--line);border-radius:8px;background:var(--card);cursor:pointer;font-size:15px}
+  .mini:hover{background:var(--cream)} .mini.del:hover{background:#fdeaea;border-color:#e3b3b3}
+  .fields{display:grid;gap:6px}
   .fld{display:flex;flex-direction:column;gap:2px}
   .fld label{font-size:11px;color:var(--faint);text-transform:uppercase;letter-spacing:.05em;font-weight:600}
-  textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:9px 11px;background:var(--card);
-    resize:none;overflow:hidden;line-height:1.5;color:var(--ink)}
-  textarea.he{direction:rtl;text-align:right;font-family:"Frank Ruhl Libre","Times New Roman",serif}
-  textarea.tr,textarea.ru{font-family:Georgia,"Times New Roman",serif}
+  .rt{width:100%;min-height:2.2em;border:1px solid var(--line);border-radius:8px;padding:9px 11px;background:var(--card);
+    line-height:1.55;color:var(--ink);outline:none}
+  .rt:focus{border-color:var(--goldL);box-shadow:0 0 0 3px rgba(152,100,19,.08)}
+  .rt.he{direction:rtl;text-align:right;font-family:"Frank Ruhl Libre","Times New Roman",serif}
+  .rt.tr,.rt.ru{font-family:Georgia,"Times New Roman",serif}
+  .rt mark{background:rgba(152,100,19,.28);border-radius:3px;padding:0 1px}
   .add{display:block;width:100%;padding:9px;border:1px dashed var(--goldL);border-radius:10px;background:transparent;
     color:var(--gold);cursor:pointer;font-weight:600;margin:6px 0}
   .add:hover{background:rgba(152,100,19,.05)}
-  .partbar{display:flex;gap:8px;justify-content:flex-end;padding:8px 14px;border-top:1px solid var(--line)}
+  .hint{color:var(--faint);font-size:13px;margin:6px 0 14px}
+  .hint b{color:var(--soft)}
   /* preview */
-  #pv{padding:24px;height:calc(100vh - 58px);overflow:auto;background:var(--paper)}
+  #pv{padding:24px;height:calc(100vh - 96px);overflow:auto;background:var(--paper)}
   .pv-part{text-align:center;margin:24px 0 8px;color:var(--gold);font-family:"Frank Ruhl Libre",serif;font-size:22px;font-weight:700}
   .pv-part small{display:block;color:var(--faint);font-size:10px;letter-spacing:.15em;text-transform:uppercase;font-family:sans-serif}
   .pv-sub{text-align:center;color:var(--gold);font-family:"Frank Ruhl Libre",serif;font-size:17px;font-weight:600;margin-top:14px}
@@ -71,21 +83,36 @@
   .pv-rubric.ins{color:var(--gold)}
   .pv-body{font-family:"Frank Ruhl Libre",serif;direction:rtl;text-align:right;font-size:22px;line-height:1.7;margin:6px 0;color:#2A2213}
   .pv-body.ins{background:rgba(152,100,19,.07);border-radius:10px;padding:10px;box-shadow:inset 3px 0 0 var(--gold)}
+  .pv-body mark,.pv-sub mark{background:rgba(152,100,19,.28);border-radius:3px}
   .liturgy .block-top{display:none}
-  .hint{color:var(--faint);font-size:13px;margin:6px 0 14px}
-  kbd{background:var(--cream);border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:12px}
 </style>
 </head>
 <body>
 <header>
-  <h1><span class="heb">סִדּוּר</span>Редактор</h1>
-  <select id="fileSel"></select>
-  <button class="btn" id="reloadBtn">↺ Перезагрузить</button>
-  <span id="fontctl">Аа <input type="range" id="fontRange" min="14" max="30" value="20"></span>
-  <div class="spacer"></div>
-  <span class="dirty" id="dirty"></span>
-  <button class="btn" id="previewBtn">👁 Превью</button>
-  <button class="btn gold" id="saveBtn" disabled>Сохранить</button>
+  <div class="row1">
+    <h1><span class="heb">סִדּוּר</span>Редактор</h1>
+    <select id="fileSel"></select>
+    <button class="btn" id="reloadBtn">↺</button>
+    <span id="fontctl">Аа <input type="range" id="fontRange" min="14" max="30" value="20"></span>
+    <div class="spacer"></div>
+    <span class="dirty" id="dirty"></span>
+    <button class="btn" id="previewBtn">👁 Превью</button>
+    <button class="btn gold" id="saveBtn" disabled>Сохранить</button>
+  </div>
+  <div class="toolbar" id="toolbar">
+    <span class="tb-label">Формат:</span>
+    <button class="tb b" data-cmd="bold" title="Жирный">Ж</button>
+    <button class="tb i" data-cmd="italic" title="Курсив">К</button>
+    <button class="tb u" data-cmd="underline" title="Подчёркнутый">Ч</button>
+    <button class="tb mk" data-cmd="mark" title="Выделить (золотом)">✎</button>
+    <span class="tb-label">Цвет:</span>
+    <span class="sw" data-color="#986413" style="background:#986413" title="Золотой"></span>
+    <span class="sw" data-color="#B3261E" style="background:#B3261E" title="Красный"></span>
+    <span class="sw" data-color="#1A5FB4" style="background:#1A5FB4" title="Синий"></span>
+    <span class="sw" data-color="#1A1714" style="background:#1A1714" title="Обычный"></span>
+    <button class="tb" data-cmd="clear" title="Убрать формат">⌫</button>
+    <span class="tb-label" id="tbctx"></span>
+  </div>
 </header>
 <main>
   <div id="editor"><p class="hint">Загрузка…</p></div>
@@ -93,185 +120,235 @@
 </main>
 
 <script>
-const $ = s => document.querySelector(s);
-let state = { name:null, data:null, dirty:false, font:20 };
+const $=s=>document.querySelector(s);
+let state={name:null,data:null,dirty:false,font:20};
+let activeEd=null;              // currently focused contenteditable
+const KINDS=[['body','Текст молитвы'],['rubric','Ремарка (курсив)'],['sub','Подзаголовок']];
 
-const KINDS = [['body','Текст молитвы'],['rubric','Ремарка (курсив)'],['sub','Подзаголовок']];
+document.execCommand('styleWithCSS',false,false);   // bold→<b>, not span
 
-async function api(path, opts){ const r = await fetch(path, opts); return r; }
-
+// ---------- server ----------
+async function api(p,o){return fetch(p,o);}
 async function loadFiles(){
-  const files = await (await api('/api/files')).json();
-  const sel = $('#fileSel'); sel.innerHTML='';
-  const nice = {mincha:'Минха', birkat_hashachar:'Утренние благословения', bedtime:'Перед сном',
-    birkat_hamazon:'Биркат а-мазон', meein_shalosh:'Меэйн шалош', birkat_halevana:'Биркат а-левана',
+  const files=await(await api('/api/files')).json();
+  const sel=$('#fileSel'); sel.innerHTML='';
+  const nice={mincha:'Минха',birkat_hashachar:'Утренние благословения',bedtime:'Перед сном',
+    birkat_hamazon:'Биркат а-мазон',meein_shalosh:'Меэйн шалош',birkat_halevana:'Биркат а-левана',
     liturgy:'Брахот (короткие)'};
-  files.forEach(f=>{
-    const id=f.replace('.json','');
-    const o=document.createElement('option'); o.value=f; o.textContent=(nice[id]||id)+'  ·  '+f; sel.appendChild(o);
-  });
+  files.forEach(f=>{const id=f.replace('.json','');const o=document.createElement('option');
+    o.value=f;o.textContent=(nice[id]||id);sel.appendChild(o);});
   sel.onchange=()=>openFile(sel.value);
   if(files.length) openFile(files.includes('mincha.json')?'mincha.json':files[0]);
 }
-
 async function openFile(name){
-  if(state.dirty && !confirm('Есть несохранённые изменения. Открыть другой файл?')) { $('#fileSel').value=state.name; return; }
+  if(state.dirty&&!confirm('Есть несохранённые изменения. Открыть другой файл?')){$('#fileSel').value=state.name;return;}
   state.name=name;
-  state.data=await (await api('/api/file?name='+encodeURIComponent(name))).json();
-  state.dirty=false; markDirty(false);
-  $('#fileSel').value=name;
-  render(); renderPreview();
+  state.data=await(await api('/api/file?name='+encodeURIComponent(name))).json();
+  markDirty(false); $('#fileSel').value=name; render(); renderPreview();
+}
+function markDirty(v){state.dirty=v;$('#saveBtn').disabled=!v;$('#dirty').textContent=v?'● не сохранено':'';}
+function touch(){markDirty(true);renderPreview();}
+
+// ---------- rich-text field ----------
+function autosize(){/* contenteditable grows naturally */}
+function rtField(label,cls,html,on){
+  const w=document.createElement('div');w.className='fld';
+  const l=document.createElement('label');l.textContent=label;w.appendChild(l);
+  const ed=document.createElement('div');ed.className='rt '+cls;ed.contentEditable='true';
+  if(cls.indexOf('he')>=0)ed.dir='rtl';
+  ed.style.fontSize=((cls.indexOf('he')>=0?state.font+2:state.font-4))+'px';
+  ed.innerHTML=html||'';
+  ed.addEventListener('focus',()=>{activeEd=ed;$('#tbctx').textContent=label;});
+  const commit=()=>on(normalize(ed));
+  ed.addEventListener('input',commit);
+  ed.addEventListener('blur',commit);
+  w.appendChild(ed);return w;
 }
 
-function markDirty(v){ state.dirty=v; $('#saveBtn').disabled=!v; $('#dirty').textContent=v?'● не сохранено':''; }
-function touch(){ markDirty(true); renderPreview(); }
-
-function autosize(t){ t.style.height='auto'; t.style.height=(t.scrollHeight+2)+'px'; }
-
-// ---- render editor ----
-function render(){
-  const d=state.data, e=$('#editor'); e.innerHTML='';
-  if(d.parts) return renderService(e,d);
-  if(d.brachotOften||d.personal) return renderLiturgy(e,d);
-  e.innerHTML='<p class="hint">Неизвестный формат файла.</p>';
+// clean the contenteditable HTML down to our subset: b/i/u/mark/span[color]/br
+function normalize(el){
+  function walk(node){
+    if(node.nodeType===3) return esc(node.nodeValue);
+    if(node.nodeType!==1) return '';
+    const tag=node.tagName;
+    const inner=[...node.childNodes].map(walk).join('');
+    if(tag==='BR') return '<br>';
+    if(tag==='DIV'||tag==='P') return inner+(inner.endsWith('<br>')?'':'<br>');
+    if(tag==='B'||tag==='STRONG') return wrap('b',inner);
+    if(tag==='I'||tag==='EM') return wrap('i',inner);
+    if(tag==='U') return wrap('u',inner);
+    if(tag==='MARK') return wrap('mark',inner);
+    if(tag==='FONT'){const c=hex(node.getAttribute('color'));return c?`<span style="color:${c}">${inner}</span>`:inner;}
+    if(tag==='SPAN'){
+      let s=inner; const st=node.style;
+      const col=hex(st.color);
+      if((st.backgroundColor&&st.backgroundColor!=='transparent')) s=`<mark>${s}</mark>`;
+      if(st.textDecorationLine&&st.textDecorationLine.indexOf('underline')>=0) s=`<u>${s}</u>`;
+      if(st.textDecoration&&st.textDecoration.indexOf('underline')>=0) s=`<u>${s}</u>`;
+      const fw=st.fontWeight; if(fw&&(fw==='bold'||+fw>=600)) s=`<b>${s}</b>`;
+      if(st.fontStyle==='italic') s=`<i>${s}</i>`;
+      if(col) s=`<span style="color:${col}">${s}</span>`;
+      return s;
+    }
+    return inner;
+  }
+  let out=[...el.childNodes].map(walk).join('');
+  out=out.replace(/(<br>)+$/,'');            // trim trailing breaks
+  out=out.replace(/<(b|i|u|mark)>\s*<\/\1>/g,''); // drop empty
+  return out;
+}
+function wrap(t,s){return s? `<${t}>${s}</${t}>`:'';}
+function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function hex(c){
+  if(!c) return null; c=c.trim();
+  let m=c.match(/^#([0-9a-fA-F]{6})$/); if(m) return '#'+m[1].toLowerCase();
+  m=c.match(/^#([0-9a-fA-F]{3})$/); if(m) return '#'+m[1].split('').map(x=>x+x).join('').toLowerCase();
+  m=c.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/); if(m){return '#'+[1,2,3].map(i=>(+m[i]).toString(16).padStart(2,'0')).join('');}
+  return null;
 }
 
-function fld(label,cls,val,on){
-  const w=document.createElement('div'); w.className='fld';
-  const l=document.createElement('label'); l.textContent=label;
-  const t=document.createElement('textarea'); t.className=cls; t.value=val||'';
-  t.style.fontSize=(cls.includes('he')?state.font+2:state.font-4)+'px';
-  t.oninput=()=>{on(t.value);autosize(t)};
-  w.appendChild(l); w.appendChild(t); setTimeout(()=>autosize(t),0);
-  return w;
+// ---------- toolbar actions (on active editable) ----------
+function focusEd(){ if(activeEd){activeEd.focus();} }
+$('#toolbar').addEventListener('mousedown',e=>{ // keep selection
+  if(e.target.closest('.tb,.sw')) e.preventDefault();
+});
+document.querySelectorAll('.tb[data-cmd]').forEach(b=>b.onclick=()=>{
+  if(!activeEd)return; activeEd.focus();
+  const cmd=b.dataset.cmd;
+  if(cmd==='bold'||cmd==='italic'||cmd==='underline') document.execCommand(cmd,false,null);
+  else if(cmd==='mark') doHighlight();
+  else if(cmd==='clear') document.execCommand('removeFormat',false,null);
+  fireInput();
+});
+document.querySelectorAll('.sw[data-color]').forEach(s=>s.onclick=()=>{
+  if(!activeEd)return; activeEd.focus();
+  document.execCommand('foreColor',false,s.dataset.color); fireInput();
+});
+function doHighlight(){
+  const sel=window.getSelection(); if(!sel.rangeCount)return;
+  const r=sel.getRangeAt(0); if(r.collapsed)return;
+  const m=document.createElement('mark');
+  try{ r.surroundContents(m); sel.removeAllRanges(); }
+  catch(e){ document.execCommand('hiliteColor',false,'rgba(152,100,19,.28)'); }
 }
+function fireInput(){ if(activeEd) activeEd.dispatchEvent(new Event('input')); }
+
+// ---------- render editor ----------
+function render(){const d=state.data,e=$('#editor');e.innerHTML='';
+  if(d.parts)return renderService(e,d);
+  if(d.brachotOften||d.personal)return renderLiturgy(e,d);
+  e.innerHTML='<p class="hint">Неизвестный формат.</p>';}
+function inp(ph,cls,val,on){const t=document.createElement('input');t.className=cls;t.placeholder=ph;t.value=val||'';t.oninput=()=>on(t.value);return t;}
+function hintEl(html){const h=document.createElement('div');h.className='hint';h.innerHTML=html;return h;}
+function miniBtn(t,fn,cls){const b=document.createElement('button');b.className='mini '+(cls||'');b.textContent=t;b.onclick=fn;return b;}
+function move(arr,i,d){const j=i+d;if(j<0||j>=arr.length)return;[arr[i],arr[j]]=[arr[j],arr[i]];touch();render();}
 
 function renderService(e,d){
-  const dt=document.createElement('div'); dt.className='doc-title';
-  dt.appendChild(inp('Название (иврит)','he',d.titleHe,v=>{d.titleHe=v;touch()}));
-  dt.appendChild(inp('Название (русский)','ru',d.titleRu,v=>{d.titleRu=v;touch()}));
+  const dt=document.createElement('div');dt.className='doc-title';
+  dt.appendChild(inp('Название — иврит','he',d.titleHe,v=>{d.titleHe=v;touch()}));
+  dt.appendChild(inp('Название — русский','ru',d.titleRu,v=>{d.titleRu=v;touch()}));
   e.appendChild(dt);
-  e.appendChild(hint('Выдели блок → кнопка <b>Вставка</b> помечает его золотым (условный текст: Летом/Зимой, Рош&nbsp;Ходеш, Ханука…). Тип блока: Текст / Ремарка / Подзаголовок. Стрелки — порядок.'));
+  e.appendChild(hintEl('Клик в текст → выдели мышкой → кнопки сверху (<b>Ж К Ч</b>, выделение, цвет). <b>⚡ Вставка</b> красит весь блок золотом (условный текст: Летом/Зимой, Рош&nbsp;Ходеш, Ханука…). Тип блока и стрелки — слева.'));
   d.parts.forEach((p,pi)=>e.appendChild(partEl(d,p,pi)));
-  const addP=document.createElement('button'); addP.className='add'; addP.textContent='＋ добавить часть';
-  addP.onclick=()=>{d.parts.push({he:'',ru:'Новая часть',blocks:[]});touch();render()};
-  e.appendChild(addP);
+  const a=document.createElement('button');a.className='add';a.textContent='＋ добавить часть';
+  a.onclick=()=>{d.parts.push({he:'',ru:'Новая часть',blocks:[]});touch();render()};
+  e.appendChild(a);
 }
-function inp(ph,cls,val,on){ const t=document.createElement('input'); t.className=cls; t.placeholder=ph; t.value=val||''; t.oninput=()=>on(t.value); return t; }
-function hint(html){ const h=document.createElement('div'); h.className='hint'; h.innerHTML=html; return h; }
-
 function partEl(d,p,pi){
-  const el=document.createElement('div'); el.className='part';
-  const head=document.createElement('div'); head.className='part-head';
-  const num=document.createElement('div'); num.className='num'; num.textContent=pi+1;
-  head.appendChild(num);
-  head.appendChild(inp('часть — иврит','he',p.he,v=>{p.he=v;touch()}));
-  head.appendChild(inp('часть — русский','ru',p.ru,v=>{p.ru=v;touch()}));
-  head.appendChild(miniBtn('↑',()=>move(d.parts,pi,-1)));
-  head.appendChild(miniBtn('↓',()=>move(d.parts,pi,1)));
-  head.appendChild(miniBtn('🗑',()=>{if(confirm('Удалить часть целиком?')){d.parts.splice(pi,1);touch();render()}},'del'));
-  el.appendChild(head);
-  const bl=document.createElement('div'); bl.className='blocks';
+  const el=document.createElement('div');el.className='part';
+  const h=document.createElement('div');h.className='part-head';
+  const n=document.createElement('div');n.className='num';n.textContent=pi+1;h.appendChild(n);
+  h.appendChild(inp('часть — иврит','he',p.he,v=>{p.he=v;touch()}));
+  h.appendChild(inp('часть — русский','ru',p.ru,v=>{p.ru=v;touch()}));
+  h.appendChild(miniBtn('↑',()=>move(d.parts,pi,-1)));
+  h.appendChild(miniBtn('↓',()=>move(d.parts,pi,1)));
+  h.appendChild(miniBtn('🗑',()=>{if(confirm('Удалить часть целиком?')){d.parts.splice(pi,1);touch();render()}},'del'));
+  el.appendChild(h);
+  const bl=document.createElement('div');bl.className='blocks';
   p.blocks.forEach((b,bi)=>bl.appendChild(blockEl(p,b,bi)));
-  const add=document.createElement('button'); add.className='add'; add.textContent='＋ блок текста';
-  add.onclick=()=>{p.blocks.push({k:'body',he:'',translit:'',ru:''});touch();render()};
-  bl.appendChild(add);
-  el.appendChild(bl);
-  return el;
+  const a=document.createElement('button');a.className='add';a.textContent='＋ блок текста';
+  a.onclick=()=>{p.blocks.push({k:'body',he:'',translit:'',ru:''});touch();render()};
+  bl.appendChild(a);el.appendChild(bl);return el;
 }
-
 function blockEl(p,b,bi){
-  const el=document.createElement('div'); el.className='block '+(b.insert?'insert ':'')+(b.k==='rubric'?'rubric':'');
-  const top=document.createElement('div'); top.className='block-top';
+  const el=document.createElement('div');el.className='block '+(b.insert?'insert ':'')+(b.k==='rubric'?'rubric':'');
+  const top=document.createElement('div');top.className='block-top';
   const ks=document.createElement('select');
   KINDS.forEach(([v,t])=>{const o=document.createElement('option');o.value=v;o.textContent=t;if(b.k===v)o.selected=true;ks.appendChild(o)});
-  ks.onchange=()=>{b.k=ks.value;touch();render()};
-  top.appendChild(ks);
-  const ins=document.createElement('button'); ins.className='toggle'+(b.insert?' on':''); ins.textContent='⚡ Вставка';
-  ins.onclick=()=>{b.insert=!b.insert; if(!b.insert)delete b.insert; touch(); render()};
-  top.appendChild(ins);
-  const sp=document.createElement('div'); sp.style.flex='1'; top.appendChild(sp);
+  ks.onchange=()=>{b.k=ks.value;touch();render()};top.appendChild(ks);
+  const ins=document.createElement('button');ins.className='toggle'+(b.insert?' on':'');ins.textContent='⚡ Вставка';
+  ins.onclick=()=>{b.insert=!b.insert;if(!b.insert)delete b.insert;touch();render()};top.appendChild(ins);
+  const sp=document.createElement('div');sp.style.flex='1';top.appendChild(sp);
   top.appendChild(miniBtn('↑',()=>move(p.blocks,bi,-1)));
   top.appendChild(miniBtn('↓',()=>move(p.blocks,bi,1)));
   top.appendChild(miniBtn('🗑',()=>{p.blocks.splice(bi,1);touch();render()},'del'));
   el.appendChild(top);
-  const f=document.createElement('div'); f.className='fields';
-  f.appendChild(fld('Иврит','he',b.he,v=>{b.he=v;touch()}));
-  if(b.k==='body'||b.k==='rubric'){
-    f.appendChild(fld('Транслитерация','tr',b.translit,v=>{b.translit=v;touch()}));
-    f.appendChild(fld('Русский','ru',b.ru,v=>{b.ru=v;touch()}));
+  const f=document.createElement('div');f.className='fields';
+  f.appendChild(rtField('Иврит','he',b.he,v=>{b.he=v;touch()}));
+  if(b.k!=='sub'){
+    f.appendChild(rtField('Транслитерация','tr',b.translit,v=>{b.translit=v;touch()}));
+    f.appendChild(rtField('Русский','ru',b.ru,v=>{b.ru=v;touch()}));
   }
-  el.appendChild(f);
-  return el;
+  el.appendChild(f);return el;
 }
-
-function miniBtn(t,fn,cls){ const b=document.createElement('button'); b.className='mini '+(cls||''); b.textContent=t; b.onclick=fn; return b; }
-function move(arr,i,d){ const j=i+d; if(j<0||j>=arr.length)return; [arr[i],arr[j]]=[arr[j],arr[i]]; touch(); render(); }
-
-// ---- liturgy (short brachot) ----
 function renderLiturgy(e,d){
-  e.appendChild(hint('Короткие благословения: иврит / транслит / русский для каждого. Пустой иврит = «Скоро» в приложении.'));
-  const groups=[['brachotOften','Часто нужные',d.brachotOften]];
-  (d.brachotFolders||[]).forEach(f=>groups.push(['folder:'+f.id, f.ru, f.items]));
-  groups.push(['personal','Другие / личные',d.personal]);
-  if(d.havdalah) groups.push(['havdalah','Авдала',[d.havdalah]]);
-  groups.forEach(([id,title,items])=>{
-    if(!items) return;
-    const h=document.createElement('h2'); h.textContent=title; h.style.cssText='font-family:Playfair Display,serif;margin:22px 0 6px;font-size:18px';
-    e.appendChild(h);
-    const part=document.createElement('div'); part.className='part liturgy';
-    const bl=document.createElement('div'); bl.className='blocks';
+  e.appendChild(hintEl('Короткие благословения: иврит / транслит / русский. Форматирование выделением работает так же. Пустой иврит = «Скоро» в приложении.'));
+  const groups=[['Часто нужные',d.brachotOften]];
+  (d.brachotFolders||[]).forEach(f=>groups.push([f.ru,f.items]));
+  groups.push(['Другие / личные',d.personal]);
+  if(d.havdalah)groups.push(['Авдала',[d.havdalah]]);
+  groups.forEach(([title,items])=>{
+    if(!items)return;
+    const hh=document.createElement('h2');hh.textContent=title;hh.style.cssText='font-family:Playfair Display,serif;margin:22px 0 6px;font-size:18px';e.appendChild(hh);
+    const part=document.createElement('div');part.className='part liturgy';const bl=document.createElement('div');bl.className='blocks';
     items.forEach(it=>{
-      const el=document.createElement('div'); el.className='block';
-      const nm=document.createElement('div'); nm.style.cssText='font-weight:600;margin-bottom:6px;color:var(--gold)';
-      nm.textContent=(it.ru||it.id)+'  ·  '+(it.he||'');
-      el.appendChild(nm);
-      const f=document.createElement('div'); f.className='fields';
-      f.appendChild(fld('Иврит','he',it.textHe,v=>{it.textHe=v;touch()}));
-      f.appendChild(fld('Транслитерация','tr',it.textTranslit,v=>{it.textTranslit=v||null;touch()}));
-      f.appendChild(fld('Русский','ru',it.textRu,v=>{it.textRu=v||null;touch()}));
-      el.appendChild(f); bl.appendChild(el);
+      const el=document.createElement('div');el.className='block';
+      const nm=document.createElement('div');nm.style.cssText='font-weight:600;margin-bottom:6px;color:var(--gold)';
+      nm.textContent=(it.ru||it.id)+'  ·  '+(it.he?stripTags(it.he):'');el.appendChild(nm);
+      const f=document.createElement('div');f.className='fields';
+      f.appendChild(rtField('Иврит','he',it.textHe,v=>{it.textHe=v;touch()}));
+      f.appendChild(rtField('Транслитерация','tr',it.textTranslit,v=>{it.textTranslit=v||null;touch()}));
+      f.appendChild(rtField('Русский','ru',it.textRu,v=>{it.textRu=v||null;touch()}));
+      el.appendChild(f);bl.appendChild(el);
     });
-    part.appendChild(bl); e.appendChild(part);
+    part.appendChild(bl);e.appendChild(part);
   });
 }
+function stripTags(s){return (s||'').replace(/<[^>]+>/g,'');}
 
-// ---- preview ----
-function renderPreview(){
-  const d=state.data, pv=$('#pv'); if(!d){pv.innerHTML='';return;}
+// ---------- preview (renders formatting) ----------
+function renderPreview(){const d=state.data,pv=$('#pv');if(!d){pv.innerHTML='';return;}
   let h='';
   if(d.parts){
     d.parts.forEach(p=>{
-      if(p.he||p.ru) h+=`<div class="pv-part">${esc(p.he)}<small>${esc(p.ru)}</small></div>`;
+      if(p.he||p.ru)h+=`<div class="pv-part">${esc(p.he)}<small>${esc(p.ru)}</small></div>`;
       p.blocks.forEach(b=>{
-        if(b.k==='sub') h+=`<div class="pv-sub">${esc(b.he)}</div>`;
-        else if(b.k==='rubric') h+=`<div class="pv-rubric ${b.insert?'ins':''}">${esc(b.he)}</div>`;
-        else h+=`<div class="pv-body ${b.insert?'ins':''}">${esc(b.he)}</div>`;
+        if(b.k==='sub')h+=`<div class="pv-sub">${b.he||''}</div>`;
+        else if(b.k==='rubric')h+=`<div class="pv-rubric ${b.insert?'ins':''}">${b.he||''}</div>`;
+        else h+=`<div class="pv-body ${b.insert?'ins':''}">${b.he||''}</div>`;
       });
     });
-  } else if(d.brachotOften){
+  }else if(d.brachotOften){
     const all=[...(d.brachotOften||[]),...((d.brachotFolders||[]).flatMap(f=>f.items)),...(d.personal||[])];
-    all.forEach(it=>{ if(it.textHe){ h+=`<div class="pv-sub">${esc(it.he)}</div><div class="pv-body">${esc(it.textHe)}</div>`; } });
+    all.forEach(it=>{if(it.textHe)h+=`<div class="pv-sub">${it.he||''}</div><div class="pv-body">${it.textHe}</div>`;});
   }
   pv.innerHTML=h||'<p class="hint">Пусто</p>';
 }
-function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
-// ---- save ----
+// ---------- save ----------
 async function save(){
   const r=await api('/api/file?name='+encodeURIComponent(state.name),{method:'POST',body:JSON.stringify(state.data)});
   const j=await r.json();
-  if(j.ok){ markDirty(false); flash('Сохранено ✓ '+j.bytes+' Б'); }
-  else flash('Ошибка: '+(j.error||'?'));
+  if(j.ok){markDirty(false);flash('Сохранено ✓');}else flash('Ошибка: '+(j.error||'?'));
 }
-function flash(t){ const d=$('#dirty'); d.textContent=t; setTimeout(()=>{if(!state.dirty)d.textContent=''},2500); }
+function flash(t){const d=$('#dirty');d.textContent=t;setTimeout(()=>{if(!state.dirty)d.textContent='';},2200);}
 
 $('#saveBtn').onclick=save;
 $('#reloadBtn').onclick=()=>openFile(state.name);
-$('#previewBtn').onclick=()=>{document.body.classList.toggle('preview');renderPreview()};
-$('#fontRange').oninput=e=>{state.font=+e.target.value;render()};
-document.addEventListener('keydown',e=>{ if((e.metaKey||e.ctrlKey)&&e.key==='s'){e.preventDefault(); if(state.dirty)save();}});
-window.addEventListener('beforeunload',e=>{ if(state.dirty){e.preventDefault();e.returnValue='';}});
+$('#previewBtn').onclick=()=>{document.body.classList.toggle('preview');renderPreview();};
+$('#fontRange').oninput=e=>{state.font=+e.target.value;render();};
+document.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key==='s'){e.preventDefault();if(state.dirty)save();}});
+window.addEventListener('beforeunload',e=>{if(state.dirty){e.preventDefault();e.returnValue='';}});
 loadFiles();
 </script>
 </body>
