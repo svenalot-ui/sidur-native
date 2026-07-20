@@ -18,3 +18,7 @@ Packages/
 
 # Claude Code local settings
 .claude/settings.local.json
+
+# editor backups
+*.bak
+Сидур/Content/*.bak

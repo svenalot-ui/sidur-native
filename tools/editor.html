@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Редактор Сидур</title>
+<style>
+  :root{
+    --paper:#FCFAF5; --card:#FFFFFF; --cream:#F2EEE6; --gold:#986413; --goldL:#B08A4A;
+    --ink:#1A1714; --soft:#554E45; --faint:#8A8175; --line:#E6E0D5;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);
+    font-family:-apple-system,"SF Pro Text",Helvetica,Arial,sans-serif;font-size:15px}
+  header{position:sticky;top:0;z-index:10;background:rgba(252,250,245,.92);backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);padding:10px 18px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  h1{font-family:"Playfair Display",Georgia,serif;font-size:20px;margin:0;font-weight:700}
+  h1 .heb{font-family:"Frank Ruhl Libre","Times New Roman",serif;color:var(--gold);margin-right:8px}
+  select,button,input{font:inherit}
+  select#fileSel{padding:7px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card);min-width:200px}
+  .btn{padding:8px 14px;border:1px solid var(--line);border-radius:10px;background:var(--card);cursor:pointer;color:var(--ink)}
+  .btn:hover{background:var(--cream)}
+  .btn.gold{background:var(--gold);color:#fff;border-color:var(--gold);font-weight:600}
+  .btn.gold[disabled]{opacity:.5;cursor:default}
+  .spacer{flex:1}
+  .dirty{color:var(--gold);font-size:13px;font-weight:600}
+  #fontctl{display:flex;align-items:center;gap:6px;color:var(--faint);font-size:13px}
+  main{display:flex;gap:0}
+  #editor{flex:1;padding:18px 22px;max-width:900px;margin:0 auto}
+  #previewPane{width:0;overflow:hidden;border-left:1px solid var(--line);transition:width .2s}
+  body.preview #previewPane{width:44%}
+  body.preview #editor{margin:0}
+  .doc-title{display:flex;gap:12px;margin-bottom:14px;align-items:flex-end}
+  .doc-title input{flex:1;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card)}
+  .doc-title .he{direction:rtl;font-family:"Frank Ruhl Libre",serif;font-size:20px;color:var(--gold)}
+  .part{border:1px solid var(--line);border-radius:16px;background:var(--card);margin:14px 0;overflow:hidden}
+  .part-head{display:flex;gap:10px;align-items:center;padding:12px 14px;background:var(--cream);border-bottom:1px solid var(--line)}
+  .part-head .num{width:26px;height:26px;border-radius:8px;background:var(--gold);color:#fff;display:flex;
+    align-items:center;justify-content:center;font-weight:700;font-size:13px;flex:none}
+  .part-head input{flex:1;padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card)}
+  .part-head input.he{direction:rtl;font-family:"Frank Ruhl Libre",serif;font-size:18px;color:var(--gold)}
+  .part-head input.ru{font-weight:600}
+  .blocks{padding:8px}
+  .block{border:1px solid var(--line);border-radius:12px;margin:8px 0;padding:10px;background:var(--paper);position:relative}
+  .block.insert{border-color:var(--goldL);background:rgba(152,100,19,.06);box-shadow:inset 3px 0 0 var(--gold)}
+  .block.rubric{background:var(--cream)}
+  .block-top{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
+  .block-top select{padding:5px 8px;border:1px solid var(--line);border-radius:8px;background:var(--card);font-size:13px}
+  .toggle{padding:5px 11px;border-radius:20px;border:1px solid var(--line);background:var(--card);cursor:pointer;font-size:13px;font-weight:600}
+  .toggle.on{background:var(--gold);color:#fff;border-color:var(--gold)}
+  .mini{width:30px;height:30px;border:1px solid var(--line);border-radius:8px;background:var(--card);cursor:pointer;font-size:15px;line-height:1}
+  .mini:hover{background:var(--cream)}
+  .mini.del:hover{background:#fdeaea;border-color:#e3b3b3}
+  .fields{display:grid;grid-template-columns:1fr;gap:6px}
+  .fld{display:flex;flex-direction:column;gap:2px}
+  .fld label{font-size:11px;color:var(--faint);text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+  textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:9px 11px;background:var(--card);
+    resize:none;overflow:hidden;line-height:1.5;color:var(--ink)}
+  textarea.he{direction:rtl;text-align:right;font-family:"Frank Ruhl Libre","Times New Roman",serif}
+  textarea.tr,textarea.ru{font-family:Georgia,"Times New Roman",serif}
+  .add{display:block;width:100%;padding:9px;border:1px dashed var(--goldL);border-radius:10px;background:transparent;
+    color:var(--gold);cursor:pointer;font-weight:600;margin:6px 0}
+  .add:hover{background:rgba(152,100,19,.05)}
+  .partbar{display:flex;gap:8px;justify-content:flex-end;padding:8px 14px;border-top:1px solid var(--line)}
+  /* preview */
+  #pv{padding:24px;height:calc(100vh - 58px);overflow:auto;background:var(--paper)}
+  .pv-part{text-align:center;margin:24px 0 8px;color:var(--gold);font-family:"Frank Ruhl Libre",serif;font-size:22px;font-weight:700}
+  .pv-part small{display:block;color:var(--faint);font-size:10px;letter-spacing:.15em;text-transform:uppercase;font-family:sans-serif}
+  .pv-sub{text-align:center;color:var(--gold);font-family:"Frank Ruhl Libre",serif;font-size:17px;font-weight:600;margin-top:14px}
+  .pv-rubric{text-align:center;color:var(--faint);font-style:italic;font-family:Georgia,serif;font-size:13px;margin:4px 0}
+  .pv-rubric.ins{color:var(--gold)}
+  .pv-body{font-family:"Frank Ruhl Libre",serif;direction:rtl;text-align:right;font-size:22px;line-height:1.7;margin:6px 0;color:#2A2213}
+  .pv-body.ins{background:rgba(152,100,19,.07);border-radius:10px;padding:10px;box-shadow:inset 3px 0 0 var(--gold)}
+  .liturgy .block-top{display:none}
+  .hint{color:var(--faint);font-size:13px;margin:6px 0 14px}
+  kbd{background:var(--cream);border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:12px}
+</style>
+</head>
+<body>
+<header>
+  <h1><span class="heb">סִדּוּר</span>Редактор</h1>
+  <select id="fileSel"></select>
+  <button class="btn" id="reloadBtn">↺ Перезагрузить</button>
+  <span id="fontctl">Аа <input type="range" id="fontRange" min="14" max="30" value="20"></span>
+  <div class="spacer"></div>
+  <span class="dirty" id="dirty"></span>
+  <button class="btn" id="previewBtn">👁 Превью</button>
+  <button class="btn gold" id="saveBtn" disabled>Сохранить</button>
+</header>
+<main>
+  <div id="editor"><p class="hint">Загрузка…</p></div>
+  <div id="previewPane"><div id="pv"></div></div>
+</main>
+
+<script>
+const $ = s => document.querySelector(s);
+let state = { name:null, data:null, dirty:false, font:20 };
+
+const KINDS = [['body','Текст молитвы'],['rubric','Ремарка (курсив)'],['sub','Подзаголовок']];
+
+async function api(path, opts){ const r = await fetch(path, opts); return r; }
+
+async function loadFiles(){
+  const files = await (await api('/api/files')).json();
+  const sel = $('#fileSel'); sel.innerHTML='';
+  const nice = {mincha:'Минха', birkat_hashachar:'Утренние благословения', bedtime:'Перед сном',
+    birkat_hamazon:'Биркат а-мазон', meein_shalosh:'Меэйн шалош', birkat_halevana:'Биркат а-левана',
+    liturgy:'Брахот (короткие)'};
+  files.forEach(f=>{
+    const id=f.replace('.json','');
+    const o=document.createElement('option'); o.value=f; o.textContent=(nice[id]||id)+'  ·  '+f; sel.appendChild(o);
+  });
+  sel.onchange=()=>openFile(sel.value);
+  if(files.length) openFile(files.includes('mincha.json')?'mincha.json':files[0]);
+}
+
+async function openFile(name){
+  if(state.dirty && !confirm('Есть несохранённые изменения. Открыть другой файл?')) { $('#fileSel').value=state.name; return; }
+  state.name=name;
+  state.data=await (await api('/api/file?name='+encodeURIComponent(name))).json();
+  state.dirty=false; markDirty(false);
+  $('#fileSel').value=name;
+  render(); renderPreview();
+}
+
+function markDirty(v){ state.dirty=v; $('#saveBtn').disabled=!v; $('#dirty').textContent=v?'● не сохранено':''; }
+function touch(){ markDirty(true); renderPreview(); }
+
+function autosize(t){ t.style.height='auto'; t.style.height=(t.scrollHeight+2)+'px'; }
+
+// ---- render editor ----
+function render(){
+  const d=state.data, e=$('#editor'); e.innerHTML='';
+  if(d.parts) return renderService(e,d);
+  if(d.brachotOften||d.personal) return renderLiturgy(e,d);
+  e.innerHTML='<p class="hint">Неизвестный формат файла.</p>';
+}
+
+function fld(label,cls,val,on){
+  const w=document.createElement('div'); w.className='fld';
+  const l=document.createElement('label'); l.textContent=label;
+  const t=document.createElement('textarea'); t.className=cls; t.value=val||'';
+  t.style.fontSize=(cls.includes('he')?state.font+2:state.font-4)+'px';
+  t.oninput=()=>{on(t.value);autosize(t)};
+  w.appendChild(l); w.appendChild(t); setTimeout(()=>autosize(t),0);
+  return w;
+}
+
+function renderService(e,d){
+  const dt=document.createElement('div'); dt.className='doc-title';
+  dt.appendChild(inp('Название (иврит)','he',d.titleHe,v=>{d.titleHe=v;touch()}));
+  dt.appendChild(inp('Название (русский)','ru',d.titleRu,v=>{d.titleRu=v;touch()}));
+  e.appendChild(dt);
+  e.appendChild(hint('Выдели блок → кнопка <b>Вставка</b> помечает его золотым (условный текст: Летом/Зимой, Рош&nbsp;Ходеш, Ханука…). Тип блока: Текст / Ремарка / Подзаголовок. Стрелки — порядок.'));
+  d.parts.forEach((p,pi)=>e.appendChild(partEl(d,p,pi)));
+  const addP=document.createElement('button'); addP.className='add'; addP.textContent='＋ добавить часть';
+  addP.onclick=()=>{d.parts.push({he:'',ru:'Новая часть',blocks:[]});touch();render()};
+  e.appendChild(addP);
+}
+function inp(ph,cls,val,on){ const t=document.createElement('input'); t.className=cls; t.placeholder=ph; t.value=val||''; t.oninput=()=>on(t.value); return t; }
+function hint(html){ const h=document.createElement('div'); h.className='hint'; h.innerHTML=html; return h; }
+
+function partEl(d,p,pi){
+  const el=document.createElement('div'); el.className='part';
+  const head=document.createElement('div'); head.className='part-head';
+  const num=document.createElement('div'); num.className='num'; num.textContent=pi+1;
+  head.appendChild(num);
+  head.appendChild(inp('часть — иврит','he',p.he,v=>{p.he=v;touch()}));
+  head.appendChild(inp('часть — русский','ru',p.ru,v=>{p.ru=v;touch()}));
+  head.appendChild(miniBtn('↑',()=>move(d.parts,pi,-1)));
+  head.appendChild(miniBtn('↓',()=>move(d.parts,pi,1)));
+  head.appendChild(miniBtn('🗑',()=>{if(confirm('Удалить часть целиком?')){d.parts.splice(pi,1);touch();render()}},'del'));
+  el.appendChild(head);
+  const bl=document.createElement('div'); bl.className='blocks';
+  p.blocks.forEach((b,bi)=>bl.appendChild(blockEl(p,b,bi)));
+  const add=document.createElement('button'); add.className='add'; add.textContent='＋ блок текста';
+  add.onclick=()=>{p.blocks.push({k:'body',he:'',translit:'',ru:''});touch();render()};
+  bl.appendChild(add);
+  el.appendChild(bl);
+  return el;
+}
+
+function blockEl(p,b,bi){
+  const el=document.createElement('div'); el.className='block '+(b.insert?'insert ':'')+(b.k==='rubric'?'rubric':'');
+  const top=document.createElement('div'); top.className='block-top';
+  const ks=document.createElement('select');
+  KINDS.forEach(([v,t])=>{const o=document.createElement('option');o.value=v;o.textContent=t;if(b.k===v)o.selected=true;ks.appendChild(o)});
+  ks.onchange=()=>{b.k=ks.value;touch();render()};
+  top.appendChild(ks);
+  const ins=document.createElement('button'); ins.className='toggle'+(b.insert?' on':''); ins.textContent='⚡ Вставка';
+  ins.onclick=()=>{b.insert=!b.insert; if(!b.insert)delete b.insert; touch(); render()};
+  top.appendChild(ins);
+  const sp=document.createElement('div'); sp.style.flex='1'; top.appendChild(sp);
+  top.appendChild(miniBtn('↑',()=>move(p.blocks,bi,-1)));
+  top.appendChild(miniBtn('↓',()=>move(p.blocks,bi,1)));
+  top.appendChild(miniBtn('🗑',()=>{p.blocks.splice(bi,1);touch();render()},'del'));
+  el.appendChild(top);
+  const f=document.createElement('div'); f.className='fields';
+  f.appendChild(fld('Иврит','he',b.he,v=>{b.he=v;touch()}));
+  if(b.k==='body'||b.k==='rubric'){
+    f.appendChild(fld('Транслитерация','tr',b.translit,v=>{b.translit=v;touch()}));
+    f.appendChild(fld('Русский','ru',b.ru,v=>{b.ru=v;touch()}));
+  }
+  el.appendChild(f);
+  return el;
+}
+
+function miniBtn(t,fn,cls){ const b=document.createElement('button'); b.className='mini '+(cls||''); b.textContent=t; b.onclick=fn; return b; }
+function move(arr,i,d){ const j=i+d; if(j<0||j>=arr.length)return; [arr[i],arr[j]]=[arr[j],arr[i]]; touch(); render(); }
+
+// ---- liturgy (short brachot) ----
+function renderLiturgy(e,d){
+  e.appendChild(hint('Короткие благословения: иврит / транслит / русский для каждого. Пустой иврит = «Скоро» в приложении.'));
+  const groups=[['brachotOften','Часто нужные',d.brachotOften]];
+  (d.brachotFolders||[]).forEach(f=>groups.push(['folder:'+f.id, f.ru, f.items]));
+  groups.push(['personal','Другие / личные',d.personal]);
+  if(d.havdalah) groups.push(['havdalah','Авдала',[d.havdalah]]);
+  groups.forEach(([id,title,items])=>{
+    if(!items) return;
+    const h=document.createElement('h2'); h.textContent=title; h.style.cssText='font-family:Playfair Display,serif;margin:22px 0 6px;font-size:18px';
+    e.appendChild(h);
+    const part=document.createElement('div'); part.className='part liturgy';
+    const bl=document.createElement('div'); bl.className='blocks';
+    items.forEach(it=>{
+      const el=document.createElement('div'); el.className='block';
+      const nm=document.createElement('div'); nm.style.cssText='font-weight:600;margin-bottom:6px;color:var(--gold)';
+      nm.textContent=(it.ru||it.id)+'  ·  '+(it.he||'');
+      el.appendChild(nm);
+      const f=document.createElement('div'); f.className='fields';
+      f.appendChild(fld('Иврит','he',it.textHe,v=>{it.textHe=v;touch()}));
+      f.appendChild(fld('Транслитерация','tr',it.textTranslit,v=>{it.textTranslit=v||null;touch()}));
+      f.appendChild(fld('Русский','ru',it.textRu,v=>{it.textRu=v||null;touch()}));
+      el.appendChild(f); bl.appendChild(el);
+    });
+    part.appendChild(bl); e.appendChild(part);
+  });
+}
+
+// ---- preview ----
+function renderPreview(){
+  const d=state.data, pv=$('#pv'); if(!d){pv.innerHTML='';return;}
+  let h='';
+  if(d.parts){
+    d.parts.forEach(p=>{
+      if(p.he||p.ru) h+=`<div class="pv-part">${esc(p.he)}<small>${esc(p.ru)}</small></div>`;
+      p.blocks.forEach(b=>{
+        if(b.k==='sub') h+=`<div class="pv-sub">${esc(b.he)}</div>`;
+        else if(b.k==='rubric') h+=`<div class="pv-rubric ${b.insert?'ins':''}">${esc(b.he)}</div>`;
+        else h+=`<div class="pv-body ${b.insert?'ins':''}">${esc(b.he)}</div>`;
+      });
+    });
+  } else if(d.brachotOften){
+    const all=[...(d.brachotOften||[]),...((d.brachotFolders||[]).flatMap(f=>f.items)),...(d.personal||[])];
+    all.forEach(it=>{ if(it.textHe){ h+=`<div class="pv-sub">${esc(it.he)}</div><div class="pv-body">${esc(it.textHe)}</div>`; } });
+  }
+  pv.innerHTML=h||'<p class="hint">Пусто</p>';
+}
+function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+// ---- save ----
+async function save(){
+  const r=await api('/api/file?name='+encodeURIComponent(state.name),{method:'POST',body:JSON.stringify(state.data)});
+  const j=await r.json();
+  if(j.ok){ markDirty(false); flash('Сохранено ✓ '+j.bytes+' Б'); }
+  else flash('Ошибка: '+(j.error||'?'));
+}
+function flash(t){ const d=$('#dirty'); d.textContent=t; setTimeout(()=>{if(!state.dirty)d.textContent=''},2500); }
+
+$('#saveBtn').onclick=save;
+$('#reloadBtn').onclick=()=>openFile(state.name);
+$('#previewBtn').onclick=()=>{document.body.classList.toggle('preview');renderPreview()};
+$('#fontRange').oninput=e=>{state.font=+e.target.value;render()};
+document.addEventListener('keydown',e=>{ if((e.metaKey||e.ctrlKey)&&e.key==='s'){e.preventDefault(); if(state.dirty)save();}});
+window.addEventListener('beforeunload',e=>{ if(state.dirty){e.preventDefault();e.returnValue='';}});
+loadFiles();
+</script>
+</body>
+</html>
