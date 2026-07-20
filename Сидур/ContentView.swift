@@ -29,7 +29,7 @@ struct ContentView: View {
         .environment(\.layoutDirection, app.lang.layoutDirection)
         .preferredColorScheme(app.preferredScheme)
         .onAppear {
-            app.startLocation()
+            app.refreshZmanim()   // GPS is opt-in now; use the saved/selected city
             NotificationScheduler.reschedule(app: app)
         }
         .onChange(of: scenePhase) { phase in

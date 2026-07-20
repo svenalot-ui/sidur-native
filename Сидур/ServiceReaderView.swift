@@ -270,9 +270,9 @@ struct ServiceReaderView: View {
 
                 ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
                     Text(mode == "translit" ? Teh.translit(line) : line)
-                        .font(mode == "he" ? Typo.serif(size) : Typo.sans(size - 5))
+                        .font(mode == "he" ? Typo.serif(size + 1) : Typo.read(size - 3))
                         .foregroundStyle(palette.fg)
-                        .lineSpacing(9)
+                        .lineSpacing(mode == "he" ? 12 : 8)
                         .frame(maxWidth: .infinity, alignment: isRTL ? .trailing : .leading)
                         .multilineTextAlignment(isRTL ? .trailing : .leading)
                         .environment(\.layoutDirection, isRTL ? .rightToLeft : .leftToRight)

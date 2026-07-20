@@ -27,6 +27,7 @@ final class AppState: ObservableObject {
 
     var usingMyZmanim: Bool { !(remoteNamed?.isEmpty ?? true) }
 
+    // GPS is opt-in now — requested only when the user taps "Определить по GPS".
     func startLocation() {
         locationManager.onUpdate = { [weak self] newLoc in
             Task { @MainActor in
@@ -35,11 +36,32 @@ final class AppState: ObservableObject {
                 if l.name == nil { l.name = self.loc.name }   // keep last known city until geocode resolves
                 if l.tzId == nil { l.tzId = self.loc.tzId }
                 self.loc = l
+                self.persistLoc()
+                self.remoteNamed = nil; self.lastFetchKey = ""
                 self.refreshZmanim()
             }
         }
         locationManager.start()
-        refreshZmanim()   // also fetch for the current (fallback) location immediately
+    }
+
+    /// Pick a city from the curated list (no GPS).
+    func selectCity(_ c: City) {
+        loc = GeoLoc(lat: c.lat, lng: c.lng, name: c.name(lang), tzId: c.tz)
+        persistLoc()
+        remoteNamed = nil; lastFetchKey = ""
+        refreshZmanim()
+    }
+
+    private func persistLoc() {
+        let d = UserDefaults.standard
+        d.set(loc.lat, forKey: "loc_lat"); d.set(loc.lng, forKey: "loc_lng")
+        d.set(loc.name, forKey: "loc_name"); d.set(loc.tzId, forKey: "loc_tz")
+    }
+    private static func loadLoc() -> GeoLoc? {
+        let d = UserDefaults.standard
+        guard d.object(forKey: "loc_lat") != nil else { return nil }
+        return GeoLoc(lat: d.double(forKey: "loc_lat"), lng: d.double(forKey: "loc_lng"),
+                      name: d.string(forKey: "loc_name"), tzId: d.string(forKey: "loc_tz"))
     }
 
     // MARK: - Rest mode (Shabbat & Yom Tov)
@@ -222,7 +244,7 @@ final class AppState: ObservableObject {
         } else {
             nusach = savedNusach
         }
-        loc = .jerusalem
+        loc = AppState.loadLoc() ?? .jerusalem
     }
 
     var preferredScheme: ColorScheme? {
@@ -247,6 +269,34 @@ final class AppState: ObservableObject {
     }
 
     func fmt(_ d: Date?) -> String { ZFmt.time(d, tz) }
+}
+
+// Curated city list for the zmanim location picker (no GPS required).
+struct City: Identifiable {
+    let ru: String, he: String, lat: Double, lng: Double, tz: String
+    var id: String { ru }
+    func name(_ lang: Lang) -> String { lang == .he ? he : ru }
+    static let all: [City] = [
+        City(ru: "Иерусалим",       he: "יְרוּשָׁלַיִם",  lat: 31.7683, lng: 35.2137, tz: "Asia/Jerusalem"),
+        City(ru: "Тель-Авив",       he: "תֵּל אָבִיב",    lat: 32.0853, lng: 34.7818, tz: "Asia/Jerusalem"),
+        City(ru: "Бней-Брак",       he: "בְּנֵי בְּרַק",   lat: 32.0807, lng: 34.8338, tz: "Asia/Jerusalem"),
+        City(ru: "Хайфа",           he: "חֵיפָה",        lat: 32.7940, lng: 34.9896, tz: "Asia/Jerusalem"),
+        City(ru: "Ашдод",           he: "אַשְׁדּוֹד",     lat: 31.8040, lng: 34.6550, tz: "Asia/Jerusalem"),
+        City(ru: "Беэр-Шева",       he: "בְּאֵר שֶׁבַע",   lat: 31.2518, lng: 34.7913, tz: "Asia/Jerusalem"),
+        City(ru: "Нетания",         he: "נְתַנְיָה",      lat: 32.3215, lng: 34.8532, tz: "Asia/Jerusalem"),
+        City(ru: "Цфат",            he: "צְפַת",         lat: 32.9646, lng: 35.4960, tz: "Asia/Jerusalem"),
+        City(ru: "Тверия",          he: "טְבֶרְיָה",      lat: 32.7959, lng: 35.5300, tz: "Asia/Jerusalem"),
+        City(ru: "Эйлат",           he: "אֵילַת",        lat: 29.5577, lng: 34.9519, tz: "Asia/Jerusalem"),
+        City(ru: "Москва",          he: "מוֹסְקְבָה",     lat: 55.7558, lng: 37.6173, tz: "Europe/Moscow"),
+        City(ru: "Санкт-Петербург", he: "סַנְקְט פֶּטֶרְבּוּרְג", lat: 59.9311, lng: 30.3609, tz: "Europe/Moscow"),
+        City(ru: "Киев",            he: "קִייֶב",        lat: 50.4501, lng: 30.5234, tz: "Europe/Kiev"),
+        City(ru: "Одесса",          he: "אוֹדֶסָה",      lat: 46.4825, lng: 30.7233, tz: "Europe/Kiev"),
+        City(ru: "Нью-Йорк",        he: "נְיוּ יוֹרְק",    lat: 40.7128, lng: -74.0060, tz: "America/New_York"),
+        City(ru: "Лондон",          he: "לוֹנְדוֹן",      lat: 51.5074, lng: -0.1278, tz: "Europe/London"),
+        City(ru: "Париж",           he: "פָּרִיז",       lat: 48.8566, lng: 2.3522, tz: "Europe/Paris"),
+        City(ru: "Берлин",          he: "בֶּרְלִין",      lat: 52.5200, lng: 13.4050, tz: "Europe/Berlin"),
+        City(ru: "Торонто",         he: "טוֹרוֹנְטוֹ",    lat: 43.6532, lng: -79.3832, tz: "America/Toronto"),
+    ]
 }
 
 enum Nusach: String, CaseIterable {

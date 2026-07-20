@@ -392,8 +392,8 @@ struct TehillimReaderView: View {
             } else {
                 ForEach(Array(lines(n).enumerated()), id: \.offset) { i, line in
                     (Text("\(i + 1)  ").font(Typo.serif(size * 0.55)).foregroundColor(Palette.gold)
-                     + Text(line).font(lmode == "he" ? Typo.serif(size) : Typo.sans(size - 4)).foregroundColor(palette.fg))
-                        .lineSpacing(9)
+                     + Text(line).font(lmode == "he" ? Typo.serif(size + 1) : Typo.read(size - 3)).foregroundColor(palette.fg))
+                        .lineSpacing(lmode == "he" ? 12 : 9)
                         .frame(maxWidth: .infinity, alignment: isRTL ? .trailing : .leading)
                         .multilineTextAlignment(isRTL ? .trailing : .leading)
                         .environment(\.layoutDirection, isRTL ? .rightToLeft : .leftToRight)

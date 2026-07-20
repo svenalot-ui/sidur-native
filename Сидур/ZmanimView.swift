@@ -24,6 +24,9 @@ struct ZmanimView: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: Space.md) {
                         ScreenTitle(text: app.s.zmanim)
+
+                        locationPicker
+
                         Text(app.s.zIntro)
                             .font(Typo.sans(12.5))
                             .foregroundStyle(Palette.soft)
@@ -64,6 +67,43 @@ struct ZmanimView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar(.hidden, for: .navigationBar)
         }
+    }
+
+    // City dropdown at the top of the times — a curated list plus opt-in GPS.
+    private var locationPicker: some View {
+        Menu {
+            Button { Haptics.tap(); app.startLocation() } label: {
+                Label(app.s.setLocRefresh, systemImage: "location.fill")
+            }
+            Divider()
+            ForEach(City.all) { c in
+                Button { Haptics.tap(); app.selectCity(c) } label: {
+                    if app.loc.name == c.name(app.lang) {
+                        Label(c.name(app.lang), systemImage: "checkmark")
+                    } else {
+                        Text(c.name(app.lang))
+                    }
+                }
+            }
+        } label: {
+            HStack(spacing: 12) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 10).fill(Palette.cream).frame(width: 38, height: 38)
+                    Image(systemName: "mappin.and.ellipse").font(.system(size: 16)).foregroundStyle(Palette.gold)
+                }
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(app.s.setLoc.uppercased()).font(Typo.label(9)).tracking(1.4).foregroundStyle(Palette.faint)
+                    Text(app.loc.name ?? app.s.locating).font(Typo.sans(15.5, .semibold)).foregroundStyle(Palette.ink)
+                }
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.up.chevron.down").font(.system(size: 12, weight: .semibold)).foregroundStyle(Palette.faint)
+            }
+            .padding(.horizontal, 14).padding(.vertical, 11)
+            .background(RoundedRectangle(cornerRadius: 16).fill(Palette.card)
+                .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(Palette.line, lineWidth: 1)))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 
     // A quiet справочная note — the times are approximate, not a halachic ruling.

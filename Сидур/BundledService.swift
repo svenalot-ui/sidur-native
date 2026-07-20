@@ -73,6 +73,7 @@ struct BundledServiceReaderView: View {
     @State private var progress: CGFloat = 0
     @State private var viewportH: CGFloat = 1
     @State private var contentH: CGFloat = 1
+    @State private var partYs: [String: CGFloat] = [:]
 
     private var showLangToggle: Bool { app.lang != .he }
     private var mode: String { showLangToggle ? storedMode : "he" }
@@ -84,7 +85,6 @@ struct BundledServiceReaderView: View {
         ZStack(alignment: .top) {
             palette.bg.ignoresSafeArea()
             content
-            if !zen { progressBar }
         }
         .readerChrome(title: title, tint: palette.fg, zen: $zen) {
             HStack(spacing: 6) {
@@ -115,7 +115,7 @@ struct BundledServiceReaderView: View {
             VStack(spacing: 0) {
                 if !zen {
                     if showLangToggle { langSegment }
-                    if service.parts.count > 1 { partChips }
+                    if service.parts.count > 1 { partChips; segmentBar }
                 }
                 ScrollViewReader { proxy in
                     ScrollView {
@@ -148,6 +148,7 @@ struct BundledServiceReaderView: View {
                     }
                     .onPreferenceChange(SvcHeightKey.self) { contentH = $0 }
                     .onPreferenceChange(PartTopKey.self) { ys in
+                        partYs = ys
                         let cur = service.parts.last(where: { (ys[$0.id] ?? .infinity) <= 140 })?.id ?? service.parts.first?.id
                         if cur != activePart { activePart = cur }
                     }
@@ -163,15 +164,35 @@ struct BundledServiceReaderView: View {
         }
     }
 
-    // A slim reading-progress bar just under the chrome.
-    private var progressBar: some View {
-        GeometryReader { g in
-            ZStack(alignment: .leading) {
-                Rectangle().fill(palette.fg.opacity(0.08)).frame(height: 2.5)
-                Rectangle().fill(Palette.gold).frame(width: g.size.width * progress, height: 2.5)
+    // One segment per part; the current segment fills as you read through it,
+    // finished parts stay full gold. Segments are also tappable to jump.
+    private var segmentBar: some View {
+        // stable global-progress fraction at which each part begins
+        let base = partYs[service.parts.first?.id ?? ""] ?? 0
+        let scrollable = max(contentH - viewportH, 1)
+        let starts = service.parts.map { max(0, ((partYs[$0.id] ?? base) - base) / scrollable) }
+        return HStack(spacing: 3) {
+            ForEach(Array(service.parts.enumerated()), id: \.element.id) { i, part in
+                let lo = i < starts.count ? starts[i] : 0
+                let hi = (i + 1) < starts.count ? starts[i + 1] : 1
+                let fill = hi > lo ? min(max((progress - lo) / (hi - lo), 0), 1) : (progress >= lo ? 1 : 0)
+                let active = part.id == activePart
+                GeometryReader { g in
+                    ZStack(alignment: .leading) {
+                        Capsule().fill(palette.fg.opacity(0.1))
+                        Capsule().fill(Palette.gold.opacity(active ? 1 : 0.75))
+                            .frame(width: g.size.width * fill)
+                    }
+                }
+                .frame(height: active ? 4 : 3)
+                .animation(.easeOut(duration: 0.15), value: fill)
+                .contentShape(Rectangle())
+                .onTapGesture { Haptics.tap(); pendingScroll = part.id }
             }
         }
-        .frame(height: 2.5)
+        .frame(height: 4)
+        .padding(.horizontal, Space.lg)
+        .padding(.bottom, 12)
     }
 
     // MARK: blocks
@@ -187,7 +208,7 @@ struct BundledServiceReaderView: View {
                 .padding(.top, 16)
         case "rubric":
             Text(text(b))
-                .font(Typo.sans(12.5).italic())
+                .font(Typo.read(13).italic())
                 .foregroundStyle(b.isInsert ? Palette.gold : palette.fg.opacity(0.5))
                 .frame(maxWidth: .infinity, alignment: .center)
                 .multilineTextAlignment(.center)
@@ -200,9 +221,9 @@ struct BundledServiceReaderView: View {
     @ViewBuilder
     private func bodyText(_ b: BundledService.Block) -> some View {
         let t = Text(text(b))
-            .font(mode == "he" ? Typo.serif(size) : Typo.sans(size - 5))
+            .font(mode == "he" ? Typo.serif(size + 1) : Typo.read(size - 3))
             .foregroundStyle(palette.fg)
-            .lineSpacing(9)
+            .lineSpacing(mode == "he" ? 12 : 8)
         if b.isInsert {
             t.frame(maxWidth: .infinity, alignment: isRTL ? .trailing : .leading)
                 .multilineTextAlignment(isRTL ? .trailing : .leading)
@@ -264,23 +285,28 @@ struct BundledServiceReaderView: View {
         ScrollViewReader { chip in
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 7) {
-                    ForEach(service.parts) { part in
+                    ForEach(Array(service.parts.enumerated()), id: \.element.id) { i, part in
                         let active = part.id == activePart
                         Button {
                             Haptics.tap(); pendingScroll = part.id
                         } label: {
-                            Text(part.name(app.lang))
-                                .font(Typo.sans(13, active ? .semibold : .regular))
-                                .foregroundStyle(active ? palette.bg : palette.fg.opacity(0.7))
-                                .padding(.horizontal, 13).padding(.vertical, 7)
-                                .background(Capsule().fill(active ? Palette.gold : palette.fg.opacity(0.06))
-                                    .overlay(Capsule().strokeBorder(palette.fg.opacity(active ? 0 : 0.12), lineWidth: 1)))
+                            HStack(spacing: 6) {
+                                Text("\(i + 1)")
+                                    .font(Typo.digits(11, .semibold)).monospacedDigit()
+                                    .foregroundStyle(active ? palette.bg.opacity(0.9) : Palette.gold)
+                                Text(part.name(app.lang))
+                                    .font(Typo.serif(14, active ? .semibold : .regular))
+                            }
+                            .foregroundStyle(active ? palette.bg : palette.fg.opacity(0.72))
+                            .padding(.horizontal, 14).padding(.vertical, 8)
+                            .background(Capsule().fill(active ? Palette.gold : palette.fg.opacity(0.05))
+                                .overlay(Capsule().strokeBorder(palette.fg.opacity(active ? 0 : 0.14), lineWidth: 1)))
                         }
                         .buttonStyle(.plain)
                         .id("chip_\(part.id)")
                     }
                 }
-                .padding(.horizontal, Space.lg).padding(.bottom, 10).padding(.top, showLangToggle ? 0 : 12)
+                .padding(.horizontal, Space.lg).padding(.bottom, 8).padding(.top, showLangToggle ? 2 : 12)
             }
             .onChange(of: activePart) { _, p in
                 guard let p else { return }

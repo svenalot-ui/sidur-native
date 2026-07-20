@@ -72,6 +72,9 @@ enum Typo {
     static func serif(_ size: CGFloat, _ w: Font.Weight = .regular) -> Font { .custom("Frank Ruhl Libre", size: size, relativeTo: .body).weight(w) }
     static func sans(_ size: CGFloat, _ w: Font.Weight = .regular) -> Font { .system(size: size, weight: w) }
     static func label(_ size: CGFloat) -> Font { .system(size: size, weight: .medium, design: .monospaced) }
+    // Body reading serif for Russian / transliteration — Apple's New York, elegant
+    // with full Cyrillic, far nicer than the plain system sans for long prayers.
+    static func read(_ size: CGFloat, _ w: Font.Weight = .regular) -> Font { .system(size: size, weight: w, design: .serif) }
 }
 
 // Display serif that respects script: Playfair for Latin/Cyrillic, Frank Ruhl for Hebrew.

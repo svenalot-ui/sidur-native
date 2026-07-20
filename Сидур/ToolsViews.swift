@@ -55,6 +55,7 @@ struct MizrahView: View {
 
                     compass
                         .frame(width: 280, height: 280)
+                        .environment(\.layoutDirection, .leftToRight)   // never mirror the dial in RTL
                         .padding(.top, Space.md)
 
                     Text("\(Int(distance.rounded()).formatted())")
