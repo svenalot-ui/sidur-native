@@ -68,7 +68,10 @@ struct TodayView: View {
                 case .psalm(let n):
                     TehillimReaderView(title: "\(app.s.psalm) \(n)", chapters: [n])
                 case .service(let raw):
-                    if let kind = ServiceKind(rawValue: raw) {
+                    // bundled services (mincha, birkat_hamazon, birkat_halevana…) win
+                    if let svc = BundledService.load(raw) {
+                        BundledServiceReaderView(service: svc, title: routeTitle(raw), icon: Liturgy.bracha(raw)?.icon ?? "book")
+                    } else if let kind = ServiceKind(rawValue: raw) {
                         ServiceReaderView(service: kind, title: serviceTitle(kind))
                     }
                 case .tehillimDay(let day):
@@ -474,6 +477,13 @@ struct TodayView: View {
 
     private func serviceTitle(_ k: ServiceKind) -> String {
         switch k { case .shacharit: return app.s.sh; case .mincha: return app.s.mi; case .maariv: return app.s.ma }
+    }
+
+    /// Short chrome title for a bundled-service route: the daily service name, or
+    /// the liturgy entry's name (Биркат а-мазон, Биркат а-левана…).
+    private func routeTitle(_ raw: String) -> String {
+        if let kind = ServiceKind(rawValue: raw) { return serviceTitle(kind) }
+        return Liturgy.bracha(raw)?.name(app.lang) ?? raw
     }
 }
 

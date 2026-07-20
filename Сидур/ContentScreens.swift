@@ -18,16 +18,18 @@ struct TextRow: View {
     @EnvironmentObject var app: AppState
     let item: SacredText
     let first: Bool
+    var ready: Bool? = nil
+    private var isReady: Bool { ready ?? item.ready }
     var body: some View {
         HStack(spacing: 13) {
             ZStack {
                 RoundedRectangle(cornerRadius: 11).fill(Palette.cream).frame(width: 40, height: 40)
-                Glyph(name: item.icon, size: 19, color: item.ready ? Palette.gold : Palette.faint)
+                Glyph(name: item.icon, size: 19, color: isReady ? Palette.gold : Palette.faint)
             }
             Text(item.name(app.lang))
-                .font(Typo.sans(15, .medium)).foregroundStyle(item.ready ? Palette.ink : Palette.faint)
+                .font(Typo.sans(15, .medium)).foregroundStyle(isReady ? Palette.ink : Palette.faint)
             Spacer(minLength: 0)
-            if !item.ready {
+            if !isReady {
                 Text(app.s.soonBadge.uppercased())
                     .font(Typo.label(9)).tracking(1).foregroundStyle(Palette.faint)
                     .padding(.horizontal, 8).padding(.vertical, 4)
@@ -45,12 +47,22 @@ struct TextRow: View {
     }
 }
 
-// A text row that navigates when ready, or sits as a "Скоро" placeholder otherwise.
+// A liturgy row auto-upgrades itself: if a bundled service json shares the item's
+// id it opens the full-service reader; a ready plain text opens ReaderView; else
+// it sits as a "Скоро" placeholder. Future texts need no code — just drop a json.
 struct LiturgyRow: View {
+    @EnvironmentObject var app: AppState
     let item: SacredText
     let first: Bool
     var body: some View {
-        if item.ready {
+        if BundledService.exists(item.id) {
+            NavigationLink {
+                if let svc = BundledService.load(item.id) {
+                    BundledServiceReaderView(service: svc, title: item.name(app.lang), icon: item.icon)
+                }
+            } label: { TextRow(item: item, first: first, ready: true) }
+                .buttonStyle(.plain)
+        } else if item.ready {
             NavigationLink { ReaderView(text: item) } label: { TextRow(item: item, first: first) }
                 .buttonStyle(.plain)
         } else {
@@ -166,6 +178,18 @@ struct PrayersView: View {
         Nusach(rawValue: app.nusach ?? "")?.name(app.lang) ?? ""
     }
 
+    // Bundled services take priority over Sefaria: when a service json is present
+    // (mincha today; shacharit/maariv whenever their files arrive) it opens the
+    // beautiful bundled reader — no code changes needed for future texts.
+    @ViewBuilder
+    private func serviceDestination(_ kind: ServiceKind, name: String, icon: String) -> some View {
+        if let svc = BundledService.load(kind.rawValue) {
+            BundledServiceReaderView(service: svc, title: name, icon: icon)
+        } else {
+            ServiceReaderView(service: kind, title: name)
+        }
+    }
+
     // Morning blessings sit above Shacharit; everything else moves to "Другие".
     private var birkatShachar: SacredText? { Liturgy.bracha("birkat_hashachar") }
     private var otherPrayers: [SacredText] {
@@ -187,7 +211,7 @@ struct PrayersView: View {
                             }
                             ForEach(Array(daily.enumerated()), id: \.offset) { _, d in
                                 NavigationLink {
-                                    ServiceReaderView(service: d.kind, title: d.name)
+                                    serviceDestination(d.kind, name: d.name, icon: d.icon)
                                 } label: {
                                     HStack(spacing: 13) {
                                         ZStack {
