@@ -32,7 +32,7 @@ struct ContentView: View {
             app.refreshZmanim()   // GPS is opt-in now; use the saved/selected city
             NotificationScheduler.reschedule(app: app)
         }
-        .onChange(of: scenePhase) { phase in
+        .onChange(of: scenePhase) { _, phase in
             if phase == .active {
                 app.refreshZmanim()
                 NotificationScheduler.reschedule(app: app)

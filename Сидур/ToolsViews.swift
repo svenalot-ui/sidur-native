@@ -385,7 +385,7 @@ struct SettingsView: View {
                         }
                         .padding(.horizontal, 16).padding(.vertical, 12)
                     }
-                    .onChange(of: candleReminder) { on in
+                    .onChange(of: candleReminder) { _, on in
                         Haptics.tap()
                         Task { @MainActor in
                             if on { _ = await NotificationScheduler.requestAuth() }
@@ -401,7 +401,7 @@ struct SettingsView: View {
                                 Image(systemName: "mappin.and.ellipse").font(.system(size: 15)).foregroundStyle(Palette.gold)
                             }
                             VStack(alignment: .leading, spacing: 1) {
-                                Text(app.loc.name ?? app.s.locating)
+                                Text(app.locName)
                                     .font(Typo.sans(14, .medium)).foregroundStyle(Palette.ink)
                                 Text(String(format: "%.3f, %.3f", app.loc.lat, app.loc.lng))
                                     .font(Typo.sans(11)).foregroundStyle(Palette.faint).monospacedDigit()

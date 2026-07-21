@@ -264,11 +264,27 @@ final class AppState: ObservableObject {
 
     var s: Strings { lang.s }
 
+    /// City label in the current language. A stored/geocoded name can be in any
+    /// language (the default is literally "Jerusalem"), so prefer a match from
+    /// the curated city list before falling back to whatever was saved.
+    var locName: String {
+        if let c = City.all.first(where: { abs($0.lat - loc.lat) < 0.06 && abs($0.lng - loc.lng) < 0.06 }) {
+            return c.name(lang)
+        }
+        return loc.name ?? City.all[0].name(lang)
+    }
+
     func zmanim(for day: Date = Date()) -> Zmanim {
         Zmanim.compute(day: day, loc: loc, tz: tz)
     }
 
     func fmt(_ d: Date?) -> String { ZFmt.time(d, tz) }
+
+    /// A time range that keeps its logical order inside RTL text. Without the
+    /// isolate, bidi flips "20:23 – 00:45" so the end time reads first in Hebrew.
+    func range(_ from: Date?, _ to: Date?) -> String {
+        "\u{2066}\(fmt(from)) – \(fmt(to))\u{2069}"
+    }
 }
 
 // Curated city list for the zmanim location picker (no GPS required).

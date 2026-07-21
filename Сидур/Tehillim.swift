@@ -18,6 +18,14 @@ enum Teh {
         return Array(dayRanges[d - 1])
     }
 
+    /// Chapters for a calendar day, honouring the month's length: a 29-day Hebrew
+    /// month has no 30th, so its 29th also carries whatever the 30th would have
+    /// covered — de-duplicated, since in this table day 30 repeats day 29.
+    static func chapters(day: Int, monthLength: Int) -> [Int] {
+        guard day >= 29, monthLength <= 29 else { return chapters(day: day) }
+        return Array(Set(chapters(day: 29) + chapters(day: 30))).sorted()
+    }
+
     // MARK: segulot — curated psalm sets for specific needs (ported from the PWA)
     struct Segula: Identifiable {
         let id: String

@@ -29,4 +29,12 @@ enum HebrewDate {
         cal.timeZone = tz
         return cal.component(.day, from: date)
     }
+
+    /// Length of the current Hebrew month (29 or 30) — a short month has no 30th
+    /// day, so its 29th must carry the 30th day's psalms too.
+    static func daysInMonth(_ date: Date = Date(), tz: TimeZone = .current) -> Int {
+        var cal = Calendar(identifier: .hebrew)
+        cal.timeZone = tz
+        return cal.range(of: .day, in: .month, for: date)?.count ?? 30
+    }
 }

@@ -87,7 +87,7 @@ struct ServiceReaderView: View {
                             let current = parts.last(where: { (ys[$0.id] ?? .infinity) <= 150 })?.id ?? parts.first?.id
                             if current != activePart { activePart = current }
                         }
-                        .onChange(of: pendingScroll) { target in
+                        .onChange(of: pendingScroll) { _, target in
                             guard let target else { return }
                             withAnimation(.easeInOut(duration: 0.3)) {
                                 proxy.scrollTo(target, anchor: .top)
@@ -154,7 +154,7 @@ struct ServiceReaderView: View {
                 .padding(.horizontal, Space.lg)
                 .padding(.bottom, 10)
             }
-            .onChange(of: activePart) { p in
+            .onChange(of: activePart) { _, p in
                 guard let p else { return }
                 withAnimation(.easeInOut(duration: 0.25)) {
                     chipProxy.scrollTo("chip_\(p)", anchor: .center)

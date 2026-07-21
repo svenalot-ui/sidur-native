@@ -47,7 +47,7 @@ struct ZmanimView: View {
                             .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(Palette.line, lineWidth: 1)))
                         .clipShape(RoundedRectangle(cornerRadius: 18))
 
-                        Text("\(app.usingMyZmanim ? "myzmanim · " : "")\(app.loc.name ?? "Jerusalem")")
+                        Text("\(app.usingMyZmanim ? "myzmanim · " : "")\(app.locName)")
                             .font(Typo.sans(11))
                             .foregroundStyle(Palette.faint)
                             .frame(maxWidth: .infinity, alignment: .center)
@@ -78,7 +78,8 @@ struct ZmanimView: View {
             Divider()
             ForEach(City.all) { c in
                 Button { Haptics.tap(); app.selectCity(c) } label: {
-                    if app.loc.name == c.name(app.lang) {
+                    // match by coordinates: the stored name is in whatever language it was picked in
+                    if abs(app.loc.lat - c.lat) < 0.06 && abs(app.loc.lng - c.lng) < 0.06 {
                         Label(c.name(app.lang), systemImage: "checkmark")
                     } else {
                         Text(c.name(app.lang))
@@ -93,7 +94,7 @@ struct ZmanimView: View {
                 }
                 VStack(alignment: .leading, spacing: 1) {
                     Text(app.s.setLoc.uppercased()).font(Typo.label(9)).tracking(1.4).foregroundStyle(Palette.faint)
-                    Text(app.loc.name ?? app.s.locating).font(Typo.sans(15.5, .semibold)).foregroundStyle(Palette.ink)
+                    Text(app.locName).font(Typo.sans(15.5, .semibold)).foregroundStyle(Palette.ink)
                 }
                 Spacer(minLength: 0)
                 Image(systemName: "chevron.up.chevron.down").font(.system(size: 12, weight: .semibold)).foregroundStyle(Palette.faint)

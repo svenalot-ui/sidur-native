@@ -75,7 +75,8 @@ struct TodayView: View {
                         ServiceReaderView(service: kind, title: serviceTitle(kind))
                     }
                 case .tehillimDay(let day):
-                    TehillimReaderView(title: "\(app.s.tehDay) \(day)", chapters: Teh.chapters(day: day))
+                    TehillimReaderView(title: "\(app.s.tehDay) \(day)",
+                                       chapters: Teh.chapters(day: day, monthLength: HebrewDate.daysInMonth(tz: app.tz)))
                 }
             }
         }
@@ -203,13 +204,14 @@ struct TodayView: View {
             // daytime: (zman tzitzit) – Sof Zman Shma (Gra)
             let start = z.t("Misheyakir11.5")
             shmaRow("sun.max", app.s.shmaWord,
-                    (start != nil ? "\(app.fmt(start)) – " : "\(app.s.untilShort) ") + "\(app.fmt(sofShma)) · \(app.s.graShort)")
+                    (start != nil ? app.range(start, sofShma) : "\u{2066}\(app.s.untilShort) \(app.fmt(sofShma))\u{2069}")
+                    + " · \(app.s.graShort)")
         } else {
             // after Sof Zman Shma: night Shma, from tzeit (chosen variant) until midnight
             let vk = ZmanDisplay.get("tzeit") ?? "Tzais8.5"
             let tzeit = z.t(vk) ?? z.tzeit
             shmaRow("moon.stars", "\(app.s.shmaWord) · \(app.s.nightWord)",
-                    "\(app.fmt(tzeit)) – \(app.fmt(z.t("SolarMidnight")))")
+                    app.range(tzeit, z.t("SolarMidnight")))
         }
     }
 
@@ -235,7 +237,7 @@ struct TodayView: View {
             HStack(spacing: 11) {
                 Image(systemName: "star.fill").font(.system(size: 15)).foregroundStyle(Palette.gold)
                 Text(app.s.tehTitle).font(Typo.sans(14.5, .semibold)).foregroundStyle(Palette.ink)
-                Text("· \(app.s.psalm) \(TEHILLIM_RANGE(day))")
+                Text("· \(app.s.psalm) \(TEHILLIM_RANGE(day, HebrewDate.daysInMonth(tz: app.tz)))")
                     .font(Typo.sans(12.5, .medium)).foregroundStyle(Palette.gold).monospacedDigit()
                 Spacer(minLength: 0)
                 Image(systemName: "chevron.forward").font(.system(size: 12, weight: .semibold)).foregroundStyle(Palette.gold.opacity(0.85))
@@ -310,7 +312,7 @@ struct TodayView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(app.s.continueReading.uppercased())
                             .font(Typo.label(9.5)).tracking(1.4).foregroundStyle(Palette.faint)
-                        Text(lr.title).font(Typo.sans(15)).foregroundStyle(Palette.ink).lineLimit(1)
+                        Text(lastReadTitle(lr)).font(Typo.sans(15)).foregroundStyle(Palette.ink).lineLimit(1)
                     }
                     Spacer(minLength: 0)
                     Button {
@@ -485,11 +487,23 @@ struct TodayView: View {
         if let kind = ServiceKind(rawValue: raw) { return serviceTitle(kind) }
         return Liturgy.bracha(raw)?.name(app.lang) ?? raw
     }
+
+    /// Resolve the "continue reading" label in the CURRENT language — the stored
+    /// title is frozen in whatever language it was saved in.
+    private func lastReadTitle(_ lr: LastRead) -> String {
+        switch lr.kind {
+        case "text":    return Liturgy.bracha(lr.refId)?.name(app.lang) ?? lr.title
+        case "psalm":   return "\(app.s.psalm) \(lr.refId)"
+        case "service": return routeTitle(lr.refId)
+        default:        return lr.title
+        }
+    }
 }
 
-// Compact chapter range for a given day of the 30-day Tehillim cycle.
-private func TEHILLIM_RANGE(_ day: Int) -> String {
-    let ch = Teh.chapters(day: day)
+// Compact chapter range for a day of the cycle (month length included, so the
+// 29th of a short month shows the merged 29+30 range).
+private func TEHILLIM_RANGE(_ day: Int, _ monthLength: Int = 30) -> String {
+    let ch = Teh.chapters(day: day, monthLength: monthLength)
     guard let f = ch.first, let l = ch.last else { return "" }
     return f == l ? "\(f)" : "\(f)–\(l)"
 }

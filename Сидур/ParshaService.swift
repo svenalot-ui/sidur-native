@@ -47,7 +47,7 @@ actor ParshaService {
         let today = Self.ymd(Date())
         if let m = memo, m.date >= today { return m }
 
-        var cal = Calendar(identifier: .gregorian)
+        let cal = Calendar(identifier: .gregorian)
         let now = Date()
         var comps = cal.dateComponents([.year, .month], from: now)
 
