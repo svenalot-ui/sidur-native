@@ -22,3 +22,4 @@ Packages/
 # editor backups
 *.bak
 Сидур/Content/*.bak
+tools/.history/

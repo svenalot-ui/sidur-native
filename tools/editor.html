@@ -7,321 +7,382 @@
 <style>
   :root{
     --paper:#FCFAF5; --card:#FFFFFF; --cream:#F2EEE6; --gold:#986413; --goldL:#B08A4A;
-    --ink:#1A1714; --soft:#554E45; --faint:#8A8175; --line:#E6E0D5;
+    --ink:#1A1714; --soft:#554E45; --faint:#8A8175; --line:#E6E0D5; --bad:#B3261E;
   }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--paper);color:var(--ink);
-    font-family:-apple-system,"SF Pro Text",Helvetica,Arial,sans-serif;font-size:15px}
-  header{position:sticky;top:0;z-index:20;background:rgba(252,250,245,.94);backdrop-filter:blur(10px);
-    border-bottom:1px solid var(--line)}
-  .row1{padding:9px 18px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
-  h1{font-family:"Playfair Display",Georgia,serif;font-size:20px;margin:0;font-weight:700}
-  h1 .heb{font-family:"Frank Ruhl Libre","Times New Roman",serif;color:var(--gold);margin-inline-end:8px}
-  select,button,input{font:inherit}
-  select#fileSel{padding:7px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card);min-width:210px}
-  .btn{padding:8px 14px;border:1px solid var(--line);border-radius:10px;background:var(--card);cursor:pointer;color:var(--ink)}
+  html,body{height:100%}
+  body{margin:0;background:var(--paper);color:var(--ink);overflow:hidden;
+    font-family:-apple-system,"SF Pro Text",Helvetica,Arial,sans-serif;font-size:14px}
+  button,select,input{font:inherit}
+  /* ---------- header ---------- */
+  header{background:rgba(252,250,245,.96);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .row1{padding:8px 14px;display:flex;gap:10px;align-items:center}
+  h1{font-family:"Playfair Display",Georgia,serif;font-size:18px;margin:0;font-weight:700;white-space:nowrap}
+  h1 .heb{font-family:"Frank Ruhl Libre",serif;color:var(--gold);margin-inline-end:6px}
+  .btn{padding:7px 12px;border:1px solid var(--line);border-radius:9px;background:var(--card);cursor:pointer;color:var(--ink);white-space:nowrap}
   .btn:hover{background:var(--cream)}
+  .btn:disabled{opacity:.4;cursor:default}
   .btn.gold{background:var(--gold);color:#fff;border-color:var(--gold);font-weight:600}
-  .btn.gold[disabled]{opacity:.5;cursor:default}
+  .btn.gold:disabled{opacity:.45}
+  .btn.sm{padding:5px 9px;font-size:13px}
   .spacer{flex:1}
   .dirty{color:var(--gold);font-size:13px;font-weight:600;white-space:nowrap}
-  #fontctl{display:flex;align-items:center;gap:6px;color:var(--faint);font-size:13px}
-  /* formatting toolbar */
-  .toolbar{padding:6px 18px;display:flex;gap:6px;align-items:center;border-top:1px solid var(--line);flex-wrap:wrap}
-  .tb{width:34px;height:30px;border:1px solid var(--line);border-radius:8px;background:var(--card);cursor:pointer;
-    display:flex;align-items:center;justify-content:center;font-size:15px}
+  .dirty.ok{color:#2e7d32}
+  .toolbar{padding:5px 14px;display:flex;gap:5px;align-items:center;border-top:1px solid var(--line);flex-wrap:wrap}
+  .tb{min-width:32px;height:28px;padding:0 7px;border:1px solid var(--line);border-radius:7px;background:var(--card);
+    cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:14px}
   .tb:hover{background:var(--cream)}
-  .tb.b{font-weight:800} .tb.i{font-style:italic;font-family:Georgia,serif} .tb.u{text-decoration:underline}
-  .tb.mk{background:rgba(152,100,19,.18)}
-  .sw{width:24px;height:24px;border-radius:6px;border:1px solid rgba(0,0,0,.15);cursor:pointer}
-  .tb-label{color:var(--faint);font-size:12px;margin-inline-start:6px;margin-inline-end:2px}
-  main{display:flex}
-  #editor{flex:1;padding:16px 22px;max-width:920px;margin:0 auto}
-  #previewPane{width:0;overflow:hidden;border-inline-start:1px solid var(--line);transition:width .2s}
-  body.preview #previewPane{width:44%}
-  body.preview #editor{margin:0}
-  .doc-title{display:flex;gap:12px;margin-bottom:12px}
-  .doc-title input{flex:1;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card)}
-  .doc-title .he{direction:rtl;font-family:"Frank Ruhl Libre",serif;font-size:20px;color:var(--gold)}
-  .part{border:1px solid var(--line);border-radius:16px;background:var(--card);margin:13px 0;overflow:hidden}
-  .part-head{display:flex;gap:10px;align-items:center;padding:11px 13px;background:var(--cream);border-bottom:1px solid var(--line)}
-  .part-head .num{width:26px;height:26px;border-radius:8px;background:var(--gold);color:#fff;display:flex;
-    align-items:center;justify-content:center;font-weight:700;font-size:13px;flex:none}
-  .part-head input{flex:1;padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card)}
-  .part-head input.he{direction:rtl;font-family:"Frank Ruhl Libre",serif;font-size:18px;color:var(--gold)}
+  .tb.b{font-weight:800}.tb.i{font-style:italic;font-family:Georgia,serif}.tb.u{text-decoration:underline}
+  .tb.mk{background:rgba(152,100,19,.2)}
+  .sw{width:22px;height:22px;border-radius:6px;border:1px solid rgba(0,0,0,.15);cursor:pointer}
+  .lbl{color:var(--faint);font-size:12px;margin-inline-start:6px}
+  .sep{width:1px;height:20px;background:var(--line);margin:0 4px}
+  /* ---------- layout ---------- */
+  main{display:flex;height:calc(100vh - 78px)}
+  aside{width:250px;flex:none;border-inline-end:1px solid var(--line);overflow:auto;background:var(--cream)}
+  .side-h{padding:9px 12px 4px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--faint);font-weight:700}
+  .fitem{padding:8px 12px;cursor:pointer;border-bottom:1px solid rgba(0,0,0,.04)}
+  .fitem:hover{background:rgba(255,255,255,.6)}
+  .fitem.on{background:var(--card);box-shadow:inset 3px 0 0 var(--gold)}
+  .fitem .nm{font-weight:600}
+  .fitem .meta{font-size:11.5px;color:var(--faint);margin-top:2px}
+  .fitem .warn{color:var(--gold);font-weight:600}
+  .toc{padding:4px 0 12px}
+  .toc a{display:block;padding:5px 12px 5px 20px;color:var(--soft);text-decoration:none;font-size:13px;cursor:pointer;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .toc a:hover{background:rgba(255,255,255,.6);color:var(--ink)}
+  #editor{flex:1;padding:14px 18px;overflow:auto}
+  #previewPane{width:0;overflow:hidden;border-inline-start:1px solid var(--line);transition:width .18s}
+  body.preview #previewPane{width:40%}
+  /* ---------- doc ---------- */
+  .doc-title{display:flex;gap:10px;margin-bottom:10px}
+  .doc-title input{flex:1;padding:8px 11px;border:1px solid var(--line);border-radius:9px;background:var(--card)}
+  .doc-title .he{direction:rtl;font-family:"Frank Ruhl Libre",serif;font-size:19px;color:var(--gold)}
+  .part{border:1px solid var(--line);border-radius:14px;background:var(--card);margin:11px 0;overflow:hidden}
+  .part-head{display:flex;gap:8px;align-items:center;padding:9px 11px;background:var(--cream);border-bottom:1px solid var(--line)}
+  .part-head .num{width:24px;height:24px;border-radius:7px;background:var(--gold);color:#fff;display:flex;
+    align-items:center;justify-content:center;font-weight:700;font-size:12px;flex:none;cursor:pointer}
+  .part-head input{flex:1;padding:5px 9px;border:1px solid var(--line);border-radius:7px;background:var(--card)}
+  .part-head input.he{direction:rtl;font-family:"Frank Ruhl Libre",serif;font-size:17px;color:var(--gold)}
   .part-head input.ru{font-weight:600}
-  .blocks{padding:8px}
-  .block{border:1px solid var(--line);border-radius:12px;margin:8px 0;padding:10px;background:var(--paper)}
+  .blocks{padding:7px}
+  .part.collapsed .blocks{display:none}
+  .block{border:1px solid var(--line);border-radius:11px;margin:7px 0;padding:9px;background:var(--paper)}
   .block.insert{border-color:var(--goldL);background:rgba(152,100,19,.06);box-shadow:inset 3px 0 0 var(--gold)}
   .block.rubric{background:var(--cream)}
-  .block-top{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
-  .block-top select{padding:5px 8px;border:1px solid var(--line);border-radius:8px;background:var(--card);font-size:13px}
-  .toggle{padding:5px 11px;border-radius:20px;border:1px solid var(--line);background:var(--card);cursor:pointer;font-size:13px;font-weight:600}
+  .block.hit{outline:2px solid var(--goldL);outline-offset:2px}
+  .block-top{display:flex;gap:6px;align-items:center;margin-bottom:7px;flex-wrap:wrap}
+  .block-top select{padding:4px 7px;border:1px solid var(--line);border-radius:7px;background:var(--card);font-size:12.5px}
+  .toggle{padding:4px 10px;border-radius:18px;border:1px solid var(--line);background:var(--card);cursor:pointer;font-size:12.5px;font-weight:600}
   .toggle.on{background:var(--gold);color:#fff;border-color:var(--gold)}
-  .mini{width:30px;height:30px;border:1px solid var(--line);border-radius:8px;background:var(--card);cursor:pointer;font-size:15px}
-  .mini:hover{background:var(--cream)} .mini.del:hover{background:#fdeaea;border-color:#e3b3b3}
-  .fields{display:grid;gap:6px}
+  .mini{width:27px;height:27px;border:1px solid var(--line);border-radius:7px;background:var(--card);cursor:pointer;font-size:13px}
+  .mini:hover{background:var(--cream)}
+  .mini.del:hover{background:#fdeaea;border-color:#e3b3b3}
+  .fields{display:grid;gap:5px}
   .fld{display:flex;flex-direction:column;gap:2px}
-  .fld label{font-size:11px;color:var(--faint);text-transform:uppercase;letter-spacing:.05em;font-weight:600}
-  .rt{width:100%;min-height:2.2em;border:1px solid var(--line);border-radius:8px;padding:9px 11px;background:var(--card);
-    line-height:1.55;color:var(--ink);outline:none}
+  .fld label{font-size:10.5px;color:var(--faint);text-transform:uppercase;letter-spacing:.05em;font-weight:700}
+  .fld.empty label{color:var(--bad)}
+  .rt{width:100%;min-height:2.1em;border:1px solid var(--line);border-radius:7px;padding:8px 10px;background:var(--card);
+    line-height:1.55;color:var(--ink);outline:none;white-space:pre-wrap}
   .rt:focus{border-color:var(--goldL);box-shadow:0 0 0 3px rgba(152,100,19,.08)}
   .rt.he{direction:rtl;text-align:right;font-family:"Frank Ruhl Libre","Times New Roman",serif}
   .rt.tr,.rt.ru{font-family:Georgia,"Times New Roman",serif}
   .rt mark{background:rgba(152,100,19,.28);border-radius:3px;padding:0 1px}
-  .add{display:block;width:100%;padding:9px;border:1px dashed var(--goldL);border-radius:10px;background:transparent;
-    color:var(--gold);cursor:pointer;font-weight:600;margin:6px 0}
+  .rt:empty:before{content:attr(data-ph);color:#c8c0b2}
+  .add{display:block;width:100%;padding:8px;border:1px dashed var(--goldL);border-radius:9px;background:transparent;
+    color:var(--gold);cursor:pointer;font-weight:600;margin:5px 0}
   .add:hover{background:rgba(152,100,19,.05)}
-  .hint{color:var(--faint);font-size:13px;margin:6px 0 14px}
+  .hint{color:var(--faint);font-size:12.5px;margin:4px 0 12px;line-height:1.5}
   .hint b{color:var(--soft)}
-  /* preview */
-  #pv{padding:24px;height:calc(100vh - 96px);overflow:auto;background:var(--paper)}
-  .pv-part{text-align:center;margin:24px 0 8px;color:var(--gold);font-family:"Frank Ruhl Libre",serif;font-size:22px;font-weight:700}
-  .pv-part small{display:block;color:var(--faint);font-size:10px;letter-spacing:.15em;text-transform:uppercase;font-family:sans-serif}
-  .pv-sub{text-align:center;color:var(--gold);font-family:"Frank Ruhl Libre",serif;font-size:17px;font-weight:600;margin-top:14px}
-  .pv-rubric{text-align:center;color:var(--faint);font-style:italic;font-family:Georgia,serif;font-size:13px;margin:4px 0}
+  kbd{background:var(--cream);border:1px solid var(--line);border-radius:4px;padding:0 5px;font-size:11.5px}
+  /* ---------- preview ---------- */
+  #pv{padding:20px;height:100%;overflow:auto;background:var(--paper)}
+  .pv-part{text-align:center;margin:20px 0 6px;color:var(--gold);font-family:"Frank Ruhl Libre",serif;font-size:21px;font-weight:700}
+  .pv-part small{display:block;color:var(--faint);font-size:10px;letter-spacing:.14em;text-transform:uppercase;font-family:sans-serif}
+  .pv-sub{text-align:center;color:var(--gold);font-family:"Frank Ruhl Libre",serif;font-size:16px;font-weight:600;margin-top:12px}
+  .pv-rubric{text-align:center;color:var(--faint);font-style:italic;font-family:Georgia,serif;font-size:12.5px;margin:4px 0}
   .pv-rubric.ins{color:var(--gold)}
-  .pv-body{font-family:"Frank Ruhl Libre",serif;direction:rtl;text-align:right;font-size:22px;line-height:1.7;margin:6px 0;color:#2A2213}
-  .pv-body.ins{background:rgba(152,100,19,.07);border-radius:10px;padding:10px;box-shadow:inset 3px 0 0 var(--gold)}
+  .pv-body{font-family:"Frank Ruhl Libre",serif;direction:rtl;text-align:right;font-size:21px;line-height:1.7;margin:5px 0;color:#2A2213}
+  .pv-body.ltr{direction:ltr;text-align:left;font-family:Georgia,serif;font-size:16px}
+  .pv-body.ins{background:rgba(152,100,19,.07);border-radius:9px;padding:9px;box-shadow:inset 3px 0 0 var(--gold)}
   .pv-body mark,.pv-sub mark{background:rgba(152,100,19,.28);border-radius:3px}
-  .liturgy .block-top{display:none}
+  /* ---------- dialog ---------- */
+  dialog{border:1px solid var(--line);border-radius:16px;padding:0;max-width:560px;width:90%;background:var(--paper);color:var(--ink)}
+  dialog::backdrop{background:rgba(0,0,0,.25)}
+  .dlg-h{padding:12px 16px;border-bottom:1px solid var(--line);font-weight:700;display:flex;align-items:center}
+  .dlg-b{padding:14px 16px;max-height:60vh;overflow:auto}
+  .dlg-f{padding:10px 16px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end}
+  .vrow{display:flex;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line)}
+  .vrow:last-child{border:0}
+  .found{padding:7px 9px;border:1px solid var(--line);border-radius:8px;margin:5px 0;cursor:pointer;background:var(--card)}
+  .found:hover{background:var(--cream)}
+  .found .where{font-size:11.5px;color:var(--faint)}
+  .found em{background:rgba(152,100,19,.25);font-style:normal;border-radius:3px}
+  #searchInp{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:var(--card)}
 </style>
 </head>
 <body>
 <header>
   <div class="row1">
     <h1><span class="heb">סִדּוּר</span>Редактор</h1>
-    <select id="fileSel"></select>
-    <button class="btn" id="reloadBtn">↺</button>
-    <span id="fontctl">Аа <input type="range" id="fontRange" min="14" max="30" value="20"></span>
+    <button class="btn sm" id="undoBtn" title="Отменить (⌘Z)">↶</button>
+    <button class="btn sm" id="redoBtn" title="Вернуть (⇧⌘Z)">↷</button>
+    <button class="btn sm" id="searchBtn" title="Поиск (⌘F)">🔍 Поиск</button>
+    <button class="btn sm" id="histBtn" title="История версий">🕘 История</button>
+    <span class="lbl">Аа</span><input type="range" id="fontRange" min="13" max="30" value="19" style="width:80px">
     <div class="spacer"></div>
     <span class="dirty" id="dirty"></span>
     <button class="btn" id="previewBtn">👁 Превью</button>
     <button class="btn gold" id="saveBtn" disabled>Сохранить</button>
   </div>
-  <div class="toolbar" id="toolbar">
-    <span class="tb-label">Формат:</span>
-    <button class="tb b" data-cmd="bold" title="Жирный">Ж</button>
-    <button class="tb i" data-cmd="italic" title="Курсив">К</button>
-    <button class="tb u" data-cmd="underline" title="Подчёркнутый">Ч</button>
-    <button class="tb mk" data-cmd="mark" title="Выделить (золотом)">✎</button>
-    <span class="tb-label">Цвет:</span>
+  <div class="toolbar">
+    <span class="lbl">Формат выделения:</span>
+    <button class="tb b" data-cmd="bold" title="Жирный (⌘B)">Ж</button>
+    <button class="tb i" data-cmd="italic" title="Курсив (⌘I)">К</button>
+    <button class="tb u" data-cmd="underline" title="Подчёркнутый (⌘U)">Ч</button>
+    <button class="tb mk" data-cmd="mark" title="Выделить золотом (⌘H)">✎</button>
+    <span class="sep"></span>
     <span class="sw" data-color="#986413" style="background:#986413" title="Золотой"></span>
     <span class="sw" data-color="#B3261E" style="background:#B3261E" title="Красный"></span>
     <span class="sw" data-color="#1A5FB4" style="background:#1A5FB4" title="Синий"></span>
     <span class="sw" data-color="#1A1714" style="background:#1A1714" title="Обычный"></span>
     <button class="tb" data-cmd="clear" title="Убрать формат">⌫</button>
-    <span class="tb-label" id="tbctx"></span>
+    <span class="sep"></span>
+    <span class="lbl" id="ctx">—</span>
   </div>
 </header>
 <main>
+  <aside>
+    <div class="side-h">Тексты</div>
+    <div id="fileList"></div>
+    <button class="add" id="newBtn" style="margin:8px 10px;width:calc(100% - 20px)">＋ новая служба</button>
+    <div class="side-h">Разделы</div>
+    <div class="toc" id="toc"></div>
+  </aside>
   <div id="editor"><p class="hint">Загрузка…</p></div>
   <div id="previewPane"><div id="pv"></div></div>
 </main>
 
+<dialog id="dlg"><div class="dlg-h" id="dlgH"></div><div class="dlg-b" id="dlgB"></div>
+  <div class="dlg-f"><button class="btn" onclick="dlg.close()">Закрыть</button></div></dialog>
+
 <script>
 const $=s=>document.querySelector(s);
-let state={name:null,data:null,dirty:false,font:20};
-let activeEd=null;              // currently focused contenteditable
+const state={name:null,data:null,dirty:false,font:19,undo:[],redo:[],files:[]};
+let activeEd=null;
 const KINDS=[['body','Текст молитвы'],['rubric','Ремарка (курсив)'],['sub','Подзаголовок']];
+document.execCommand('styleWithCSS',false,false);
 
-document.execCommand('styleWithCSS',false,false);   // bold→<b>, not span
-
-// ---------- server ----------
-async function api(p,o){return fetch(p,o);}
+/* ================= server ================= */
+const api=(p,o)=>fetch(p,o);
 async function loadFiles(){
-  const files=await(await api('/api/files')).json();
-  const sel=$('#fileSel'); sel.innerHTML='';
-  const nice={mincha:'Минха',birkat_hashachar:'Утренние благословения',bedtime:'Перед сном',
-    birkat_hamazon:'Биркат а-мазон',meein_shalosh:'Меэйн шалош',birkat_halevana:'Биркат а-левана',
-    liturgy:'Брахот (короткие)'};
-  files.forEach(f=>{const id=f.replace('.json','');const o=document.createElement('option');
-    o.value=f;o.textContent=(nice[id]||id);sel.appendChild(o);});
-  sel.onchange=()=>openFile(sel.value);
-  if(files.length) openFile(files.includes('mincha.json')?'mincha.json':files[0]);
+  state.files=await(await api('/api/files')).json();
+  const el=$('#fileList'); el.innerHTML='';
+  state.files.forEach(f=>{
+    const d=document.createElement('div'); d.className='fitem'+(f.file===state.name?' on':'');
+    let meta='';
+    if(f.kind==='service') meta=`${f.parts} ч · ${f.blocks} бл`+(f.inserts?` · ⚡${f.inserts}`:'')+(f.empty?` · <span class="warn">${f.empty} пусто</span>`:'');
+    else if(f.kind==='liturgy') meta=`${f.items} шт`+(f.empty?` · <span class="warn">${f.empty} пусто</span>`:'');
+    d.innerHTML=`<div class="nm">${esc(f.nice)}</div><div class="meta">${meta}</div>`;
+    d.onclick=()=>openFile(f.file);
+    el.appendChild(d);
+  });
+  if(!state.name&&state.files.length) openFile((state.files.find(f=>f.id==='mincha')||state.files[0]).file);
 }
 async function openFile(name){
-  if(state.dirty&&!confirm('Есть несохранённые изменения. Открыть другой файл?')){$('#fileSel').value=state.name;return;}
+  if(state.dirty&&!confirm('Есть несохранённые изменения. Открыть другой файл?'))return;
   state.name=name;
   state.data=await(await api('/api/file?name='+encodeURIComponent(name))).json();
-  markDirty(false); $('#fileSel').value=name; render(); renderPreview();
+  state.undo=[];state.redo=[];markDirty(false);render();loadFiles();
 }
-function markDirty(v){state.dirty=v;$('#saveBtn').disabled=!v;$('#dirty').textContent=v?'● не сохранено':'';}
-function touch(){markDirty(true);renderPreview();}
+function markDirty(v,msg){state.dirty=v;$('#saveBtn').disabled=!v;
+  const d=$('#dirty'); d.className='dirty'+(v?'':' ok'); d.textContent=msg||(v?'● не сохранено':'');}
+function snapshot(){state.undo.push(JSON.stringify(state.data));if(state.undo.length>60)state.undo.shift();state.redo=[];upd();}
+function upd(){$('#undoBtn').disabled=!state.undo.length;$('#redoBtn').disabled=!state.redo.length;}
+function touch(){markDirty(true);renderPreview();refreshTOC();}
+function edit(fn){snapshot();fn();touch();}
 
-// ---------- rich-text field ----------
-function autosize(){/* contenteditable grows naturally */}
-function rtField(label,cls,html,on){
-  const w=document.createElement('div');w.className='fld';
+/* ================= rich text ================= */
+function rtField(label,cls,html,on,ph){
+  const w=document.createElement('div');w.className='fld'+((html||'').trim()?'':' empty');
   const l=document.createElement('label');l.textContent=label;w.appendChild(l);
   const ed=document.createElement('div');ed.className='rt '+cls;ed.contentEditable='true';
-  if(cls.indexOf('he')>=0)ed.dir='rtl';
-  ed.style.fontSize=((cls.indexOf('he')>=0?state.font+2:state.font-4))+'px';
+  ed.dataset.ph=ph||''; if(cls.includes('he'))ed.dir='rtl';
+  ed.style.fontSize=((cls.includes('he')?state.font+2:state.font-3))+'px';
   ed.innerHTML=html||'';
-  ed.addEventListener('focus',()=>{activeEd=ed;$('#tbctx').textContent=label;});
-  const commit=()=>on(normalize(ed));
-  ed.addEventListener('input',commit);
-  ed.addEventListener('blur',commit);
+  ed.addEventListener('focus',()=>{activeEd=ed;$('#ctx').textContent=label;});
+  let pending=false;
+  ed.addEventListener('input',()=>{ if(!pending){pending=true;snapshot();} on(normalize(ed)); markDirty(true); });
+  ed.addEventListener('blur',()=>{pending=false;on(normalize(ed));renderPreview();
+    w.classList.toggle('empty',!ed.textContent.trim());});
   w.appendChild(ed);return w;
 }
-
-// clean the contenteditable HTML down to our subset: b/i/u/mark/span[color]/br
 function normalize(el){
-  function walk(node){
-    if(node.nodeType===3) return esc(node.nodeValue);
-    if(node.nodeType!==1) return '';
-    const tag=node.tagName;
-    const inner=[...node.childNodes].map(walk).join('');
-    if(tag==='BR') return '<br>';
-    if(tag==='DIV'||tag==='P') return inner+(inner.endsWith('<br>')?'':'<br>');
-    if(tag==='B'||tag==='STRONG') return wrap('b',inner);
-    if(tag==='I'||tag==='EM') return wrap('i',inner);
-    if(tag==='U') return wrap('u',inner);
-    if(tag==='MARK') return wrap('mark',inner);
-    if(tag==='FONT'){const c=hex(node.getAttribute('color'));return c?`<span style="color:${c}">${inner}</span>`:inner;}
-    if(tag==='SPAN'){
-      let s=inner; const st=node.style;
-      const col=hex(st.color);
-      if((st.backgroundColor&&st.backgroundColor!=='transparent')) s=`<mark>${s}</mark>`;
-      if(st.textDecorationLine&&st.textDecorationLine.indexOf('underline')>=0) s=`<u>${s}</u>`;
-      if(st.textDecoration&&st.textDecoration.indexOf('underline')>=0) s=`<u>${s}</u>`;
-      const fw=st.fontWeight; if(fw&&(fw==='bold'||+fw>=600)) s=`<b>${s}</b>`;
-      if(st.fontStyle==='italic') s=`<i>${s}</i>`;
-      if(col) s=`<span style="color:${col}">${s}</span>`;
-      return s;
-    }
+  function walk(n){
+    if(n.nodeType===3)return esc(n.nodeValue);
+    if(n.nodeType!==1)return '';
+    const t=n.tagName,inner=[...n.childNodes].map(walk).join('');
+    if(t==='BR')return '<br>';
+    if(t==='DIV'||t==='P')return inner+(inner.endsWith('<br>')?'':'<br>');
+    if(t==='B'||t==='STRONG')return wrap('b',inner);
+    if(t==='I'||t==='EM')return wrap('i',inner);
+    if(t==='U')return wrap('u',inner);
+    if(t==='MARK')return wrap('mark',inner);
+    if(t==='FONT'){const c=hex(n.getAttribute('color'));return c?`<span style="color:${c}">${inner}</span>`:inner;}
+    if(t==='SPAN'){let s=inner;const st=n.style,c=hex(st.color);
+      if(st.backgroundColor&&st.backgroundColor!=='transparent')s=`<mark>${s}</mark>`;
+      if((st.textDecorationLine||st.textDecoration||'').includes('underline'))s=`<u>${s}</u>`;
+      const fw=st.fontWeight;if(fw&&(fw==='bold'||+fw>=600))s=`<b>${s}</b>`;
+      if(st.fontStyle==='italic')s=`<i>${s}</i>`;
+      if(c)s=`<span style="color:${c}">${s}</span>`;
+      return s;}
     return inner;
   }
-  let out=[...el.childNodes].map(walk).join('');
-  out=out.replace(/(<br>)+$/,'');            // trim trailing breaks
-  out=out.replace(/<(b|i|u|mark)>\s*<\/\1>/g,''); // drop empty
-  return out;
+  return [...el.childNodes].map(walk).join('').replace(/(<br>)+$/,'').replace(/<(b|i|u|mark)>\s*<\/\1>/g,'');
 }
-function wrap(t,s){return s? `<${t}>${s}</${t}>`:'';}
-function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function hex(c){
-  if(!c) return null; c=c.trim();
-  let m=c.match(/^#([0-9a-fA-F]{6})$/); if(m) return '#'+m[1].toLowerCase();
-  m=c.match(/^#([0-9a-fA-F]{3})$/); if(m) return '#'+m[1].split('').map(x=>x+x).join('').toLowerCase();
-  m=c.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/); if(m){return '#'+[1,2,3].map(i=>(+m[i]).toString(16).padStart(2,'0')).join('');}
-  return null;
-}
-
-// ---------- toolbar actions (on active editable) ----------
-function focusEd(){ if(activeEd){activeEd.focus();} }
-$('#toolbar').addEventListener('mousedown',e=>{ // keep selection
-  if(e.target.closest('.tb,.sw')) e.preventDefault();
-});
-document.querySelectorAll('.tb[data-cmd]').forEach(b=>b.onclick=()=>{
-  if(!activeEd)return; activeEd.focus();
-  const cmd=b.dataset.cmd;
-  if(cmd==='bold'||cmd==='italic'||cmd==='underline') document.execCommand(cmd,false,null);
-  else if(cmd==='mark') doHighlight();
-  else if(cmd==='clear') document.execCommand('removeFormat',false,null);
-  fireInput();
-});
+const wrap=(t,s)=>s?`<${t}>${s}</${t}>`:'';
+const esc=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function hex(c){if(!c)return null;c=c.trim();
+  let m=c.match(/^#([0-9a-fA-F]{6})$/);if(m)return '#'+m[1].toLowerCase();
+  m=c.match(/^#([0-9a-fA-F]{3})$/);if(m)return '#'+m[1].split('').map(x=>x+x).join('').toLowerCase();
+  m=c.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);if(m)return '#'+[1,2,3].map(i=>(+m[i]).toString(16).padStart(2,'0')).join('');
+  return null;}
+/* toolbar */
+$('.toolbar').addEventListener('mousedown',e=>{if(e.target.closest('.tb,.sw'))e.preventDefault();});
+document.querySelectorAll('.tb[data-cmd]').forEach(b=>b.onclick=()=>fmt(b.dataset.cmd));
 document.querySelectorAll('.sw[data-color]').forEach(s=>s.onclick=()=>{
+  if(!activeEd)return;activeEd.focus();document.execCommand('foreColor',false,s.dataset.color);fire();});
+function fmt(cmd){
   if(!activeEd)return; activeEd.focus();
-  document.execCommand('foreColor',false,s.dataset.color); fireInput();
-});
-function doHighlight(){
-  const sel=window.getSelection(); if(!sel.rangeCount)return;
-  const r=sel.getRangeAt(0); if(r.collapsed)return;
-  const m=document.createElement('mark');
-  try{ r.surroundContents(m); sel.removeAllRanges(); }
-  catch(e){ document.execCommand('hiliteColor',false,'rgba(152,100,19,.28)'); }
+  if(cmd==='mark'){const sel=getSelection();if(sel.rangeCount&&!sel.getRangeAt(0).collapsed){
+      try{sel.getRangeAt(0).surroundContents(document.createElement('mark'));}
+      catch(e){document.execCommand('hiliteColor',false,'rgba(152,100,19,.28)');}}}
+  else if(cmd==='clear')document.execCommand('removeFormat',false,null);
+  else document.execCommand(cmd,false,null);
+  fire();
 }
-function fireInput(){ if(activeEd) activeEd.dispatchEvent(new Event('input')); }
+const fire=()=>activeEd&&activeEd.dispatchEvent(new Event('input'));
 
-// ---------- render editor ----------
-function render(){const d=state.data,e=$('#editor');e.innerHTML='';
-  if(d.parts)return renderService(e,d);
-  if(d.brachotOften||d.personal)return renderLiturgy(e,d);
-  e.innerHTML='<p class="hint">Неизвестный формат.</p>';}
-function inp(ph,cls,val,on){const t=document.createElement('input');t.className=cls;t.placeholder=ph;t.value=val||'';t.oninput=()=>on(t.value);return t;}
-function hintEl(html){const h=document.createElement('div');h.className='hint';h.innerHTML=html;return h;}
-function miniBtn(t,fn,cls){const b=document.createElement('button');b.className='mini '+(cls||'');b.textContent=t;b.onclick=fn;return b;}
-function move(arr,i,d){const j=i+d;if(j<0||j>=arr.length)return;[arr[i],arr[j]]=[arr[j],arr[i]];touch();render();}
+/* ================= render ================= */
+function render(){const d=state.data,e=$('#editor');e.innerHTML='';activeEd=null;
+  if(d&&d.parts)renderService(e,d); else if(d&&(d.brachotOften||d.personal))renderLiturgy(e,d);
+  else e.innerHTML='<p class="hint">Неизвестный формат файла.</p>';
+  refreshTOC();renderPreview();upd();}
+const inp=(ph,cls,val,on)=>{const t=document.createElement('input');t.className=cls;t.placeholder=ph;t.value=val||'';
+  t.onfocus=()=>{activeEd=null;$('#ctx').textContent=ph;};
+  let p=false;t.oninput=()=>{if(!p){p=true;snapshot();}on(t.value);markDirty(true);};
+  t.onblur=()=>{p=false;renderPreview();refreshTOC();};return t;};
+const hintEl=h=>{const d=document.createElement('div');d.className='hint';d.innerHTML=h;return d;};
+const mini=(t,fn,cls,title)=>{const b=document.createElement('button');b.className='mini '+(cls||'');b.textContent=t;
+  if(title)b.title=title;b.onclick=fn;return b;};
+const move=(a,i,d)=>{const j=i+d;if(j<0||j>=a.length)return;edit(()=>{[a[i],a[j]]=[a[j],a[i]];});render();};
 
 function renderService(e,d){
   const dt=document.createElement('div');dt.className='doc-title';
-  dt.appendChild(inp('Название — иврит','he',d.titleHe,v=>{d.titleHe=v;touch()}));
-  dt.appendChild(inp('Название — русский','ru',d.titleRu,v=>{d.titleRu=v;touch()}));
+  dt.appendChild(inp('Название — иврит','he',d.titleHe,v=>d.titleHe=v));
+  dt.appendChild(inp('Название — русский','ru',d.titleRu,v=>d.titleRu=v));
   e.appendChild(dt);
-  e.appendChild(hintEl('Клик в текст → выдели мышкой → кнопки сверху (<b>Ж К Ч</b>, выделение, цвет). <b>⚡ Вставка</b> красит весь блок золотом (условный текст: Летом/Зимой, Рош&nbsp;Ходеш, Ханука…). Тип блока и стрелки — слева.'));
-  d.parts.forEach((p,pi)=>e.appendChild(partEl(d,p,pi)));
+  e.appendChild(hintEl('Клик в текст → выдели мышкой → <b>Ж К Ч</b>, ✎ выделение, цвет. <b>⚡ Вставка</b> — условный текст (Летом/Зимой, Рош&nbsp;Ходеш, Ханука…). <kbd>⌘S</kbd> сохранить, <kbd>⌘Z</kbd> отменить, <kbd>⌘F</kbd> поиск. Клик по номеру части — свернуть.'));
+  d.parts.forEach((p,i)=>e.appendChild(partEl(d,p,i)));
   const a=document.createElement('button');a.className='add';a.textContent='＋ добавить часть';
-  a.onclick=()=>{d.parts.push({he:'',ru:'Новая часть',blocks:[]});touch();render()};
+  a.onclick=()=>{edit(()=>d.parts.push({he:'',ru:'Новая часть',blocks:[]}));render();};
   e.appendChild(a);
 }
 function partEl(d,p,pi){
-  const el=document.createElement('div');el.className='part';
+  const el=document.createElement('div');el.className='part';el.id='part'+pi;
   const h=document.createElement('div');h.className='part-head';
-  const n=document.createElement('div');n.className='num';n.textContent=pi+1;h.appendChild(n);
-  h.appendChild(inp('часть — иврит','he',p.he,v=>{p.he=v;touch()}));
-  h.appendChild(inp('часть — русский','ru',p.ru,v=>{p.ru=v;touch()}));
-  h.appendChild(miniBtn('↑',()=>move(d.parts,pi,-1)));
-  h.appendChild(miniBtn('↓',()=>move(d.parts,pi,1)));
-  h.appendChild(miniBtn('🗑',()=>{if(confirm('Удалить часть целиком?')){d.parts.splice(pi,1);touch();render()}},'del'));
+  const n=document.createElement('div');n.className='num';n.textContent=pi+1;n.title='Свернуть/развернуть';
+  n.onclick=()=>el.classList.toggle('collapsed');h.appendChild(n);
+  h.appendChild(inp('часть — иврит','he',p.he,v=>p.he=v));
+  h.appendChild(inp('часть — русский','ru',p.ru,v=>p.ru=v));
+  h.appendChild(mini('↑',()=>move(d.parts,pi,-1),'','Выше'));
+  h.appendChild(mini('↓',()=>move(d.parts,pi,1),'','Ниже'));
+  h.appendChild(mini('🗑',()=>{if(confirm(`Удалить часть «${p.ru||p.he}» со всеми блоками?`)){edit(()=>d.parts.splice(pi,1));render();}},'del','Удалить часть'));
   el.appendChild(h);
   const bl=document.createElement('div');bl.className='blocks';
-  p.blocks.forEach((b,bi)=>bl.appendChild(blockEl(p,b,bi)));
+  p.blocks.forEach((b,bi)=>bl.appendChild(blockEl(d,p,b,bi)));
   const a=document.createElement('button');a.className='add';a.textContent='＋ блок текста';
-  a.onclick=()=>{p.blocks.push({k:'body',he:'',translit:'',ru:''});touch();render()};
+  a.onclick=()=>{edit(()=>p.blocks.push({k:'body',he:'',translit:'',ru:''}));render();};
   bl.appendChild(a);el.appendChild(bl);return el;
 }
-function blockEl(p,b,bi){
+function blockEl(d,p,b,bi){
   const el=document.createElement('div');el.className='block '+(b.insert?'insert ':'')+(b.k==='rubric'?'rubric':'');
   const top=document.createElement('div');top.className='block-top';
   const ks=document.createElement('select');
   KINDS.forEach(([v,t])=>{const o=document.createElement('option');o.value=v;o.textContent=t;if(b.k===v)o.selected=true;ks.appendChild(o)});
-  ks.onchange=()=>{b.k=ks.value;touch();render()};top.appendChild(ks);
+  ks.onchange=()=>{edit(()=>b.k=ks.value);render();};top.appendChild(ks);
   const ins=document.createElement('button');ins.className='toggle'+(b.insert?' on':'');ins.textContent='⚡ Вставка';
-  ins.onclick=()=>{b.insert=!b.insert;if(!b.insert)delete b.insert;touch();render()};top.appendChild(ins);
+  ins.title='Условный текст — в приложении подсветится золотом';
+  ins.onclick=()=>{edit(()=>{b.insert=!b.insert;if(!b.insert)delete b.insert;});render();};top.appendChild(ins);
   const sp=document.createElement('div');sp.style.flex='1';top.appendChild(sp);
-  top.appendChild(miniBtn('↑',()=>move(p.blocks,bi,-1)));
-  top.appendChild(miniBtn('↓',()=>move(p.blocks,bi,1)));
-  top.appendChild(miniBtn('🗑',()=>{p.blocks.splice(bi,1);touch();render()},'del'));
+  top.appendChild(mini('⧉',()=>{edit(()=>p.blocks.splice(bi+1,0,JSON.parse(JSON.stringify(b))));render();},'','Дублировать'));
+  if(d.parts.length>1)top.appendChild(mini('⇄',()=>moveToPart(d,p,bi),'','Перенести в другую часть'));
+  top.appendChild(mini('↑',()=>move(p.blocks,bi,-1),'','Выше'));
+  top.appendChild(mini('↓',()=>move(p.blocks,bi,1),'','Ниже'));
+  top.appendChild(mini('🗑',()=>{edit(()=>p.blocks.splice(bi,1));render();},'del','Удалить блок'));
   el.appendChild(top);
   const f=document.createElement('div');f.className='fields';
-  f.appendChild(rtField('Иврит','he',b.he,v=>{b.he=v;touch()}));
+  f.appendChild(rtField('Иврит','he',b.he,v=>b.he=v,'הטקסט בעברית…'));
   if(b.k!=='sub'){
-    f.appendChild(rtField('Транслитерация','tr',b.translit,v=>{b.translit=v;touch()}));
-    f.appendChild(rtField('Русский','ru',b.ru,v=>{b.ru=v;touch()}));
+    f.appendChild(rtField('Транслитерация','tr',b.translit,v=>b.translit=v,'Транслитерация…'));
+    f.appendChild(rtField('Русский','ru',b.ru,v=>b.ru=v,'Перевод…'));
   }
   el.appendChild(f);return el;
 }
+function moveToPart(d,from,bi){
+  const names=d.parts.map((p,i)=>`${i+1}. ${p.ru||p.he}`).join('\n');
+  const n=prompt('Перенести блок в часть №:\n'+names);
+  const idx=parseInt(n,10)-1;
+  if(isNaN(idx)||idx<0||idx>=d.parts.length)return;
+  edit(()=>{const [b]=from.blocks.splice(bi,1);d.parts[idx].blocks.push(b);});render();
+}
 function renderLiturgy(e,d){
-  e.appendChild(hintEl('Короткие благословения: иврит / транслит / русский. Форматирование выделением работает так же. Пустой иврит = «Скоро» в приложении.'));
+  e.appendChild(hintEl('Короткие благословения. Пустой иврит = в приложении показывается «Скоро». Форматирование выделением работает так же.'));
   const groups=[['Часто нужные',d.brachotOften]];
   (d.brachotFolders||[]).forEach(f=>groups.push([f.ru,f.items]));
   groups.push(['Другие / личные',d.personal]);
   if(d.havdalah)groups.push(['Авдала',[d.havdalah]]);
-  groups.forEach(([title,items])=>{
+  groups.forEach(([title,items],gi)=>{
     if(!items)return;
-    const hh=document.createElement('h2');hh.textContent=title;hh.style.cssText='font-family:Playfair Display,serif;margin:22px 0 6px;font-size:18px';e.appendChild(hh);
-    const part=document.createElement('div');part.className='part liturgy';const bl=document.createElement('div');bl.className='blocks';
+    const h=document.createElement('h2');h.id='part'+gi;h.textContent=title;
+    h.style.cssText='font-family:Playfair Display,serif;margin:18px 0 5px;font-size:17px';e.appendChild(h);
+    const part=document.createElement('div');part.className='part';const bl=document.createElement('div');bl.className='blocks';
     items.forEach(it=>{
       const el=document.createElement('div');el.className='block';
-      const nm=document.createElement('div');nm.style.cssText='font-weight:600;margin-bottom:6px;color:var(--gold)';
-      nm.textContent=(it.ru||it.id)+'  ·  '+(it.he?stripTags(it.he):'');el.appendChild(nm);
+      const nm=document.createElement('div');nm.style.cssText='font-weight:600;margin-bottom:5px;color:var(--gold)';
+      nm.textContent=(it.ru||it.id)+(it.he?'  ·  '+strip(it.he):'');el.appendChild(nm);
       const f=document.createElement('div');f.className='fields';
-      f.appendChild(rtField('Иврит','he',it.textHe,v=>{it.textHe=v;touch()}));
-      f.appendChild(rtField('Транслитерация','tr',it.textTranslit,v=>{it.textTranslit=v||null;touch()}));
-      f.appendChild(rtField('Русский','ru',it.textRu,v=>{it.textRu=v||null;touch()}));
+      f.appendChild(rtField('Иврит','he',it.textHe,v=>it.textHe=v,'הטקסט…'));
+      f.appendChild(rtField('Транслитерация','tr',it.textTranslit,v=>it.textTranslit=v||null,'Транслитерация…'));
+      f.appendChild(rtField('Русский','ru',it.textRu,v=>it.textRu=v||null,'Перевод…'));
       el.appendChild(f);bl.appendChild(el);
     });
     part.appendChild(bl);e.appendChild(part);
   });
 }
-function stripTags(s){return (s||'').replace(/<[^>]+>/g,'');}
+const strip=s=>(s||'').replace(/<[^>]+>/g,'');
 
-// ---------- preview (renders formatting) ----------
-function renderPreview(){const d=state.data,pv=$('#pv');if(!d){pv.innerHTML='';return;}
+/* ================= TOC ================= */
+function refreshTOC(){
+  const t=$('#toc');t.innerHTML='';const d=state.data;if(!d)return;
+  const items=d.parts?d.parts.map((p,i)=>[`${i+1}. ${p.ru||strip(p.he)||'—'}`,'part'+i,p.blocks.length])
+    :[['Часто нужные','part0',0],...(d.brachotFolders||[]).map((f,i)=>[f.ru,'part'+(i+1),0]),
+      ['Другие / личные','part'+((d.brachotFolders||[]).length+1),0]];
+  items.forEach(([label,id,n])=>{
+    const a=document.createElement('a');a.textContent=label+(n?`  (${n})`:'');
+    a.onclick=()=>{const el=document.getElementById(id);if(el)el.scrollIntoView({behavior:'smooth',block:'start'});};
+    t.appendChild(a);
+  });
+}
+
+/* ================= preview ================= */
+function renderPreview(){
+  if(!document.body.classList.contains('preview'))return;
+  const d=state.data,pv=$('#pv');if(!d){pv.innerHTML='';return;}
   let h='';
   if(d.parts){
     d.parts.forEach(p=>{
-      if(p.he||p.ru)h+=`<div class="pv-part">${esc(p.he)}<small>${esc(p.ru)}</small></div>`;
+      if(p.he||p.ru)h+=`<div class="pv-part">${esc(strip(p.he))}<small>${esc(p.ru)}</small></div>`;
       p.blocks.forEach(b=>{
         if(b.k==='sub')h+=`<div class="pv-sub">${b.he||''}</div>`;
         else if(b.k==='rubric')h+=`<div class="pv-rubric ${b.insert?'ins':''}">${b.he||''}</div>`;
@@ -329,25 +390,94 @@ function renderPreview(){const d=state.data,pv=$('#pv');if(!d){pv.innerHTML='';r
       });
     });
   }else if(d.brachotOften){
-    const all=[...(d.brachotOften||[]),...((d.brachotFolders||[]).flatMap(f=>f.items)),...(d.personal||[])];
-    all.forEach(it=>{if(it.textHe)h+=`<div class="pv-sub">${it.he||''}</div><div class="pv-body">${it.textHe}</div>`;});
+    [...(d.brachotOften||[]),...((d.brachotFolders||[]).flatMap(f=>f.items)),...(d.personal||[])]
+      .forEach(it=>{if(it.textHe)h+=`<div class="pv-sub">${it.he||''}</div><div class="pv-body">${it.textHe}</div>`;});
   }
   pv.innerHTML=h||'<p class="hint">Пусто</p>';
 }
 
-// ---------- save ----------
+/* ================= search ================= */
+function openSearch(){
+  dlgShow('Поиск по файлу',`<input id="searchInp" placeholder="что искать…" autofocus><div id="res"></div>`);
+  const inpEl=$('#searchInp');inpEl.oninput=()=>runSearch(inpEl.value);inpEl.focus();
+}
+function runSearch(q){
+  const box=$('#res');box.innerHTML='';if(!q||q.length<2)return;
+  const d=state.data,low=q.toLowerCase();let n=0;
+  const push=(where,text,id)=>{
+    const i=text.toLowerCase().indexOf(low);if(i<0)return;
+    n++;const s=Math.max(0,i-30),frag=esc(text.slice(s,i))+'<em>'+esc(text.slice(i,i+q.length))+'</em>'+esc(text.slice(i+q.length,i+q.length+40));
+    const el=document.createElement('div');el.className='found';
+    el.innerHTML=`<div class="where">${esc(where)}</div><div>…${frag}…</div>`;
+    el.onclick=()=>{dlg.close();const t=document.getElementById(id);if(t){t.scrollIntoView({behavior:'smooth',block:'center'});
+      t.classList.add('hit');setTimeout(()=>t.classList.remove('hit'),1800);}};
+    box.appendChild(el);
+  };
+  if(d.parts) d.parts.forEach((p,pi)=>p.blocks.forEach(b=>{
+    ['he','translit','ru'].forEach(k=>push(`${pi+1}. ${p.ru||strip(p.he)}`,strip(b[k]||''),'part'+pi));
+  }));
+  else [...(d.brachotOften||[]),...((d.brachotFolders||[]).flatMap(f=>f.items)),...(d.personal||[])]
+    .forEach(it=>['textHe','textTranslit','textRu'].forEach(k=>push(it.ru||it.id,strip(it[k]||''),'part0')));
+  if(!n)box.innerHTML='<p class="hint">Ничего не найдено.</p>';
+}
+
+/* ================= history ================= */
+async function openHistory(){
+  const vs=await(await api('/api/history?name='+encodeURIComponent(state.name))).json();
+  const body=vs.length?vs.map(v=>`<div class="vrow"><div style="flex:1">${v.when} <span class="where">(${(v.size/1024).toFixed(1)} КБ)</span></div>
+    <button class="btn sm" onclick="restore('${v.v}')">Откатить</button></div>`).join('')
+    :'<p class="hint">Пока нет сохранённых версий. Версия создаётся при каждом сохранении.</p>';
+  dlgShow('История версий — '+state.name,body);
+}
+async function restore(v){
+  if(!confirm('Откатить файл к этой версии? Текущее состояние тоже попадёт в историю.'))return;
+  const r=await(await api(`/api/restore?name=${encodeURIComponent(state.name)}&v=${v}`,{method:'POST'})).json();
+  dlg.close();
+  if(r.ok){state.dirty=false;await openFile(state.name);markDirty(false,'Откачено ✓');}
+  else alert('Ошибка: '+(r.error||'?'));
+}
+function dlgShow(title,html){$('#dlgH').textContent=title;$('#dlgB').innerHTML=html;dlg.showModal();}
+
+/* ================= save / new ================= */
 async function save(){
   const r=await api('/api/file?name='+encodeURIComponent(state.name),{method:'POST',body:JSON.stringify(state.data)});
   const j=await r.json();
-  if(j.ok){markDirty(false);flash('Сохранено ✓');}else flash('Ошибка: '+(j.error||'?'));
+  if(j.ok){markDirty(false,'Сохранено ✓');loadFiles();setTimeout(()=>{if(!state.dirty)$('#dirty').textContent='';},2500);}
+  else alert('Не сохранено — '+(j.error||'?'));
 }
-function flash(t){const d=$('#dirty');d.textContent=t;setTimeout(()=>{if(!state.dirty)d.textContent='';},2200);}
+async function newService(){
+  const id=prompt('Латинский id новой службы (например shacharit, maariv, havdalah):');
+  if(!id)return;
+  const name=id.trim().toLowerCase().replace(/[^a-z0-9_]/g,'')+'.json';
+  const j=await(await api('/api/new?name='+encodeURIComponent(name),{method:'POST'})).json();
+  if(j.ok){state.dirty=false;await loadFiles();openFile(name);}
+  else alert('Ошибка: '+(j.error||'?'));
+}
 
+/* ================= wiring ================= */
 $('#saveBtn').onclick=save;
-$('#reloadBtn').onclick=()=>openFile(state.name);
+$('#newBtn').onclick=newService;
+$('#searchBtn').onclick=openSearch;
+$('#histBtn').onclick=openHistory;
 $('#previewBtn').onclick=()=>{document.body.classList.toggle('preview');renderPreview();};
-$('#fontRange').oninput=e=>{state.font=+e.target.value;render();};
-document.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key==='s'){e.preventDefault();if(state.dirty)save();}});
+$('#fontRange').oninput=e=>{state.font=+e.target.value;
+  document.querySelectorAll('.rt').forEach(el=>el.style.fontSize=((el.classList.contains('he')?state.font+2:state.font-3))+'px');};
+$('#undoBtn').onclick=()=>{if(!state.undo.length)return;state.redo.push(JSON.stringify(state.data));
+  state.data=JSON.parse(state.undo.pop());markDirty(true);render();};
+$('#redoBtn').onclick=()=>{if(!state.redo.length)return;state.undo.push(JSON.stringify(state.data));
+  state.data=JSON.parse(state.redo.pop());markDirty(true);render();};
+document.addEventListener('keydown',e=>{
+  const m=e.metaKey||e.ctrlKey;if(!m)return;
+  const k=e.key.toLowerCase();
+  if(k==='s'){e.preventDefault();if(state.dirty)save();}
+  else if(k==='f'){e.preventDefault();openSearch();}
+  else if(k==='z'&&!e.shiftKey){e.preventDefault();$('#undoBtn').click();}
+  else if((k==='z'&&e.shiftKey)||k==='y'){e.preventDefault();$('#redoBtn').click();}
+  else if(k==='b'){e.preventDefault();fmt('bold');}
+  else if(k==='i'){e.preventDefault();fmt('italic');}
+  else if(k==='u'){e.preventDefault();fmt('underline');}
+  else if(k==='h'){e.preventDefault();fmt('mark');}
+});
 window.addEventListener('beforeunload',e=>{if(state.dirty){e.preventDefault();e.returnValue='';}});
 loadFiles();
 </script>
