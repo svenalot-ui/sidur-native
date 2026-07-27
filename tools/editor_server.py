@@ -19,9 +19,15 @@ import http.server, socketserver, json, os, urllib.parse, webbrowser, threading
 import time, sys, subprocess, shutil, datetime
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+
+# --root <путь к проекту> — так запускает «Редактор Сидур.app» (его копия скрипта
+# лежит внутри бандла, а тексты остаются в репозитории).
 ROOT = os.path.dirname(HERE)
+if '--root' in sys.argv:
+    ROOT = sys.argv[sys.argv.index('--root') + 1]
+
 CONTENT = os.path.join(ROOT, 'Сидур', 'Content')
-HISTORY = os.path.join(HERE, '.history')
+HISTORY = os.path.join(ROOT, 'tools', '.history')
 HTML = os.path.join(HERE, 'editor.html')
 PORT = 8777
 SKIP = {'calendar.json'}
@@ -227,7 +233,29 @@ class Reusable(socketserver.TCPServer):
     allow_reuse_address = True
 
 
+def need_access():
+    """macOS не пускает приложение в «Документы» без разрешения — объясняем и
+    открываем нужную панель настроек, иначе редактор просто молча не работал бы."""
+    msg = ('Редактору нужен доступ к папке «Документы», чтобы править тексты молитв.\\n\\n'
+           'Нажмите «Открыть настройки», включите «Редактор Сидур» в разделе '
+           '«Файлы и папки» (или добавьте его в «Полный доступ к диску»), '
+           'затем запустите редактор заново.')
+    script = ('display dialog "%s" with title "Редактор Сидур" '
+              'buttons {"Отмена", "Открыть настройки"} default button 2 with icon caution' % msg)
+    r = subprocess.run(['osascript', '-e', script], capture_output=True, text=True)
+    if 'Открыть настройки' in r.stdout:
+        subprocess.run(['open', 'x-apple.systempreferences:com.apple.preference.security'
+                                '?Privacy_FilesAndFolders'])
+
+
 if __name__ == '__main__':
+    try:
+        os.listdir(CONTENT)
+    except PermissionError:
+        need_access()
+        sys.exit(1)
+    except FileNotFoundError:
+        pass
     if not os.path.isdir(CONTENT):
         print('Не найдена папка Content:', CONTENT)
         sys.exit(1)
